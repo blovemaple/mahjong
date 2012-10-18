@@ -1,0 +1,4 @@
+== Introduction ==
+Mahjong is a command-line Chinese Mahjong game, written in Java 7.
+
+This project is being developed now. Maybe it will last a long time, because I am just writting for fun in my spare time! :)
