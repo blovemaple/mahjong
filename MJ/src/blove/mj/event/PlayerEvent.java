@@ -7,7 +7,7 @@ import blove.mj.board.GameBoard;
 /**
  * 玩家进入、离开游戏，或者准备好开始游戏的事件。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class PlayerEvent extends GameEvent {
 	private static final long serialVersionUID = 1L;
@@ -15,7 +15,7 @@ public class PlayerEvent extends GameEvent {
 	/**
 	 * 玩家事件类型。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	public enum PlayerEventType {
 		IN, OUT, READY

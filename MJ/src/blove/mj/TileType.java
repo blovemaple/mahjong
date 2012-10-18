@@ -8,13 +8,13 @@ import java.util.Map;
 /**
  * 牌型。每个牌型的牌通常有四张。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class TileType implements Comparable<TileType> {
 	/**
 	 * “花色”。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	public enum Suit {
 		// 以下排列顺序决定了牌型的比较顺序！

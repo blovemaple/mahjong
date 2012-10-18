@@ -11,7 +11,7 @@ import blove.mj.rules.WinStrategy;
 /**
  * 游戏桌。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public interface GameBoard {
 

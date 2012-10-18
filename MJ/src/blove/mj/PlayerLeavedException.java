@@ -5,7 +5,7 @@ import blove.mj.board.GameBoard;
 /**
  * 因玩家已离开游戏桌，而不能进行某些操作时，抛出此异常。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class PlayerLeavedException extends IllegalStateException {
 	private static final long serialVersionUID = 1L;

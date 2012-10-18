@@ -6,7 +6,7 @@ import blove.mj.board.GameBoard;
 /**
  * 一局结束的事件。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class GameOverEvent extends GameEvent {
 

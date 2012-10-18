@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 默认的限时策略，采用固定限时。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class DefTimeLimitStrategy implements TimeLimitStrategy {
 	private final long discardLimit, cpkLimit;

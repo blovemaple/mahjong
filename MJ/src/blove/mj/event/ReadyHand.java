@@ -11,7 +11,7 @@ import blove.mj.TileType;
 /**
  * 听牌。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class ReadyHand {
 	private final TileType discardTile;

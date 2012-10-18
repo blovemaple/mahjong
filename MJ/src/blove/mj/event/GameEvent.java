@@ -7,7 +7,7 @@ import blove.mj.board.GameBoard;
 /**
  * 游戏事件。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public abstract class GameEvent extends EventObject {
 

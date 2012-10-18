@@ -3,7 +3,7 @@ package blove.mj;
 /**
  * 玩家位置。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public enum PlayerLocation {
 	// 顺序勿动。计算位置依赖此枚举的顺序！
@@ -28,7 +28,7 @@ public enum PlayerLocation {
 	/**
 	 * 位置关系。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	public enum Relation {
 		// 顺序勿动。计算位置依赖此枚举的顺序！

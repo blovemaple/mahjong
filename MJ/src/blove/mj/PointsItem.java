@@ -3,7 +3,7 @@ package blove.mj;
 /**
  * 得分项目。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public interface PointsItem {
 	/**

@@ -3,7 +3,7 @@ package blove.mj.board;
 /**
  * 因游戏桌已满而无法进行某些操作时，抛出此异常。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class GameBoardFullException extends Exception {
 	private static final long serialVersionUID = 1L;

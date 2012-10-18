@@ -12,7 +12,7 @@ import blove.mj.board.PlayerTiles;
 /**
  * 本地游戏桌上一个玩家的牌。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 class LocalPlayerTiles extends PlayerTiles {
 	/**

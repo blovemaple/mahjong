@@ -5,7 +5,7 @@ import blove.mj.board.GameBoard;
 /**
  * 游戏开始的事件。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class GameStartEvent extends GameEvent {
 

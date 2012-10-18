@@ -12,7 +12,7 @@ import blove.mj.Tile;
 /**
  * 一个玩家的牌。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class PlayerTiles {
 	protected Set<Tile> aliveTiles;

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 玩家。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class Player {
 	private static AtomicInteger nextId = new AtomicInteger();

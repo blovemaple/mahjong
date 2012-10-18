@@ -9,7 +9,7 @@ import blove.mj.board.Wall;
 /**
  * 本地游戏桌上的牌墙。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 class LocalWall extends Wall {
 	/**

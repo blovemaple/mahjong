@@ -3,7 +3,7 @@ package blove.mj.rules;
 /**
  * 游戏限时策略。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public interface TimeLimitStrategy {
 	/**

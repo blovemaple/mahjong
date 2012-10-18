@@ -11,7 +11,7 @@ import blove.mj.TileType.Suit;
 /**
  * 一张牌。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class Tile implements Comparable<Tile> {
 	private static Set<Tile> tiles;

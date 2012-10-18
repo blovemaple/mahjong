@@ -8,7 +8,7 @@ import blove.mj.board.DiscardedTiles;
 /**
  * 本地游戏桌上的Discard Tiles。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 class LocalDiscardTiles extends DiscardedTiles {
 	/**

@@ -45,7 +45,7 @@ import blove.mj.rules.WinStrategy;
 /**
  * 本地麻将桌。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class LocalGameBoard implements GameBoard {
 	private final Map<PlayerLocation, PlayerInfo> playerInfos = new EnumMap<>(
@@ -504,7 +504,7 @@ public class LocalGameBoard implements GameBoard {
 	/**
 	 * 打牌后等待状态的管理员，负责在等待动作时管理它们的优先级别，根据玩家的请求做出适当的动作。同时还负责计时，并在超时时做出必要动作。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	private class DiscardedWaiter {
 		private PlayerLocation discardedLocation;
@@ -750,7 +750,7 @@ public class LocalGameBoard implements GameBoard {
 	/**
 	 * 摸牌后等待的管理员，负责根据玩家的请求做出适当的动作。同时还负责计时，并在超时时做出必要动作。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	private class DrawedWaiter {
 		private PlayerLocation waitingLocation;

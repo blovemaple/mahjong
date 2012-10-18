@@ -10,7 +10,7 @@ import blove.mj.TileType;
 /**
  * 已打出放在桌上的牌。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class DiscardedTiles {
 	/**

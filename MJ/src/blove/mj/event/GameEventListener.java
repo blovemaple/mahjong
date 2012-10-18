@@ -7,7 +7,7 @@ import blove.mj.GameBoardView;
 /**
  * 游戏事件监听器（向游戏桌注册）。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public interface GameEventListener extends EventListener {
 	/**

@@ -9,7 +9,7 @@ import blove.mj.board.GameBoard;
 /**
  * 发牌结束，以及任何玩家摸牌、打牌、吃/碰/杠牌的事件。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class PlayerActionEvent extends GameEvent {
 	private static final long serialVersionUID = 1L;
@@ -17,7 +17,7 @@ public class PlayerActionEvent extends GameEvent {
 	/**
 	 * 事件类型。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	public enum ActionType {
 		DEAL_OVER, DRAW, DISCARD, CPK

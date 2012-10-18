@@ -10,7 +10,7 @@ import blove.mj.board.PlayerTiles;
 /**
  * 和牌策略。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public interface WinStrategy {
 	/**

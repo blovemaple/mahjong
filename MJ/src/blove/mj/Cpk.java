@@ -15,7 +15,7 @@ import blove.mj.PlayerLocation.Relation;
  * 吃、碰、杠。<br/>
  * 此类实现Comparable接口，其比较方法按照牌的先后顺序比较大小。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class Cpk implements Comparable<Cpk> {
 	private final CpkType type;

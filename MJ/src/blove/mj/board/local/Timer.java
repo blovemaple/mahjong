@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 游戏进行时的计时器。每倒数一秒触发一次动作。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 class Timer {
 	private final ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(
@@ -98,7 +98,7 @@ class Timer {
 	/**
 	 * 计时器计时动作。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	abstract static class TimerAction {
 

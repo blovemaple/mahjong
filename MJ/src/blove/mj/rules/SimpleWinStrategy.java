@@ -10,7 +10,7 @@ import blove.mj.board.PlayerTiles;
 /**
  * 最简单的和牌策略。没有基本得分，和牌得分为10分。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class SimpleWinStrategy extends AbstractWinStrategy {
 

@@ -17,7 +17,7 @@ import blove.mj.board.PlayerTiles;
 /**
  * 吃碰杠类型。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public enum CpkType {
 	/**

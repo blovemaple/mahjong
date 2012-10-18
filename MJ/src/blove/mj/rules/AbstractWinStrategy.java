@@ -13,7 +13,7 @@ import blove.mj.board.PlayerTiles;
 /**
  * 简化的和牌策略接口。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public abstract class AbstractWinStrategy implements WinStrategy {
 

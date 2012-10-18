@@ -11,7 +11,7 @@ import blove.mj.event.GameEventListener;
  * 游戏桌的玩家视图。游戏的所有事件通过监听器通知。<br/>
  * 此视图对应的玩家离开此游戏桌后，所有已注册的监听器将自动移除，且大部分方法都将抛出{@link PlayerLeavedException}。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public interface GameBoardView {
 

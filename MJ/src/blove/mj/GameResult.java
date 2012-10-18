@@ -10,7 +10,7 @@ import blove.mj.rules.WinStrategy;
 /**
  * 一局游戏的结果。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class GameResult {
 	private final Map<PlayerLocation, Player> players;
@@ -119,7 +119,7 @@ public class GameResult {
 	/**
 	 * 和牌信息。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	public static class WinInfo {
 		private final PlayerLocation winnerLocation;

@@ -9,7 +9,7 @@ import blove.mj.Tile;
 /**
  * 牌墙。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class Wall {
 	/**

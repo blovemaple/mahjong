@@ -24,7 +24,7 @@ import javax.swing.event.EventListenerList;
  * 如果从此列表中取出的监听器在从此列表中移除后被调用，则所有方法均抛出{@link IllegalStateException}
  * 。调用原监听器（加入此列表前的监听器）则会正常执行操作。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class AsyncEventListenerList extends EventListenerList {
 	private static final long serialVersionUID = 1L;
@@ -74,7 +74,7 @@ public class AsyncEventListenerList extends EventListenerList {
 	/**
 	 * 调用监听器方法的处理器。此处理器将所有方法调用放入线程池执行。
 	 * 
-	 * @author 陈通
+	 * @author blovemaple
 	 */
 	private class ListenerMethodHandler implements InvocationHandler {
 		@Override

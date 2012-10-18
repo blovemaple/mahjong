@@ -11,7 +11,7 @@ import blove.mj.rules.WinStrategy;
 /**
  * 一局游戏结果分数。
  * 
- * @author 陈通
+ * @author blovemaple
  */
 public class PointsResult {
 	private final int basicPoints;
