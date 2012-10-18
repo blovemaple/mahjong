@@ -24,11 +24,12 @@ public class SimpleWinStrategy extends AbstractWinStrategy {
 		return 2;
 	}
 
+	@Override
 	protected boolean isWin(PlayerTiles playerTiles, Set<Tile> aliveTiles) {
-		// TODO
-		return false;
+		return BasicWin.match(playerTiles, aliveTiles);
 	}
 
+	@Override
 	protected Set<PointsItem> getPoints(PlayerTiles playerTiles,
 			Set<Tile> aliveTiles) {
 		if (!isWin(playerTiles, aliveTiles))

@@ -2,6 +2,11 @@ package blove.mj.event;
 
 import blove.mj.board.GameBoard;
 
+/**
+ * 计时的时候时间变化的事件。
+ * 
+ * @author blovemaple
+ */
 public class TimeLimitEvent extends GameEvent {
 	private static final long serialVersionUID = 1L;
 
