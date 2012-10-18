@@ -178,9 +178,10 @@ public class LocalGameBoard implements GameBoard {
 		}
 	}
 
-	private void draw(PlayerLocation location, boolean timeout) {
+	private void draw(PlayerLocation location, boolean fromSeabed,
+			boolean timeout) {
 		try {
-			Tile tile = wall.draw();
+			Tile tile = fromSeabed ? wall.drawFromSeabed() : wall.draw();
 			playerInfos.get(location).tiles.addTile(tile);
 
 			fireDraw(location, tile);
@@ -626,7 +627,7 @@ public class LocalGameBoard implements GameBoard {
 				Tile discardedTile = this.discardedTile;
 				end(false, false);
 				if (firstChoice.getType().isKong())
-					draw(location, false);
+					draw(location, false, false);
 				else
 					drawedWaiter.startWaiting(location, discardedTile);
 				return true;
@@ -673,7 +674,7 @@ public class LocalGameBoard implements GameBoard {
 			winChanceLocations.clear();
 			cpkChoices.clear();
 			if (nextDraw)
-				draw(nextLocation, timeout);
+				draw(nextLocation, false, timeout);
 		}
 
 		/**
@@ -893,7 +894,7 @@ public class LocalGameBoard implements GameBoard {
 
 			fireCpk(location, cpk);
 
-			draw(location, false);
+			draw(location, true, false);
 		}
 
 		/**
