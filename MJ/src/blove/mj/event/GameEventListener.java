@@ -41,7 +41,7 @@ public interface GameEventListener extends EventListener {
 
 	/**
 	 * 发牌结束，或者有玩家摸牌、打牌、吃/碰/杠牌。<br>
-	 * 注意：若在事件中有吃/碰/杠机会，则必须通过{@link GameBoardView}做出回应，要么做出吃/碰/杠动作，要么放弃。
+	 * 注意：若在事件中有吃/碰/杠/和机会，则必须通过{@link GameBoardView}做出回应，要么做出吃/碰/杠动作，要么放弃。
 	 * 
 	 * @param event
 	 *            事件

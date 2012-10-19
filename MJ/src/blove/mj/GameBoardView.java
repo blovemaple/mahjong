@@ -76,7 +76,7 @@ public interface GameBoardView {
 	 * 
 	 * @throws PlayerLeavedException
 	 * @throws IllegalStateException
-	 *             此时已在游戏中，或者玩家已经准备好
+	 *             此时已在游戏中
 	 */
 	void readyForGame();
 

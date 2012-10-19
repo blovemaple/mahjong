@@ -412,9 +412,6 @@ public class LocalGameBoard implements GameBoard {
 			synchronized (LocalGameBoard.this) {
 				checkInGame(false);
 
-				if (playerInfos.get(player).ready)
-					throw new IllegalStateException("玩家已经准备好");
-
 				playerInfos.get(player).ready = true;
 
 				firePlayerReady(player, location);
