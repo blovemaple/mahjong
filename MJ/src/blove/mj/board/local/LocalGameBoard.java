@@ -770,11 +770,8 @@ public class LocalGameBoard implements GameBoard {
 			@Override
 			public void timeoutRun() {
 				synchronized (LocalGameBoard.this) {
-					// 超时将会打出迭代器返回的第一张牌。是不确定的。
-					discard(waitingLocation,
-							playerInfos.get(waitingLocation).tiles
-									.getAliveTiles().iterator().next(), false,
-							false);
+					// 超时将会打出刚刚摸的牌
+					discard(waitingLocation, drawedTile, false, false);
 				}
 			}
 		};
