@@ -13,7 +13,7 @@ import blove.mj.PlayerLocation.Relation;
 
 /**
  * 吃、碰、杠。<br/>
- * 此类实现Comparable接口，其比较方法按照牌的先后顺序比较大小。
+ * 此类实现Comparable接口，其比较方法按照非得牌的先后顺序比较大小。
  * 
  * @author blovemaple
  */
@@ -161,6 +161,42 @@ public class Cpk implements Comparable<Cpk> {
 			return false;
 		return true;
 	}
+
+	/**
+	 * 按照牌的类型比较大小的比较器。牌的类型如果相同则认为相等。
+	 */
+	public static final Comparator<Cpk> tileTypeComparator = new Comparator<Cpk>() {
+
+		@Override
+		public int compare(Cpk o1, Cpk o2) {
+			int compare;
+
+			TreeSet<Tile> orderSet1 = new TreeSet<>();
+			orderSet1.addAll(o1.getTiles());
+
+			TreeSet<Tile> orderSet2 = new TreeSet<>();
+			orderSet2.addAll(o2.getTiles());
+
+			Tile smallTileOfO1 = orderSet1.first();
+			Tile smallTileOfO2 = orderSet2.first();
+
+			do {
+				compare = smallTileOfO1.getType().compareTo(
+						smallTileOfO2.getType());
+				if (compare != 0)
+					return compare;
+
+				smallTileOfO1 = orderSet1.higher(smallTileOfO1);
+				smallTileOfO2 = orderSet2.higher(smallTileOfO2);
+			} while (smallTileOfO1 != null && smallTileOfO2 != null);
+			if (smallTileOfO1 == null)
+				return 1;
+			else if (smallTileOfO2 == null)
+				return -1;
+			else
+				return 0;
+		}
+	};
 
 	public boolean tileTypeEquals(Object obj) {
 		if (this == obj)
