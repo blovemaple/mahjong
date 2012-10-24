@@ -236,7 +236,7 @@ public enum CpkType {
 				if (count == 4) {
 					Set<Tile> sameTiles = getTilesForType(
 							tiles.getAliveTiles(), type);
-					chances.add(new Cpk(CONCEALED_KONG, newTile, fromRelation,
+					chances.add(new Cpk(CONCEALED_KONG, null, fromRelation,
 							sameTiles.toArray(new Tile[] {})));
 				}
 			}

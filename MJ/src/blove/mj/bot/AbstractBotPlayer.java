@@ -86,12 +86,6 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 
 		@Override
 		public void newEvent(PlayerActionEvent event) {
-			// deal over:检查是否杠/和牌，如果有询问操作，执行操作，如果无操作询问出牌
-			// draw，自己：检查是否杠/和牌，如果有询问操作，执行操作，如果无操作询问出牌
-			// discard，自己：记录和牌机会
-			// discard，别人：检查吃/碰/杠/和机会，如果有询问操作，执行操作
-			// cp，自己：检查是否杠/和牌，如果有询问操作，执行操作，如果无操作询问出牌
-
 			win = false;
 			readyHand = false;
 

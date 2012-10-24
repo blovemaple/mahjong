@@ -3,7 +3,9 @@ package blove.mj;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 牌型。每个牌型的牌通常有四张。
@@ -146,6 +148,21 @@ public class TileType implements Comparable<TileType> {
 	 */
 	public int getRank() {
 		return rank;
+	}
+
+	/**
+	 * 从指定牌集合中查找所有类型为此类型的牌，并返回。
+	 * 
+	 * @param tiles
+	 *            牌集合
+	 * @return 此类型的牌集合
+	 */
+	public Set<Tile> findTiles(Set<Tile> tiles) {
+		Set<Tile> typeTiles = new HashSet<>();
+		for (Tile tile : tiles)
+			if (this.equals(tile.getType()))
+				typeTiles.add(tile);
+		return typeTiles;
 	}
 
 	@Override
