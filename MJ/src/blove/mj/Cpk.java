@@ -117,11 +117,6 @@ public class Cpk implements Comparable<Cpk> {
 	}
 
 	@Override
-	public String toString() {
-		return "从" + fromRelation + type + "牌" + forTile + "，组成" + tiles;
-	}
-
-	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

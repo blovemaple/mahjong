@@ -21,11 +21,11 @@ public class TileType implements Comparable<TileType> {
 	public enum Suit {
 		// 以下排列顺序决定了牌型的比较顺序！
 		// 非字牌
-		CHARACTER("萬", false), DOT("饼", false), BAMBOO("条", false),
+		CHARACTER("W", false), DOT("O", false), BAMBOO("T", false),
 		// 风牌
-		EAST("東", true), SOUTH("南", true), WEST("西", true), NORTH("北", true),
+		EAST("E", true), SOUTH("S", true), WEST("W", true), NORTH("N", true),
 		// 箭牌
-		RED("中", true), GREEN("發", true), WHITE("白", true);
+		RED("Z", true), GREEN("F", true), WHITE("B", true);
 
 		private final String name;
 		private final boolean isHonor;

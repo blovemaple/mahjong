@@ -3,7 +3,7 @@ package blove.mj.rules;
 import java.util.Map;
 import java.util.Set;
 
-import blove.mj.PointsItem;
+import blove.mj.PointItem;
 import blove.mj.TileType;
 import blove.mj.board.PlayerTiles;
 
@@ -46,7 +46,7 @@ public interface WinStrategy {
 	 * @throws IllegalArgumentException
 	 *             牌的数量不合法，或指定牌集合不是听牌状态
 	 */
-	Map<TileType, Set<PointsItem>> getPointsFromReadyHand(
+	Map<TileType, Set<PointItem>> getPointsFromReadyHand(
 			PlayerTiles playerTiles);
 
 	/**
@@ -77,7 +77,7 @@ public interface WinStrategy {
 	 * @throws IllegalArgumentException
 	 *             牌的数量不合法，或指定玩家的牌没有和牌
 	 */
-	Set<PointsItem> getPoints(PlayerTiles playerTiles);
+	Set<PointItem> getPoints(PlayerTiles playerTiles);
 
 	/**
 	 * 返回庄家分数倍数。

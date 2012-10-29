@@ -2,7 +2,7 @@ package blove.mj.rules;
 
 import java.util.Set;
 
-import blove.mj.PointsItem;
+import blove.mj.PointItem;
 import blove.mj.Tile;
 import blove.mj.board.PlayerTiles;
 
@@ -11,7 +11,7 @@ import blove.mj.board.PlayerTiles;
  * 
  * @author blovemaple
  */
-public interface MatchablePointsItem extends PointsItem {
+public interface MatchablePointsItem extends PointItem {
 	/**
 	 * 是否为特殊的和牌类型。
 	 * 
@@ -35,6 +35,6 @@ public interface MatchablePointsItem extends PointsItem {
 	 * 
 	 * @return 覆盖的得分项目集合
 	 */
-	Set<PointsItem> coverItems();
+	Set<PointItem> coverItems();
 
 }

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import blove.mj.PointsItem;
+import blove.mj.PointItem;
 
 /**
  * 简化的可判断匹配得分项目接口。
@@ -16,7 +16,7 @@ public abstract class AbstractMatchablePointsItem implements
 	private final String name;
 	private final int points;
 	private final boolean isSpecialWinType;
-	private final Set<PointsItem> coverItems;
+	private final Set<PointItem> coverItems;
 
 	/**
 	 * 新建一个实例。
@@ -31,7 +31,7 @@ public abstract class AbstractMatchablePointsItem implements
 	 *            覆盖的得分项目
 	 */
 	public AbstractMatchablePointsItem(String name, int points,
-			boolean isSpecialWinType, PointsItem... coverItems) {
+			boolean isSpecialWinType, PointItem... coverItems) {
 		this.name = name;
 		this.points = points;
 		this.isSpecialWinType = isSpecialWinType;
@@ -55,7 +55,7 @@ public abstract class AbstractMatchablePointsItem implements
 	}
 
 	@Override
-	public Set<PointsItem> coverItems() {
+	public Set<PointItem> coverItems() {
 		return coverItems;
 	}
 

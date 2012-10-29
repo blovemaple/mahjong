@@ -7,23 +7,7 @@ package blove.mj;
  */
 public enum PlayerLocation {
 	// 顺序勿动。计算位置依赖此枚举的顺序！
-	EAST("东"), SOUTH("南"), WEST("西"), NORTH("北");
-
-	private final String name;
-
-	private PlayerLocation(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * 返回可显示名称。
-	 * 
-	 * @see java.lang.Enum#toString()
-	 */
-	@Override
-	public String toString() {
-		return name;
-	}
+	EAST, SOUTH, WEST, NORTH;
 
 	/**
 	 * 位置关系。

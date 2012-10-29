@@ -72,8 +72,6 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 
 	private GameEventListener eventListener = new GameEventListener() {
 
-		private Set<TileType> winChances;
-
 		@Override
 		public void newEvent(PlayerEvent event) {
 			if (event.getType() == PlayerEventType.OUT)
@@ -84,7 +82,11 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 		public void newEvent(GameStartEvent event) {
 		}
 
+		private Set<TileType> winChances;
+
 		@Override
+		// XXX -
+		// 与blove.mj.cli.CliGame.CliGameListener.newEvent(PlayerActionEvent)有代码重复
 		public void newEvent(PlayerActionEvent event) {
 			win = false;
 			readyHand = false;
@@ -100,7 +102,7 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 					|| (event.getType() == ActionType.DISCARD && event
 							.getPlayerLocation() != myLocation)) {
 				// 发牌结束、自己摸牌、自己吃/碰：
-				// 检查是否杠/和牌，如果有询问操作，执行操作，如果无操作询问出牌
+				// 检查是否杠/和牌，如果有询问操作，执行操作，如果无机会或无操作询问出牌。
 				// 别人出牌：
 				// 检查吃/碰/杠/和机会，如果有询问操作，执行操作
 				boolean winChance;
@@ -112,20 +114,23 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 				Set<Cpk> cpkChances = CpkType.getAllChances(myTiles, eventTile,
 						myLocation.getRelationOf(event.getPlayerLocation()));
 
-				Cpk cpkChoose = chooseCpk(myTiles, eventTile, cpkChances,
-						winChance);
-				if (cpkChoose != null)
-					gameBoardView.cpk(cpkChoose);
-				else if (win)
-					gameBoardView.win();
-				else {
-					gameBoardView.giveUpCpkw();
-
-					if (event.getType() != ActionType.DISCARD) {
-						Tile discardTile = chooseDiscard(myTiles);
-						gameBoardView.discard(discardTile, readyHand);
-					}
+				if (winChance == true || !cpkChances.isEmpty()) {
+					Cpk cpkChoose = chooseCpk(myTiles, eventTile, cpkChances,
+							winChance);
+					if (cpkChoose != null)
+						gameBoardView.cpk(cpkChoose);
+					else if (win)
+						gameBoardView.win();
+					return;
 				}
+
+				if (event.getType() == ActionType.DISCARD) {
+					gameBoardView.giveUpCpkw();
+				} else {
+					Tile discardTile = chooseDiscard(myTiles);
+					gameBoardView.discard(discardTile, readyHand);
+				}
+
 			} else if (event.getType() == ActionType.DISCARD
 					&& event.getPlayerLocation() == myLocation) {
 				// 自己出牌：

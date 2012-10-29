@@ -15,7 +15,7 @@ import blove.mj.rules.WinStrategy;
  */
 public class PointsResult {
 	private final int basicPoints;
-	private final Set<PointsItem> pointItems;
+	private final Set<PointItem> pointItems;
 	private final WinInfo winInfo;
 	private final PlayerLocation dealerLocation;
 	private final int dealerMultiple;
@@ -25,14 +25,14 @@ public class PointsResult {
 			WinStrategy winStrategy) {
 		int basicPoints = winStrategy.getBasicPoints();
 		int dealerMultiple = winStrategy.getDealerMultiple();
-		Set<PointsItem> pointItems = winInfo != null ? winStrategy
+		Set<PointItem> pointItems = winInfo != null ? winStrategy
 				.getPoints(tiles.get(winInfo.getWinnerLocation()))
-				: Collections.<PointsItem> emptySet();
+				: Collections.<PointItem> emptySet();
 		return new PointsResult(basicPoints, pointItems, winInfo,
 				dealerLocation, dealerMultiple);
 	}
 
-	private PointsResult(int basicPoints, Set<PointsItem> pointItems,
+	private PointsResult(int basicPoints, Set<PointItem> pointItems,
 			WinInfo winInfo, PlayerLocation dealerLocation, int dealerMultiple) {
 		this.basicPoints = basicPoints;
 		this.pointItems = pointItems;
@@ -55,7 +55,7 @@ public class PointsResult {
 	 * 
 	 * @return 所有得分项目
 	 */
-	public Set<PointsItem> getPointItems() {
+	public Set<PointItem> getPointItems() {
 		return pointItems;
 	}
 
@@ -80,7 +80,7 @@ public class PointsResult {
 
 		boolean winnerIsDealer = location.equals(dealerLocation);
 		int itemPoints = 0;
-		for (PointsItem item : pointItems)
+		for (PointItem item : pointItems)
 			itemPoints += item.getPoints();
 
 		int points;

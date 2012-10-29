@@ -3,7 +3,7 @@ package blove.mj.rules;
 import java.util.Collections;
 import java.util.Set;
 
-import blove.mj.PointsItem;
+import blove.mj.PointItem;
 import blove.mj.Tile;
 import blove.mj.board.PlayerTiles;
 
@@ -30,12 +30,12 @@ public class SimpleWinStrategy extends AbstractWinStrategy {
 	}
 
 	@Override
-	protected Set<PointsItem> getPoints(PlayerTiles playerTiles,
+	protected Set<PointItem> getPoints(PlayerTiles playerTiles,
 			Set<Tile> aliveTiles) {
 		if (!isWin(playerTiles, aliveTiles))
 			throw new IllegalArgumentException("指定玩家的牌不是和牌");
 
-		return Collections.<PointsItem> singleton(new PointsItem() {
+		return Collections.<PointItem> singleton(new PointItem() {
 
 			@Override
 			public int getPoints() {

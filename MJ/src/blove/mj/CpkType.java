@@ -23,11 +23,13 @@ public enum CpkType {
 	/**
 	 * 吃
 	 */
-	CHOW("吃", 2) {
+	CHOW(2) {
 
 		@Override
 		public Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
 				Relation fromRelation) {
+			if (tiles.isForDiscarding())
+				return Collections.emptySet();
 			if (fromRelation != Relation.PREVIOUS)
 				return Collections.emptySet();
 			if (newTile.getType().getSuit().isHonor())
@@ -112,7 +114,7 @@ public enum CpkType {
 	/**
 	 * 碰
 	 */
-	PONG("碰", 1) {
+	PONG(1) {
 
 		@Override
 		Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
@@ -154,7 +156,7 @@ public enum CpkType {
 	/**
 	 * 明杠
 	 */
-	EXPOSED_KONG("明杠", 0, true) {
+	EXPOSED_KONG(0, true) {
 		@Override
 		Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
 				Relation fromRelation) {
@@ -211,7 +213,7 @@ public enum CpkType {
 	/**
 	 * 暗杠
 	 */
-	CONCEALED_KONG("暗杠", 0, true) {
+	CONCEALED_KONG(0, true) {
 		@Override
 		Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
 				Relation fromRelation) {
@@ -250,16 +252,14 @@ public enum CpkType {
 		}
 	};
 
-	private final String name;
 	private final int priority;
 	private final boolean isKong;
 
-	private CpkType(String name, int priority) {
-		this(name, priority, false);
+	private CpkType(int priority) {
+		this(priority, false);
 	}
 
-	private CpkType(String name, int priority, boolean isKong) {
-		this.name = name;
+	private CpkType(int priority, boolean isKong) {
 		this.priority = priority;
 		this.isKong = isKong;
 	}
@@ -356,8 +356,4 @@ public enum CpkType {
 		return priority;
 	}
 
-	@Override
-	public String toString() {
-		return name;
-	}
 }

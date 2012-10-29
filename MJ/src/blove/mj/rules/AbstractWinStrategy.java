@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import blove.mj.PointsItem;
+import blove.mj.PointItem;
 import blove.mj.Tile;
 import blove.mj.TileType;
 import blove.mj.board.PlayerTiles;
@@ -40,11 +40,11 @@ public abstract class AbstractWinStrategy implements WinStrategy {
 	}
 
 	@Override
-	public Map<TileType, Set<PointsItem>> getPointsFromReadyHand(
+	public Map<TileType, Set<PointItem>> getPointsFromReadyHand(
 			PlayerTiles playerTiles) {
 		Set<TileType> winChances = getWinChances(playerTiles);
 		Set<Tile> aliveTiles = new HashSet<>(playerTiles.getAliveTiles());
-		Map<TileType, Set<PointsItem>> points = new HashMap<>();
+		Map<TileType, Set<PointItem>> points = new HashMap<>();
 		for (TileType winTileType : winChances) {
 			Tile winTile = findAdditionalTileFromType(aliveTiles, winTileType);
 			if (winTile == null)
@@ -64,7 +64,7 @@ public abstract class AbstractWinStrategy implements WinStrategy {
 	}
 
 	@Override
-	public Set<PointsItem> getPoints(PlayerTiles playerTiles) {
+	public Set<PointItem> getPoints(PlayerTiles playerTiles) {
 		return getPoints(playerTiles, null);
 	}
 
@@ -141,7 +141,7 @@ public abstract class AbstractWinStrategy implements WinStrategy {
 	 * @throws IllegalArgumentException
 	 *             牌的数量不合法，或指定玩家的牌不是和牌
 	 */
-	protected abstract Set<PointsItem> getPoints(PlayerTiles playerTiles,
+	protected abstract Set<PointItem> getPoints(PlayerTiles playerTiles,
 			Set<Tile> aliveTiles);
 
 }
