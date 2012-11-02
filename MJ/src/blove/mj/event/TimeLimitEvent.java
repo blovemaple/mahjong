@@ -10,6 +10,11 @@ import blove.mj.board.GameBoard;
 public class TimeLimitEvent extends GameEvent {
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * 表示停止计时的时间值。
+	 */
+	public static long STOP_TIME_LIMIT = -1;
+
 	private final long timeLimit;
 
 	/**
@@ -18,7 +23,7 @@ public class TimeLimitEvent extends GameEvent {
 	 * @param source
 	 *            源
 	 * @param timeLimit
-	 *            当前限时。单位：秒。
+	 *            当前限时。单位：秒。若停止计时则为-1。
 	 */
 	public TimeLimitEvent(GameBoard source, long timeLimit) {
 		super(source);
@@ -28,7 +33,7 @@ public class TimeLimitEvent extends GameEvent {
 	/**
 	 * 返回当前限时。单位：秒。
 	 * 
-	 * @return 限时
+	 * @return 限时。若停止计时则返回-1。
 	 */
 	public long getTimeLimit() {
 		return timeLimit;

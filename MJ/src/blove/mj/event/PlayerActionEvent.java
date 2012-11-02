@@ -30,9 +30,10 @@ public class PlayerActionEvent extends GameEvent {
 	private final boolean newReadyHand;
 	private final boolean forTimeOut;
 
-	public static PlayerActionEvent newForDealOver(GameBoard board) {
-		return new PlayerActionEvent(board, ActionType.DEAL_OVER, null, null,
-				null, false, false);
+	public static PlayerActionEvent newForDealOver(GameBoard board,
+			Tile dealerTile) {
+		return new PlayerActionEvent(board, ActionType.DEAL_OVER, null,
+				dealerTile, null, false, false);
 	}
 
 	public static PlayerActionEvent newForDraw(GameBoard board,
@@ -92,10 +93,13 @@ public class PlayerActionEvent extends GameEvent {
 	 * @return 牌
 	 */
 	public Tile getTile(GameBoardView boardView) {
+		Tile tile;
 		if (type == ActionType.DRAW
 				&& !playerLocation.equals(boardView.getMyLocation()))
 			// 摸牌动作，如果不是自己摸的牌，则返回null
-			return null;
+			tile = null;
+		else
+			tile = this.tile;
 		return tile;
 	}
 

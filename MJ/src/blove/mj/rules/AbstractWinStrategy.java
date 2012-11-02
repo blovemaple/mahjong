@@ -2,6 +2,7 @@ package blove.mj.rules;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public abstract class AbstractWinStrategy implements WinStrategy {
 
 		Set<TileType> chances = new HashSet<>();
 		Set<Tile> aliveTiles = new HashSet<>(playerTiles.getAliveTiles());
-		for (Tile discardTile : playerTiles.getAliveTiles()) {
+		for (Tile discardTile : new LinkedList<>(playerTiles.getAliveTiles())) {
 			aliveTiles.remove(discardTile);
 			if (!getWinChances(playerTiles, aliveTiles).isEmpty())
 				chances.add(discardTile.getType());
@@ -82,18 +83,20 @@ public abstract class AbstractWinStrategy implements WinStrategy {
 	 */
 	private Set<TileType> getWinChances(PlayerTiles playerTiles,
 			Set<Tile> aliveTiles) {
-		if ((aliveTiles != null && PlayerTiles.isForDiscarding(aliveTiles))
-				|| playerTiles.isForDiscarding())
+		if (aliveTiles == null)
+			aliveTiles = playerTiles.getAliveTiles();
+
+		if (PlayerTiles.isForDiscarding(aliveTiles)) {
 			throw new IllegalArgumentException("牌的数量不合法。");
+		}
 
 		Set<TileType> chances = new HashSet<>();
-		Set<Tile> winAttemptTiles = new HashSet<>(
-				aliveTiles != null ? aliveTiles : playerTiles.getAliveTiles());
+		Set<Tile> winAttemptTiles = new HashSet<>(aliveTiles);
 
 		Set<TileType> attemptedTypes = new HashSet<>();
 		for (Tile tile : Tile.getAllTiles()) {
 			TileType type = tile.getType();
-			if (attemptedTypes.contains(type))
+			if (attemptedTypes.contains(type) || aliveTiles.contains(tile))
 				continue;
 
 			winAttemptTiles.add(tile);

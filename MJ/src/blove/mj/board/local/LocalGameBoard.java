@@ -90,7 +90,7 @@ public class LocalGameBoard implements GameBoard {
 	}
 
 	@Override
-	public synchronized Map<PlayerLocation, Player> getPlayers() {
+	public Map<PlayerLocation, Player> getPlayers() {
 		Map<PlayerLocation, Player> players = new EnumMap<>(
 				PlayerLocation.class);
 		for (Map.Entry<PlayerLocation, PlayerInfo> playerInfoEntry : playerInfos
@@ -151,14 +151,16 @@ public class LocalGameBoard implements GameBoard {
 
 		fireGameStart();
 
-		deal();
-		drawedWaiter.startWaiting(dealerLocation, null);
+		Tile lastTile = deal();
+		drawedWaiter.startWaiting(dealerLocation, lastTile);
 	}
 
 	/**
 	 * 发牌。
+	 * 
+	 * @return 发给庄家的最后一张牌
 	 */
-	private void deal() {
+	private Tile deal() {
 		try {
 			PlayerLocation loc = dealerLocation;
 			for (int i = 0; i < 4; i++) {
@@ -169,9 +171,12 @@ public class LocalGameBoard implements GameBoard {
 					loc = loc.getLocationOf(Relation.NEXT);
 				}
 			}
-			playerInfos.get(dealerLocation).tiles.addTile(wall.draw());
+			Tile lastTile = wall.draw();
+			playerInfos.get(dealerLocation).tiles.addTile(lastTile);
 
-			fireDealOver();
+			fireDealOver(lastTile);
+
+			return lastTile;
 		} catch (DrawGameException e) {
 			// 发牌时不可能流局
 			throw new RuntimeException(e);
@@ -271,8 +276,8 @@ public class LocalGameBoard implements GameBoard {
 		fireGameEvent(new GameStartEvent(this));
 	}
 
-	protected void fireDealOver() {
-		fireGameEvent(PlayerActionEvent.newForDealOver(this));
+	protected void fireDealOver(Tile dealerTile) {
+		fireGameEvent(PlayerActionEvent.newForDealOver(this, dealerTile));
 	}
 
 	protected void fireTimeLimit(long timeLimit) {
@@ -373,9 +378,21 @@ public class LocalGameBoard implements GameBoard {
 		}
 
 		@Override
+		public PlayerLocation getDealerLocation() {
+			return dealerLocation;
+		}
+
+		@Override
 		public void addGameEventListener(GameEventListener listener) {
-			playerInfos.get(location).listenerList.add(GameEventListener.class,
-					listener);
+			try {
+				playerInfos.get(location).listenerList.add(
+						GameEventListener.class, listener,
+						GameEventListener.class.getMethod(
+								GameEventListener.METHOD_NAME,
+								TimeLimitEvent.class));
+			} catch (NoSuchMethodException | SecurityException e) {
+				throw new RuntimeException();
+			}
 		}
 
 		@Override
@@ -401,9 +418,7 @@ public class LocalGameBoard implements GameBoard {
 		@Override
 		public PlayerTiles getMyTiles() {
 			checkNotLeaved();
-			synchronized (LocalGameBoard.this) {
-				return playerInfos.get(location).tiles;
-			}
+			return playerInfos.get(location).tiles;
 		}
 
 		@Override
@@ -412,7 +427,7 @@ public class LocalGameBoard implements GameBoard {
 			synchronized (LocalGameBoard.this) {
 				checkInGame(false);
 
-				playerInfos.get(player).ready = true;
+				playerInfos.get(location).ready = true;
 
 				firePlayerReady(player, location);
 
@@ -530,6 +545,13 @@ public class LocalGameBoard implements GameBoard {
 					end(true, true);
 				}
 			}
+
+			@Override
+			public void stopRun() {
+				synchronized (LocalGameBoard.this) {
+					fireTimeLimit(TimeLimitEvent.STOP_TIME_LIMIT);
+				}
+			}
 		};
 
 		/**
@@ -555,9 +577,13 @@ public class LocalGameBoard implements GameBoard {
 			this.discardedLocation = location;
 			this.discardedTile = discardedTile;
 
-			fireDiscard(location, discardedTile, newReadyHand, timeout);
-
 			prepareForWaiting();
+
+			/*try {
+				TimeUnit.SECONDS.sleep(1);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}*/
 
 			if (checkForStop())
 				return;
@@ -621,12 +647,11 @@ public class LocalGameBoard implements GameBoard {
 
 				fireCpk(location, firstChoice);
 
-				Tile discardedTile = this.discardedTile;
 				end(false, false);
 				if (firstChoice.getType().isKong())
 					draw(location, false, false);
 				else
-					drawedWaiter.startWaiting(location, discardedTile);
+					drawedWaiter.startWaiting(location, null);
 				return true;
 			} else if (firstChoice == null && firstChance == null) {
 				// 玩家没有机会，或已全部放弃
@@ -657,7 +682,7 @@ public class LocalGameBoard implements GameBoard {
 		 * @param timeout
 		 *            是否是超时
 		 */
-		private void end(boolean nextDraw, boolean timeout) {
+		synchronized private void end(boolean nextDraw, boolean timeout) {
 			if (discardedLocation == null)
 				return;
 
@@ -767,8 +792,24 @@ public class LocalGameBoard implements GameBoard {
 			@Override
 			public void timeoutRun() {
 				synchronized (LocalGameBoard.this) {
-					// 超时将会打出刚刚摸的牌
-					discard(waitingLocation, drawedTile, false, false);
+					// 如果是摸牌，则超时将会打出刚刚摸的牌，否则会打出最大的牌
+					Tile discardTile = drawedTile;
+					if (discardTile == null) {
+						for (Tile tile : playerInfos.get(waitingLocation).tiles
+								.getAliveTiles()) {
+							if (discardTile == null
+									|| tile.compareTo(discardTile) > 0)
+								discardTile = tile;
+						}
+					}
+					discard(waitingLocation, drawedTile, false, true);
+				}
+			}
+
+			@Override
+			public void stopRun() {
+				synchronized (LocalGameBoard.this) {
+					fireTimeLimit(TimeLimitEvent.STOP_TIME_LIMIT);
 				}
 			}
 		};
@@ -779,7 +820,7 @@ public class LocalGameBoard implements GameBoard {
 		 * @param drawedLocation
 		 *            摸牌的玩家位置
 		 * @param drawedTile
-		 *            摸的牌。如果是null，则表示刚刚发牌。
+		 *            摸的牌。如果是null，则表示是吃/碰之后。
 		 * 
 		 * @throws IllegalStateException
 		 *             此时已经在等待中，或者此时指定玩家不能等待出牌
@@ -790,7 +831,7 @@ public class LocalGameBoard implements GameBoard {
 			if (waitingLocation != null)
 				throw new IllegalStateException("在等待位置[" + waitingLocation
 						+ "]的玩家出牌");
-			if (playerInfos.get(drawedLocation).tiles.isForDiscarding())
+			if (!playerInfos.get(drawedLocation).tiles.isForDiscarding())
 				throw new IllegalStateException(drawedLocation + "玩家不能等待出牌");
 			if (drawedTile != null
 					&& !playerInfos.get(drawedLocation).tiles.getAliveTiles()
@@ -861,6 +902,8 @@ public class LocalGameBoard implements GameBoard {
 			tiles.removeTile(tile, readyHand);
 			waitingLocation = null;
 
+			fireDiscard(location, tile, readyHand, timeout);
+
 			discardedWaiter.discarded(location, tile, readyHand, timeout);
 		}
 
@@ -901,7 +944,8 @@ public class LocalGameBoard implements GameBoard {
 		 */
 		void selfDrawWin(PlayerLocation location) {
 			checkLocation(location);
-			if (!winStrategy.isWin(playerInfos.get(location).tiles))
+			if (drawedTile == null
+					|| !winStrategy.isWin(playerInfos.get(location).tiles))
 				throw new IllegalStateException(location + "玩家此时不能和牌");
 
 			endGame(location, null, drawedTile);

@@ -2,13 +2,12 @@ package blove.mj.cli;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.Reader;
-import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import jline.console.ConsoleReader;
 
 /**
  * 命令行显示。提供信息显示以及最下方的状态栏显示，以及接受用户单字符无回显输入。
@@ -16,8 +15,8 @@ import java.util.List;
  * @author blovemaple
  */
 public class CliView {
+	private final ConsoleReader consoleReader;
 	private final PrintStream out;
-	private final InputStream in;
 
 	private String status = "";
 	private List<CharHandler> charHandlers = new LinkedList<>();
@@ -29,20 +28,24 @@ public class CliView {
 	 *            输出流
 	 * @param in
 	 *            输入流
+	 * @throws IOException
 	 */
-	public CliView(PrintStream out, InputStream in) {
+	public CliView(PrintStream out, InputStream in) throws IOException {
+		consoleReader = new ConsoleReader(null, in, out, null);
 		this.out = out;
-		this.in = in;
+		consoleReader.getTerminal().setEchoEnabled(false);
 		readThread.start();
 	}
 
 	/**
 	 * 初始化显示。
+	 * 
+	 * @throws IOException
 	 */
-	public void init() {
-		for (int i = 0; i < 50; i++) {
+	public void init() throws IOException {
+		consoleReader.clearScreen();
+		for (int i = 0; i < consoleReader.getTerminal().getHeight(); i++)
 			out.println();
-		}
 		out.print(status);
 	}
 
@@ -53,7 +56,7 @@ public class CliView {
 	 *            信息
 	 */
 	public void showMessage(String message) {
-		out.print('\r');
+		clearStatus();
 		out.println(message);
 		out.print(status);
 	}
@@ -65,8 +68,24 @@ public class CliView {
 	 *            状态栏
 	 */
 	public void updateStatus(String status) {
-		out.print('\r');
+		clearStatus();
 		out.print(this.status = status);
+	}
+
+	private void clearStatus() {
+		out.print('\r');
+		for (int i = 0; i < status.length(); i++)
+			out.print(" ");
+		out.print('\r');
+	}
+
+	/**
+	 * 返回状态栏字符串。
+	 * 
+	 * @return 状态栏
+	 */
+	public String getStatus() {
+		return status;
 	}
 
 	/**
@@ -83,9 +102,13 @@ public class CliView {
 		synchronized (charHandlers) {
 			charHandlers.add(handler);
 		}
-		if (wait)
-			while (charHandlers.contains(handler))
-				handler.wait();
+		if (wait) {
+			synchronized (handler) {
+				while (charHandlers.contains(handler)) {
+					handler.wait();
+				}
+			}
+		}
 	}
 
 	/**
@@ -111,11 +134,11 @@ public class CliView {
 
 		@Override
 		public void run() {
-			Reader reader = new InputStreamReader(in, Charset.defaultCharset());
-			char c;
-			int cInt;
 			try {
-				while ((cInt = reader.read()) >= 0) {
+				char c;
+				int cInt;
+
+				while ((cInt = consoleReader.readCharacter()) >= 0) {
 					c = (char) cInt;
 					synchronized (charHandlers) {
 						Iterator<CharHandler> handlerItr = charHandlers
@@ -124,7 +147,9 @@ public class CliView {
 							CharHandler handler = handlerItr.next();
 							if (!handler.handle(c)) {
 								handlerItr.remove();
-								handler.notifyAll();
+								synchronized (handler) {
+									handler.notifyAll();
+								}
 							}
 						}
 					}

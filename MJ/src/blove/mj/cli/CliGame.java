@@ -1,5 +1,6 @@
 package blove.mj.cli;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -8,11 +9,13 @@ import blove.mj.CpkType;
 import blove.mj.GameBoardView;
 import blove.mj.Player;
 import blove.mj.PlayerLocation;
+import blove.mj.PlayerLocation.Relation;
 import blove.mj.Tile;
 import blove.mj.TileType;
 import blove.mj.board.GameBoard;
 import blove.mj.board.GameBoardFullException;
 import blove.mj.board.PlayerTiles;
+import blove.mj.cli.CliMessager.PlayerTilesViewComparator;
 import blove.mj.cli.CliView.CharHandler;
 import blove.mj.event.GameEventListener;
 import blove.mj.event.GameOverEvent;
@@ -89,9 +92,10 @@ public class CliGame {
 	 *             游戏桌已满
 	 * @throws InterruptedException
 	 *             游戏中本线程被中断
+	 * @throws IOException
 	 */
 	public synchronized void play(GameBoard gameBoard, String name)
-			throws GameBoardFullException, InterruptedException {
+			throws GameBoardFullException, InterruptedException, IOException {
 		gameBoardView = gameBoard.newPlayer(name);
 		this.gameBoard = gameBoard;
 		this.inGameBoard = true;
@@ -117,15 +121,15 @@ public class CliGame {
 	 * 等待用户选择准备好游戏或退出游戏桌。
 	 */
 	private void forReady() {
-		messager.directStatus("If you are ready for new game, press space:");
+		messager.directStatus("If you are ready for new game, press space.");
 		messager.addCharHandler(new CharHandler() {
 
 			@Override
 			public boolean handle(char c) {
 				switch (c) {
 				case ' ':
-					gameBoardView.readyForGame();
 					messager.directStatus("Waiting for other players to be ready for game...");
+					gameBoardView.readyForGame();
 					return false;
 				default:
 					return true;
@@ -173,7 +177,14 @@ public class CliGame {
 			messager.clearTimeStatus();
 
 			inGame = true;
-			messager.showMessage("start", null, null, "New game started",
+			messager.showMessage(
+					"start",
+					null,
+					null,
+					"New game started, dealer is "
+							+ CliMessager.toString(
+									gameBoardView.getDealerLocation(),
+									gameBoardView.getMyLocation()),
 					gameBoardView.getMyLocation());
 		}
 
@@ -182,10 +193,8 @@ public class CliGame {
 			messager.timeStatus(event.getTimeLimit());
 		}
 
-		private Set<TileType> winChances;
-
 		@Override
-		// XXX -
+		// XXX - 代码重复：
 		// 与blove.mj.bot.AbstractBotPlayer.newEvent(PlayerActionEvent)有代码重复
 		public void newEvent(PlayerActionEvent event) {
 			PlayerLocation myLocation = gameBoardView.getMyLocation();
@@ -205,6 +214,7 @@ public class CliGame {
 			case DRAW:
 				action = "draw";
 				message = "drawed a tile.";
+				break;
 			case DISCARD:
 				action = "discard";
 				message = "discard tile: " + CliMessager.toString(eventTile);
@@ -228,53 +238,58 @@ public class CliGame {
 				throw new RuntimeException();// 已列举完，不可能出现
 			}
 
+			if (event.isForTimeOut())
+				message += " (TIMEOUT)";
+
 			messager.showMessage(action, eventLocation, eventPlayer, message,
 					myLocation);
 
-			if (event.getType() == ActionType.DEAL_OVER
-					|| (event.getType() == ActionType.DRAW && event
-							.getPlayerLocation() == myLocation)
-					|| (event.getType() == ActionType.CPK
-							&& event.getPlayerLocation() == myLocation && !event
-							.getCpk().getType().isKong())
-					|| (event.getType() == ActionType.DISCARD && event
-							.getPlayerLocation() != myLocation)) {
-				// 发牌结束、自己摸牌、自己吃/碰：
-				// 检查是否杠/和牌，如果有询问操作，执行操作，如果无机会或无操作询问出牌。
-				// 别人出牌：
-				// 检查吃/碰/杠/和机会，如果有询问操作，执行操作
-				boolean winChance;
-				if (event.getType() == ActionType.DEAL_OVER)
-					winChance = winStrategy.isWin(myTiles);
-				else
-					winChance = winChances.contains(eventTile.getType());
+			try {
+				if (myTiles.isForDiscarding()) {
+					// 应该打牌
 
-				Set<Cpk> cpkChances = CpkType.getAllChances(myTiles, eventTile,
-						myLocation.getRelationOf(event.getPlayerLocation()));
+					// 如果不是吃/碰之后，则检查是否已和牌
+					boolean winChance = false;
+					if (eventType != ActionType.CPK)
+						winChance = winStrategy.isWin(myTiles);
 
-				try {
-					if (winChance == true || !cpkChances.isEmpty()) {
-						boolean cpkChoose = chooseCpk(cpkChances, winChance);
-						if (cpkChoose)
-							return;
+					// 检查杠牌机会
+					Set<Cpk> kongChances = CpkType.getAllChances(myTiles,
+							eventTile, Relation.SELF);
+
+					boolean winOrKong = false;// 是否选择了和牌或杠牌
+					if (winChance || !kongChances.isEmpty()) {
+						// 如果和牌或有杠牌机会，则询问并执行选择的操作
+						winOrKong = chooseCpk(kongChances, winChance, eventTile);
 					}
-
+					if (!winOrKong) {
+						// 如果没有机会或没有选择操作，询问打出一张牌
+						chooseDiscard(event.getTile(gameBoardView));
+					}
+				} else {
+					// 不应该打牌
 					if (event.getType() == ActionType.DISCARD) {
-						gameBoardView.giveUpCpkw();
-					} else {
-						chooseDiscard();
+						// 别人打出了一张牌，检查是否有和牌或吃/碰/杠机会
+						boolean winChance = winStrategy.getWinChances(myTiles)
+								.contains(eventTile);
+						Set<Cpk> cpkChances = CpkType.getAllChances(myTiles,
+								eventTile,
+								myLocation.getRelationOf(eventLocation));
+						if (winChance || !cpkChances.isEmpty()) {
+							// 如果有和牌或吃/碰/杠机会，则询问并执行选择的操作
+							boolean winOrCpk;
+							winOrCpk = chooseCpk(cpkChances, winChance, null);
+							if (!winOrCpk)
+								// 如果没有选择，则选择放弃
+								gameBoardView.giveUpCpkw();
+						}
+
 					}
-				} catch (InterruptedException e) {
 				}
 
-			} else if (event.getType() == ActionType.DISCARD
-					&& event.getPlayerLocation() == myLocation) {
-				// 自己出牌：
-				// 记录和牌机会
-				winChances = winStrategy.getWinChances(myTiles);
+				messager.tilesStatus(myTiles, null, (Tile) null, null, null);
+			} catch (InterruptedException e) {
 			}
-
-			messager.tilesStatus(myTiles, (Tile) null, null, "");
 		}
 
 		/**
@@ -284,11 +299,13 @@ public class CliGame {
 		 *            吃/碰/杠机会
 		 * @param winChance
 		 *            和牌机会
+		 * @param drawedTile
+		 *            刚摸的牌。如果为null表示吃/碰。
 		 * @return （见上）
 		 * @throws InterruptedException
 		 */
-		private boolean chooseCpk(Set<Cpk> cpkChances, final boolean winChance)
-				throws InterruptedException {
+		private boolean chooseCpk(Set<Cpk> cpkChances, final boolean winChance,
+				final Tile drawedTile) throws InterruptedException {
 			final PlayerTiles myTiles = gameBoardView.getMyTiles();
 
 			final String winOption = (winChance ? "w:win / " : "")
@@ -297,8 +314,9 @@ public class CliGame {
 			final TreeSet<Cpk> cpkAsTileTypes = new TreeSet<>(
 					Cpk.tileTypeComparator);
 			cpkAsTileTypes.addAll(cpkChances);
-			messager.tilesStatus(myTiles, cpkAsTileTypes.first().getTiles(),
-					winOption, status);
+
+			messager.tilesStatus(myTiles, drawedTile, cpkAsTileTypes.first()
+					.getTiles(), winOption, status);
 
 			class ChooseCpkCharHandler implements CharHandler {
 				private Cpk crtChoose = cpkAsTileTypes.first();
@@ -339,8 +357,8 @@ public class CliGame {
 				}
 
 				private void focus() {
-					messager.tilesStatus(myTiles, crtChoose.getTiles(),
-							winOption, status);
+					messager.tilesStatus(myTiles, drawedTile,
+							crtChoose.getTiles(), winOption, status);
 				}
 
 				/**
@@ -380,14 +398,18 @@ public class CliGame {
 
 		/**
 		 * 让用户选择打出一张牌。如果用户选择了就打出。
+		 * 
+		 * @param drawedTile
+		 *            刚摸的牌。null表示吃/碰之后。
+		 * @throws InterruptedException
 		 */
-		private void chooseDiscard() {
+		private void chooseDiscard(final Tile drawedTile)
+				throws InterruptedException {
 			final PlayerTiles myTiles = gameBoardView.getMyTiles();
 
-			final String readyHandOption = "r:ready hand";
-
 			final TreeSet<Tile> aliveTiles = new TreeSet<>(
-					myTiles.getAliveTiles());
+					new PlayerTilesViewComparator(drawedTile));
+			aliveTiles.addAll(myTiles.getAliveTiles());
 
 			final TreeSet<Tile> readyHandTiles = new TreeSet<>();
 			Set<TileType> readyHandTypes = gameBoard.getWinStrategy()
@@ -396,12 +418,15 @@ public class CliGame {
 				if (readyHandTypes.contains(tile.getType()))
 					readyHandTiles.add(tile);
 
+			final String option = readyHandTiles.isEmpty() ? null
+					: "r:ready hand";
 			final String status = "discard";
 			final String statusWithReadyHand = "discard with rh";
 
-			messager.tilesStatus(myTiles, aliveTiles.first(), readyHandOption,
-					status);
-			messager.addCharHandler(new CharHandler() {
+			messager.tilesStatus(myTiles, drawedTile,
+					drawedTile != null ? drawedTile : aliveTiles.first(),
+					option, status);
+			messager.addCharHandlerAndWait(new CharHandler() {
 				private Tile crtTile = aliveTiles.first();
 				private boolean readyHand = false;
 
@@ -422,10 +447,16 @@ public class CliGame {
 							crtTile = tilesForChoose.first();
 						break;
 					case 'r':
-						readyHand = !readyHand;
-						tilesForChoose = readyHand ? readyHandTiles
-								: aliveTiles;
-						crtTile = tilesForChoose.first();
+						if (!readyHandTiles.isEmpty()) {
+							readyHand = !readyHand;
+							if (!readyHand) {
+								tilesForChoose = aliveTiles;
+								crtTile = drawedTile;
+							} else {
+								tilesForChoose = readyHandTiles;
+								crtTile = tilesForChoose.first();
+							}
+						}
 						break;
 					case ' ':
 						gameBoardView.discard(crtTile, readyHand);
@@ -434,7 +465,7 @@ public class CliGame {
 						return true;
 					}
 
-					messager.tilesStatus(myTiles, crtTile, readyHandOption,
+					messager.tilesStatus(myTiles, drawedTile, crtTile, option,
 							readyHand ? statusWithReadyHand : status);
 					return true;
 				}

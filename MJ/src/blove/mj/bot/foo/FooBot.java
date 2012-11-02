@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import blove.mj.Cpk;
 import blove.mj.Tile;
@@ -24,6 +27,11 @@ import blove.mj.bot.AbstractBotPlayer;
  * @author blovemaple
  */
 public class FooBot extends AbstractBotPlayer {
+	private static final int MIN_THINKING_TIME = 3, MAX_THINKING_TIME = 10;
+	private final Random random = new Random();
+
+	@SuppressWarnings("unused")
+	private final String name;
 
 	/**
 	 * 新建一个实例。
@@ -33,11 +41,15 @@ public class FooBot extends AbstractBotPlayer {
 	 */
 	public FooBot(String name) {
 		super("[FOO]" + name);
+		this.name = name;
 	}
 
 	@Override
 	protected Cpk chooseCpk(PlayerTiles myTiles, Tile newTile,
-			Set<Cpk> cpkChances, boolean winChance) {
+			Set<Cpk> cpkChances, boolean winChance) throws InterruptedException {
+		TimeUnit.SECONDS.sleep(MIN_THINKING_TIME
+				+ random.nextInt(MAX_THINKING_TIME - MIN_THINKING_TIME));
+
 		// 如果有和牌机会则和牌
 		if (winChance) {
 			win();
@@ -65,14 +77,12 @@ public class FooBot extends AbstractBotPlayer {
 			throw new RuntimeException("得牌是独组");// 得牌不可能是独组
 
 		// 算出所有顺子、刻子
-		Set<Face> allFaces = null;
+		Set<Face> allFaces = countFaces(myTiles.getAliveTiles(), eyeCandidates,
+				myTiles);
 
 		// 若杠牌中有上面算出的刻子，则杠牌
 		for (Cpk cpkChance : cpkChances) {
 			if (cpkChance.getType().isKong()) {
-				if (allFaces == null)
-					allFaces = countFaces(myTiles.getAliveTiles(),
-							eyeCandidates, myTiles);
 				for (Face face : allFaces) {
 					TileType faceTileType = face.tiles.iterator().next()
 							.getType();
@@ -86,14 +96,17 @@ public class FooBot extends AbstractBotPlayer {
 
 		// 去掉上面算出的顺子、刻子
 		for (Face face : allFaces)
-			removeTiles(groups, face.tiles);
+			groups = removeTiles(groups, face.tiles);
 
 		// 去掉剩下牌中已不可能的吃碰机会
-		for (Cpk cpkChance : new LinkedList<>(cpkChances)) {
+		Iterator<Cpk> cpkChanceItr = cpkChances.iterator();
+		while (cpkChanceItr.hasNext()) {
+			Cpk cpkChance = cpkChanceItr.next();
 			for (Tile tileInCpk : cpkChance.getTiles()) {
 				if (!tileInCpk.equals(cpkChance.getForTile())
-						&& containTile(groups, tileInCpk)) {
-					cpkChances.remove(cpkChance);
+						&& !containsTile(groups, tileInCpk)) {
+					cpkChanceItr.remove();
+					break;
 				}
 			}
 		}
@@ -123,7 +136,10 @@ public class FooBot extends AbstractBotPlayer {
 	}
 
 	@Override
-	protected Tile chooseDiscard(PlayerTiles myTiles) {
+	protected Tile chooseDiscard(PlayerTiles myTiles)
+			throws InterruptedException {
+		TimeUnit.SECONDS.sleep(MIN_THINKING_TIME
+				+ random.nextInt(MAX_THINKING_TIME - MIN_THINKING_TIME));
 
 		// 所有牌分组
 		Set<Set<Tile>> groups = group(myTiles.getAliveTiles());
@@ -136,7 +152,7 @@ public class FooBot extends AbstractBotPlayer {
 		Set<Tile> tilesInFaces = new HashSet<>();
 		for (Face face : allFaces)
 			tilesInFaces.addAll(face.tiles);
-		removeTiles(groups, tilesInFaces);
+		groups = removeTiles(groups, tilesInFaces);
 
 		Tile discardTile;// 存放待打出的牌
 
@@ -166,8 +182,8 @@ public class FooBot extends AbstractBotPlayer {
 					avNextTiles.put(singleTileType,
 							getTilesRemain(myTiles, singleTileType));
 				} else {
-					for (int avRank = singleTileType.getRank() - 2; avRank <= singleTileType
-							.getRank() + 2; avRank++) {
+					for (int avRank = Math.max(1, singleTileType.getRank() - 2); avRank <= Math
+							.min(9, singleTileType.getRank() + 2); avRank++) {
 						TileType avType = TileType.get(
 								singleTileType.getSuit(), avRank);
 						avNextTiles
@@ -268,29 +284,26 @@ public class FooBot extends AbstractBotPlayer {
 	 * @return 所有组
 	 */
 	private Set<Set<Tile>> group(Set<Tile> tiles) {
+		if (tiles.isEmpty())
+			return Collections.emptySet();
+
 		Set<Set<Tile>> groups = new HashSet<>();
 
 		List<Tile> tileList = new ArrayList<>(tiles);
 		Collections.sort(tileList);
 
-		Set<Tile> crtGroup = null;
+		Set<Tile> crtGroup = new HashSet<>();
 		TileType lastTileType = null;
 		for (Tile tile : tileList) {
 			TileType tileType = tile.getType();
-			if (crtGroup == null) {
+			if (lastTileType != null
+					&& (!tileType.getSuit().equals(lastTileType.getSuit()) || tileType
+							.getRank() > lastTileType.getRank() + 2)) {
+				groups.add(crtGroup);
 				crtGroup = new HashSet<>();
-				crtGroup.add(tile);
-				lastTileType = tileType;
-			} else {
-				crtGroup.add(tile);
-				if (tileType.getSuit().equals(lastTileType.getSuit())
-						&& tileType.getRank() <= lastTileType.getRank() + 2) {
-					lastTileType = tileType;
-				} else {
-					groups.add(crtGroup);
-					crtGroup = null;
-				}
 			}
+			crtGroup.add(tile);
+			lastTileType = tileType;
 		}
 		if (crtGroup != null && !crtGroup.isEmpty())
 			groups.add(crtGroup);
@@ -509,51 +522,13 @@ public class FooBot extends AbstractBotPlayer {
 		for (Set<Tile> sequence : allSequences)
 			allFaces.add(new Face(Face.FaceType.SEQUENCE, sequence));
 
-		// 计算所有顺子刻子冲突集合（冲突集合：里面所有顺子、刻子两两互相冲突）
-		Set<Set<Face>> faceConflictGroups = new HashSet<>();
-		// 遍历每个Face
-		Set<Face> countedFaces = new HashSet<>();// 存放遍历过的Face
-		for (Face face : allFaces) {
-			// 计算之前遍历过的与其有冲突的Face
-			Set<Face> conflictFaces = new HashSet<>();
-			for (Face countedFace : countedFaces) {
-				if (face.isConflictWith(countedFace))
-					conflictFaces.add(face);
-			}
-			if (conflictFaces.isEmpty()) {
-				// 如果此Face没有冲突Face，则新建一个冲突集合，仅包含此Face
-				Set<Face> newConflictGroup = new HashSet<>();
-				newConflictGroup.add(face);
-				faceConflictGroups.add(newConflictGroup);
-			} else {
-				// 若这些Face包含了某些冲突集合，则将此Face加入这些集合
-				Set<Face> remainConflictFaces = new HashSet<>(conflictFaces);// 用于计算剩余冲突Face
-				for (Set<Face> conflictGroup : faceConflictGroups) {
-					if (conflictFaces.containsAll(conflictGroup)) {
-						remainConflictFaces.removeAll(conflictGroup);
-						conflictGroup.add(face);
-					}
-				}
-				// 若冲突Face有剩余，则每个Face与此Face新建一个冲突集合
-				if (!remainConflictFaces.isEmpty()) {
-					for (Face remainConflictFace : remainConflictFaces) {
-						Set<Face> newConflictGroup = new HashSet<>();
-						newConflictGroup.add(face);
-						newConflictGroup.add(remainConflictFace);
-						faceConflictGroups.add(newConflictGroup);
-					}
-				}
-			}
-			countedFaces.add(face);// 记录遍历过的Face
-		}
+		// 计算所有可能的顺子刻子搭配组合
+		Set<Set<Face>> faceGroups = countFaceGroups(allFaces);
 
-		// 每个冲突集合内至多选一个顺子或刻子（若前面的集合选过的顺子或刻子包含于本集合，则忽略本集合），组成所有可能的顺子刻子搭配组合
+		// 去掉破坏所有将牌候选的组合中与将牌候选冲突的Face
 		Set<Tile> allEyeCandidatesTiles = new HashSet<>();
 		for (Set<Tile> eyeCandidate : eyeCandidates)
 			allEyeCandidatesTiles.addAll(eyeCandidate);
-
-		Set<Set<Face>> faceGroups = countFaceGroups(faceConflictGroups);
-		// 去掉破坏所有将牌候选的组合中与将牌候选冲突的Face
 		Set<Tile> faceGroupTiles = new HashSet<>();
 		for (Set<Face> faceGroup : new LinkedList<>(faceGroups)) {
 			faceGroupTiles.clear();
@@ -562,19 +537,21 @@ public class FooBot extends AbstractBotPlayer {
 
 			boolean allConflict = true;
 			for (Set<Tile> eyeCandidate : eyeCandidates) {
-				if (!isConflict(faceGroupTiles, eyeCandidate)) {
+				if (Collections.disjoint(faceGroupTiles, eyeCandidate)) {
 					allConflict = false;
 					break;
 				}
 			}
 			if (allConflict) {
 				for (Face face : new LinkedList<>(faceGroup))
-					if (isConflict(face.tiles, allEyeCandidatesTiles))
+					if (!Collections
+							.disjoint(face.tiles, allEyeCandidatesTiles))
 						faceGroup.remove(face);
 				if (faceGroup.isEmpty())
 					faceGroups.remove(faceGroup);
 			}
 		}
+		faceGroups = new HashSet<>(faceGroups);// 清除因去掉某些group中的元素而导致的相同group
 
 		if (faceGroups.isEmpty())
 			return Collections.emptySet();
@@ -615,6 +592,86 @@ public class FooBot extends AbstractBotPlayer {
 			}
 		}
 		return mostRemainWaitingFaceGroup;
+	}
+
+	/**
+	 * Used by {@link #countFaces(Set, Set, PlayerTiles)}. 计算所有可能的顺子刻子搭配组合。
+	 * 
+	 * @param allFaces
+	 * @return
+	 */
+	// XXX - 算法效率有提升空间
+	private Set<Set<Face>> countFaceGroups(Set<Face> allFaces) {
+		return countFaceGroups(new ArrayList<>(allFaces), 0,
+				Collections.<Face> emptySet());
+	}
+
+	/**
+	 * Used by {@link #countFaceGroups(Set)}.
+	 * 
+	 * @param allFaces
+	 * @param fromIndex
+	 * @param prevFaces
+	 * @return
+	 */
+	private Set<Set<Face>> countFaceGroups(List<Face> allFaces, int fromIndex,
+			Set<Face> prevFaces) {
+		/*
+		 * 递归算法。每层获得前面选出的一个Faces组合prevFaces，返回基于prevFaces的所有可能的Face组合。
+		 */
+
+		if (fromIndex >= allFaces.size()) {
+			// 如果已递归到结尾，则直接返回只包含prevFaces这一个Faces组合的结果。
+			// 不用Collections.singleton，因为返回的集合必须可以添加元素。
+			Set<Set<Face>> groups = new HashSet<>();
+			groups.add(prevFaces);
+			return groups;
+		}
+
+		Face forFace = allFaces.get(fromIndex);// 当前层Face
+
+		// 检查当前层Face与前面选出的Faces是否有冲突
+		boolean conflictWithPrev = isConflict(prevFaces, forFace);
+		if (conflictWithPrev) {
+			// 如果有冲突，则当前层Face不可选，直接递归到下一层。
+			return countFaceGroups(allFaces, fromIndex + 1, prevFaces);
+		} else {
+			// 没有冲突
+			Set<Set<Face>> faceGroups = new HashSet<>();
+
+			// 先获得包含当前层Face时，递归到下一层选出的所有Face组合
+			Set<Face> prevFacesWithCrt = new HashSet<>(prevFaces);
+			prevFacesWithCrt.add(forFace);
+			faceGroups.addAll(countFaceGroups(allFaces, fromIndex + 1,
+					prevFacesWithCrt));
+
+			// 再获得不包含当前层Face时，递归到下一层选出的，并与当前层Face相冲突的Face组合
+			Set<Set<Face>> groupFacesWithoutCrt = countFaceGroups(allFaces,
+					fromIndex + 1, prevFaces);
+			Iterator<Set<Face>> groupFacesItr = groupFacesWithoutCrt.iterator();
+			while (groupFacesItr.hasNext()) {
+				Set<Face> groupFace = groupFacesItr.next();
+				if (!isConflict(groupFace, forFace))
+					groupFacesItr.remove();
+			}
+			faceGroups.addAll(groupFacesWithoutCrt);
+
+			return faceGroups;
+		}
+	}
+
+	/**
+	 * Used by {@link #countFaceGroups(List, int, Set)}.
+	 * 
+	 * @param faces
+	 * @param face
+	 * @return
+	 */
+	private boolean isConflict(Set<Face> faces, Face face) {
+		for (Face aFace : faces)
+			if (aFace.isConflictWith(face))
+				return true;
+		return false;
 	}
 
 	/**
@@ -688,59 +745,10 @@ public class FooBot extends AbstractBotPlayer {
 				sequence.add(typeInc1Tile);
 				sequence.add(typeInc2Tile);
 				sequence.add(tile);
+				sequences.add(sequence);
 			}
 		}
 		return sequences;
-	}
-
-	/**
-	 * Used by {@link #countFaces(Set, Set, PlayerTiles)}. 计算所有可能的Face组合。
-	 * 
-	 * @param faceConflictGroups
-	 * @return
-	 */
-	private Set<Set<Face>> countFaceGroups(Set<Set<Face>> faceConflictGroups) {
-		return countFaceGroups(new ArrayList<>(faceConflictGroups), 0,
-				Collections.<Face> emptySet());
-	}
-
-	/**
-	 * Used by {@link #countFaceGroups(Set)}.
-	 * 
-	 * @param faceConflictGroups
-	 * @param startIndex
-	 * @param preFaces
-	 * @return
-	 */
-	private Set<Set<Face>> countFaceGroups(List<Set<Face>> faceConflictGroups,
-			int startIndex, Set<Face> preFaces) {
-		// 递归计算，每次递归考虑一个冲突集合
-		// 每一层获得之前的冲突集合选出的Face。
-		// 如果本组包含之前的组选出的Face，则本组不选，直接递归下一层，选出从下一组开始的Face组合；
-		// 如果不包含之前选出的Face，则遍历选择本组Face，分别选出从下一组开始的Face组合，加入本组选择的Face，组成新的组合。
-		if (startIndex >= faceConflictGroups.size())
-			return Collections.emptySet();
-
-		Set<Face> startConflictGroup = faceConflictGroups.get(startIndex);
-		if (isConflict(startConflictGroup, preFaces))
-			return countFaceGroups(faceConflictGroups, startIndex + 1, preFaces);
-		else {
-			Set<Set<Face>> faceGroups = new HashSet<>();
-
-			Set<Face> newPreFaces = new HashSet<>(preFaces);
-			for (Face face : startConflictGroup) {
-				newPreFaces.add(face);
-				Set<Set<Face>> newFaceGroups = countFaceGroups(
-						faceConflictGroups, startIndex + 1, newPreFaces);
-				for (Set<Face> newFaceGroup : newFaceGroups) {
-					newFaceGroup.add(face);
-					faceGroups.add(newFaceGroup);
-				}
-				newPreFaces.remove(face);
-			}
-
-			return faceGroups;
-		}
 	}
 
 	/**
@@ -759,6 +767,8 @@ public class FooBot extends AbstractBotPlayer {
 		if (!eyeCandidates.isEmpty()) {
 			// 如果包含所有将牌候选牌，则选择去掉任意一个将牌候选之后等牌数量最大者
 			Set<Tile> allEyeCandidatesTiles = new HashSet<>();
+			for (Set<Tile> eyeCandidate : eyeCandidates)
+				allEyeCandidatesTiles.addAll(eyeCandidate);
 			if (tiles.containsAll(allEyeCandidatesTiles)) {
 				int mostCount = -1;
 				Set<Tile> tilesCopy = new HashSet<>(tiles);
@@ -795,15 +805,19 @@ public class FooBot extends AbstractBotPlayer {
 			if (count >= 2 && count < 4)
 				pongableTiles.add(type);
 			if (!type.getSuit().isHonor()) {
-				if (typeTileCount.containsKey(TileType.get(type.getSuit(),
-						type.getRank() + 1))) {
-					chowableTiles.add(TileType.get(type.getSuit(),
-							type.getRank() - 1));
-					chowableTiles.add(TileType.get(type.getSuit(),
-							type.getRank() + 2));
+				if (type.getRank() <= 8
+						&& typeTileCount.containsKey(TileType.get(
+								type.getSuit(), type.getRank() + 1))) {
+					if (type.getRank() >= 2)
+						chowableTiles.add(TileType.get(type.getSuit(),
+								type.getRank() - 1));
+					if (type.getRank() <= 7)
+						chowableTiles.add(TileType.get(type.getSuit(),
+								type.getRank() + 2));
 				}
-				if (typeTileCount.containsKey(TileType.get(type.getSuit(),
-						type.getRank() + 2))) {
+				if (type.getRank() <= 7
+						&& typeTileCount.containsKey(TileType.get(
+								type.getSuit(), type.getRank() + 2))) {
 					chowableTiles.add(TileType.get(type.getSuit(),
 							type.getRank() + 1));
 				}
@@ -813,7 +827,7 @@ public class FooBot extends AbstractBotPlayer {
 		// 可碰者优先：去掉可吃的牌中与可碰牌冲突者。（因为可碰牌按三倍算）
 		chowableTiles.removeAll(pongableTiles);
 
-		// 计算可碰、可吃的牌所剩数量（仅考虑本玩家所持牌）
+		// 计算可碰、可吃的牌所剩数量（仅除去本玩家所持牌）
 		Map<TileType, Integer> pongOrChowableTilesCount = new HashMap<>();
 		for (TileType tileType : pongableTiles)
 			pongOrChowableTilesCount.put(tileType,
@@ -873,15 +887,18 @@ public class FooBot extends AbstractBotPlayer {
 	 *            分组集合
 	 * @param tiles
 	 *            牌集合
+	 * @return 结果分组集合
 	 */
-	private void removeTiles(Set<Set<Tile>> groups, Set<Tile> tiles) {
-		Set<Set<Tile>> emptyGroups = new HashSet<>();
+	// XXX - 不原地删除空组，因为用迭代器的remove方法删除失败，不知原因
+	private Set<Set<Tile>> removeTiles(Set<Set<Tile>> groups, Set<Tile> tiles) {
+		Set<Set<Tile>> newGroups = new HashSet<>();
 		for (Set<Tile> group : groups) {
 			group.removeAll(tiles);
-			if (group.isEmpty())
-				emptyGroups.add(group);
+			if (!group.isEmpty()) {
+				newGroups.add(group);
+			}
 		}
-		groups.removeAll(emptyGroups);
+		return newGroups;
 	}
 
 	/**
@@ -893,7 +910,7 @@ public class FooBot extends AbstractBotPlayer {
 	 *            牌
 	 * @return 如果包含，返回true；否则返回false。
 	 */
-	private boolean containTile(Set<Set<Tile>> groups, Tile tile) {
+	private boolean containsTile(Set<Set<Tile>> groups, Tile tile) {
 		for (Set<Tile> group : groups)
 			if (group.contains(tile))
 				return true;
@@ -910,26 +927,11 @@ public class FooBot extends AbstractBotPlayer {
 	 * @return 牌集合
 	 */
 	private Set<Tile> getTilesRemain(PlayerTiles playerTiles, TileType tileType) {
-		Set<Tile> typeTiles = Tile.getTilesForType(tileType);
+		Set<Tile> typeTiles = new HashSet<>(Tile.getTilesForType(tileType));
 		for (Cpk cpk : playerTiles.getCpks())
 			typeTiles.removeAll(cpk.getTiles());
 		typeTiles.removeAll(playerTiles.getAliveTiles());
 		return typeTiles;
-	}
-
-	/**
-	 * 判断两个集合是否冲突（有重复的元素）。
-	 * 
-	 * @param tiles1
-	 *            第一个集合
-	 * @param tiles2
-	 *            第二个集合
-	 * @return 如果有重复，返回true；否则返回false。
-	 */
-	private static <ElementType> boolean isConflict(Set<ElementType> tiles1,
-			Set<ElementType> tiles2) {
-		Set<ElementType> tiles1Copy = new HashSet<>();
-		return tiles1Copy.removeAll(tiles2);
 	}
 
 	/**
@@ -958,7 +960,17 @@ public class FooBot extends AbstractBotPlayer {
 		 * @return 如果冲突，返回true；否则返回false。
 		 */
 		boolean isConflictWith(Face o) {
-			return isConflict(tiles, o.tiles);
+			return !Collections.disjoint(tiles, o.tiles);
+		}
+
+		/**
+		 * Just for debug.
+		 * 
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return "[" + type + ":" + tiles + "]";
 		}
 
 	}

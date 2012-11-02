@@ -7,7 +7,7 @@ import blove.mj.CpkType;
 import blove.mj.GameBoardView;
 import blove.mj.PlayerLocation;
 import blove.mj.Tile;
-import blove.mj.TileType;
+import blove.mj.PlayerLocation.Relation;
 import blove.mj.board.GameBoard;
 import blove.mj.board.GameBoardFullException;
 import blove.mj.board.PlayerTiles;
@@ -82,62 +82,73 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 		public void newEvent(GameStartEvent event) {
 		}
 
-		private Set<TileType> winChances;
-
 		@Override
-		// XXX -
+		// XXX - 代码重复：
 		// 与blove.mj.cli.CliGame.CliGameListener.newEvent(PlayerActionEvent)有代码重复
 		public void newEvent(PlayerActionEvent event) {
-			win = false;
-			readyHand = false;
+			try {
+				win = false;
+				readyHand = false;
 
-			Tile eventTile = event.getTile(gameBoardView);
+				Tile eventTile = event.getTile(gameBoardView);
+				PlayerLocation eventLocation = event.getPlayerLocation();
 
-			if (event.getType() == ActionType.DEAL_OVER
-					|| (event.getType() == ActionType.DRAW && event
-							.getPlayerLocation() == myLocation)
-					|| (event.getType() == ActionType.CPK
-							&& event.getPlayerLocation() == myLocation && !event
-							.getCpk().getType().isKong())
-					|| (event.getType() == ActionType.DISCARD && event
-							.getPlayerLocation() != myLocation)) {
-				// 发牌结束、自己摸牌、自己吃/碰：
-				// 检查是否杠/和牌，如果有询问操作，执行操作，如果无机会或无操作询问出牌。
-				// 别人出牌：
-				// 检查吃/碰/杠/和机会，如果有询问操作，执行操作
-				boolean winChance;
-				if (event.getType() == ActionType.DEAL_OVER)
-					winChance = winStrategy.isWin(myTiles);
-				else
-					winChance = winChances.contains(eventTile.getType());
+				if (myTiles.isForDiscarding()) {
+					// 应该打牌
 
-				Set<Cpk> cpkChances = CpkType.getAllChances(myTiles, eventTile,
-						myLocation.getRelationOf(event.getPlayerLocation()));
+					// 如果不是吃/碰之后，则检查是否已和牌
+					boolean winChance = false;
+					if (event.getType() != ActionType.CPK)
+						winChance = winStrategy.isWin(myTiles);
 
-				if (winChance == true || !cpkChances.isEmpty()) {
-					Cpk cpkChoose = chooseCpk(myTiles, eventTile, cpkChances,
-							winChance);
-					if (cpkChoose != null)
-						gameBoardView.cpk(cpkChoose);
-					else if (win)
-						gameBoardView.win();
-					return;
-				}
+					// 检查杠牌机会
+					Set<Cpk> kongChances = CpkType.getAllChances(myTiles,
+							eventTile, Relation.SELF);
 
-				if (event.getType() == ActionType.DISCARD) {
-					gameBoardView.giveUpCpkw();
+					boolean winOrKong = false;// 是否选择了和牌或杠牌
+					if (winChance || !kongChances.isEmpty()) {
+						// 如果和牌或有杠牌机会，则询问并执行选择的操作
+						Cpk cpkChoose = chooseCpk(myTiles, eventTile,
+								kongChances, winChance);
+						if (cpkChoose != null) {
+							gameBoardView.cpk(cpkChoose);
+							winOrKong = true;
+						} else if (win) {
+							gameBoardView.win();
+							winOrKong = true;
+						}
+					}
+					if (!winOrKong) {
+						// 如果没有机会或没有选择操作，询问打出一张牌
+						Tile discardTile = chooseDiscard(myTiles);
+						gameBoardView.discard(discardTile, readyHand);
+					}
 				} else {
-					Tile discardTile = chooseDiscard(myTiles);
-					gameBoardView.discard(discardTile, readyHand);
+					// 不应该打牌
+					if (event.getType() == ActionType.DISCARD) {
+						// 别人打出了一张牌，检查是否有和牌或吃/碰/杠机会
+						boolean winChance = winStrategy.getWinChances(myTiles)
+								.contains(eventTile);
+						Set<Cpk> cpkChances = CpkType.getAllChances(myTiles,
+								eventTile,
+								myLocation.getRelationOf(eventLocation));
+						if (winChance || !cpkChances.isEmpty()) {
+							// 如果有和牌或吃/碰/杠机会，则询问并执行选择的操作
+							Cpk cpkChoose = chooseCpk(myTiles, eventTile,
+									cpkChances, winChance);
+							if (cpkChoose != null)
+								gameBoardView.cpk(cpkChoose);
+							else if (win)
+								gameBoardView.win();
+							else
+								// 如果没有选择，则选择放弃
+								gameBoardView.giveUpCpkw();
+						}
+
+					}
 				}
-
-			} else if (event.getType() == ActionType.DISCARD
-					&& event.getPlayerLocation() == myLocation) {
-				// 自己出牌：
-				// 记录和牌机会
-				winChances = winStrategy.getWinChances(myTiles);
+			} catch (InterruptedException e) {
 			}
-
 		}
 
 		@Override
@@ -166,9 +177,10 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 	 * @param winChance
 	 *            是否可以和牌
 	 * @return 见上述说明
+	 * @throws InterruptedException
 	 */
 	protected abstract Cpk chooseCpk(PlayerTiles myTiles, Tile newTile,
-			Set<Cpk> cpkChances, boolean winChance);
+			Set<Cpk> cpkChances, boolean winChance) throws InterruptedException;
 
 	/**
 	 * 在{@link #chooseCpk(PlayerTiles, Tile, Set, boolean)}方法中选择和牌时调用。
@@ -183,8 +195,10 @@ public abstract class AbstractBotPlayer implements BotPlayer {
 	 * @param myTiles
 	 *            自己的牌
 	 * @return 打出的牌
+	 * @throws InterruptedException
 	 */
-	protected abstract Tile chooseDiscard(PlayerTiles myTiles);
+	protected abstract Tile chooseDiscard(PlayerTiles myTiles)
+			throws InterruptedException;
 
 	/**
 	 * 在{@link #chooseDiscard(PlayerTiles)}方法中听牌时调用。

@@ -20,21 +20,23 @@ public class Tile implements Comparable<Tile> {
 		// 初始化所有牌
 		tiles = new HashSet<>();
 		tilesForType = new HashMap<>();
-		for (Suit suit : Suit.values())
+		for (Suit suit : Suit.values()) {
 			if (suit.isHonor()) {
 				TileType type = TileType.get(suit);
-				Set<Tile> tiles = Collections
+				Set<Tile> typeTiles = Collections
 						.unmodifiableSet(geneTilesForType(type));
-				tiles.addAll(tiles);
-				tilesForType.put(type, tiles);
-			} else
+				tilesForType.put(type, typeTiles);
+				tiles.addAll(typeTiles);
+			} else {
 				for (int rank = 1; rank <= 9; rank++) {
 					TileType type = TileType.get(suit, rank);
-					Set<Tile> tiles = Collections
+					Set<Tile> typeTiles = Collections
 							.unmodifiableSet(geneTilesForType(type));
-					tiles.addAll(tiles);
-					tilesForType.put(type, tiles);
+					tilesForType.put(type, typeTiles);
+					tiles.addAll(typeTiles);
 				}
+			}
+		}
 		tiles = Collections.unmodifiableSet(tiles);
 		tilesForType = Collections.unmodifiableMap(tilesForType);
 	}
@@ -64,6 +66,25 @@ public class Tile implements Comparable<Tile> {
 	 */
 	public static Set<Tile> getTilesForType(TileType type) {
 		return tilesForType.get(type);
+	}
+
+	/**
+	 * 返回一张指定类型的牌。
+	 * 
+	 * @param type
+	 *            类型
+	 * @param avoidTiles
+	 *            除了哪些牌
+	 * @return 牌。如果没有，则返回null。
+	 */
+	public static Tile getATileForType(TileType type, Set<Tile> avoidTiles) {
+		Set<Tile> tilesForType = new HashSet<>(getTilesForType(type));
+		if (avoidTiles != null)
+			tilesForType.removeAll(avoidTiles);
+		if (tilesForType.isEmpty())
+			return null;
+		else
+			return tilesForType.iterator().next();
 	}
 
 	private final TileType type;
@@ -124,6 +145,16 @@ public class Tile implements Comparable<Tile> {
 		} else if (!type.equals(other.type))
 			return false;
 		return true;
+	}
+
+	/**
+	 * Just for debug.
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "[" + type + ", " + id + "]";
 	}
 
 }

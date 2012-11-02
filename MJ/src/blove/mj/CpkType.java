@@ -160,7 +160,7 @@ public enum CpkType {
 		@Override
 		Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
 				Relation fromRelation) {
-			if (fromRelation == Relation.SELF) {
+			if (fromRelation == Relation.SELF && newTile != null) {
 				// 自摸明杠
 				if (!tiles.isForDiscarding())
 					return Collections.emptySet();
@@ -182,7 +182,7 @@ public enum CpkType {
 				if (chances == null)
 					chances = Collections.emptySet();
 				return chances;
-			} else {
+			} else if (fromRelation != null) {
 				// 普通明杠
 				if (tiles.isForDiscarding())
 					return Collections.emptySet();
@@ -195,11 +195,13 @@ public enum CpkType {
 					kongTiles.addAll(sameTiles);
 					kongTiles.add(newTile);
 					chances = Collections.singleton(new Cpk(EXPOSED_KONG,
-							newTile, Relation.SELF, kongTiles
+							newTile, fromRelation, kongTiles
 									.toArray(new Tile[] {})));
 				} else
 					chances = Collections.emptySet();
 				return chances;
+			} else {
+				return Collections.emptySet();
 			}
 		}
 
@@ -238,8 +240,8 @@ public enum CpkType {
 				if (count == 4) {
 					Set<Tile> sameTiles = getTilesForType(
 							tiles.getAliveTiles(), type);
-					chances.add(new Cpk(CONCEALED_KONG, null, fromRelation,
-							sameTiles.toArray(new Tile[] {})));
+					chances.add(new Cpk(CONCEALED_KONG, null, null, sameTiles
+							.toArray(new Tile[] {})));
 				}
 			}
 

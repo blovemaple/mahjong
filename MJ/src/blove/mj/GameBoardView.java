@@ -38,6 +38,13 @@ public interface GameBoardView {
 	PlayerLocation getMyLocation();
 
 	/**
+	 * 返回庄家位置。
+	 * 
+	 * @return 位置
+	 */
+	PlayerLocation getDealerLocation();
+
+	/**
 	 * 添加一个游戏事件监听器。
 	 * 
 	 * @param listener

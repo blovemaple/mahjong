@@ -68,7 +68,7 @@ public class PlayerTiles {
 	 * @return 如果可以出牌，返回true；否则返回false。
 	 */
 	public static boolean isForDiscarding(Set<Tile> aliveTiles) {
-		return (aliveTiles.size() - 2) % 3 == 0;
+		return aliveTiles.size() % 3 == 2;
 	}
 
 	/**

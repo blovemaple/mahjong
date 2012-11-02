@@ -1,7 +1,9 @@
 package blove.mj.cli;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +22,7 @@ import blove.mj.TileType;
 import blove.mj.TileType.Suit;
 import blove.mj.board.PlayerTiles;
 import blove.mj.cli.CliView.CharHandler;
+import blove.mj.event.TimeLimitEvent;
 
 /**
  * 提供向CliView提供展示信息的便捷方法。
@@ -28,8 +31,6 @@ import blove.mj.cli.CliView.CharHandler;
  */
 class CliMessager {
 	private final CliView cliView;
-
-	private String crtStatus;
 
 	private static final String DEVIDING_LINE = "**************************************************";
 
@@ -44,9 +45,10 @@ class CliMessager {
 	}
 
 	/**
+	 * @throws IOException
 	 * @see blove.mj.cli.CliView#init()
 	 */
-	void initView() {
+	void initView() throws IOException {
 		cliView.init();
 	}
 
@@ -124,27 +126,32 @@ class CliMessager {
 	}
 
 	private PlayerTiles tiles;
+	private Tile drawedTile;
 	private Set<Tile> focusTiles;
 	private String extraOptions;
-	private String status;
-	private long time = -1;
+	private String statusInfo;
+	private long time = TimeLimitEvent.STOP_TIME_LIMIT;
+	private boolean isTileStatus = false;
 
 	/**
 	 * 在状态栏显示与本玩家的牌相关的信息。
 	 * 
 	 * @param tiles
 	 *            玩家的牌
+	 * @param drawedTile
+	 *            刚摸的牌，放在最后显示。null表示没有。
 	 * @param focusTile
 	 *            聚焦的牌。吃/碰/杠中的牌，只有一组全部聚焦才能聚焦。
 	 * @param extraOptions
 	 *            额外选项。如果为null表示没有额外选项。
-	 * @param status
+	 * @param statusInfo
 	 *            状态信息。如果为null表示没有状态信息。
 	 */
-	void tilesStatus(PlayerTiles tiles, Tile focusTile, String extraOptions,
-			String status) {
-		tilesStatus(tiles, focusTile != null ? Collections.singleton(focusTile)
-				: null, extraOptions, status);
+	void tilesStatus(PlayerTiles tiles, Tile drawedTile, Tile focusTile,
+			String extraOptions, String statusInfo) {
+		tilesStatus(tiles, drawedTile,
+				focusTile != null ? Collections.singleton(focusTile) : null,
+				extraOptions, statusInfo);
 	}
 
 	/**
@@ -152,20 +159,23 @@ class CliMessager {
 	 * 
 	 * @param tiles
 	 *            玩家的牌
+	 * @param drawedTile
+	 *            刚摸的牌，放在最后显示。null表示没有。
 	 * @param focusTiles
 	 *            聚焦的多张牌。此集合内不包含于玩家手中的牌将被忽略。吃/碰/杠中的牌，只有一组全部聚焦才能聚焦。
 	 * @param extraOptions
 	 *            额外选项。如果为null表示没有额外选项。
-	 * @param status
+	 * @param statusInfo
 	 *            状态信息。如果为null表示没有状态信息。
 	 */
-	void tilesStatus(PlayerTiles tiles, Set<Tile> focusTiles,
-			String extraOptions, String status) {
+	void tilesStatus(PlayerTiles tiles, Tile drawedTile, Set<Tile> focusTiles,
+			String extraOptions, String statusInfo) {
 		this.tiles = tiles;
+		this.drawedTile = drawedTile;
 		this.focusTiles = focusTiles != null ? focusTiles : Collections
 				.<Tile> emptySet();
 		this.extraOptions = extraOptions;
-		this.status = status;
+		this.statusInfo = statusInfo;
 		refreshTileStatus();
 	}
 
@@ -177,47 +187,49 @@ class CliMessager {
 	 */
 	void timeStatus(long time) {
 		this.time = time;
-		refreshTileStatus();
+		if (isTileStatus)
+			refreshTileStatus();
 	}
 
 	/**
 	 * 在状态栏清除时间信息。
 	 */
 	void clearTimeStatus() {
-		this.time = -1;
-		refreshTileStatus();
+		timeStatus(TimeLimitEvent.STOP_TIME_LIMIT);
 	}
 
 	private void refreshTileStatus() {
 		// playerTiles <extra options> [STATUS] time
 		StringBuilder status = new StringBuilder();
 		if (tiles != null) {
-			status.append(toString(tiles, focusTiles));
+			status.append(toString(tiles, drawedTile, focusTiles));
 			if (extraOptions != null) {
 				status.append(" <");
 				status.append(extraOptions);
 				status.append('>');
 			}
-			if (this.status != null) {
+			if (this.statusInfo != null) {
 				status.append(" [");
-				status.append(this.status.toUpperCase());
+				status.append(this.statusInfo.toUpperCase());
 				status.append(']');
 			}
-			if (time >= 0) {
+			if (time != TimeLimitEvent.STOP_TIME_LIMIT) {
 				status.append(' ');
 				status.append(time);
 			}
 		}
 
-		cliView.updateStatus(crtStatus = status.toString());
+		cliView.updateStatus(status.toString());
+		isTileStatus = true;
 	}
 
-	private static final char SINGLE_FOCUS_HEAD = '→';
-	private static final char SINGLE_FUCUS_TAIL = '←';
+	private static final char SINGLE_FOCUS_HEAD = /* '→' */'(';
+	private static final char SINGLE_FUCUS_TAIL = /* '←' */')';
 	private static final char MULTI_FOCUS_HEAD = '[';
 	private static final char MULTI_FOCUS_TAIL = ']';
 
-	private static String toString(PlayerTiles playerTiles, Set<Tile> focusTiles) {
+	private static String toString(PlayerTiles playerTiles,
+			final Tile drawedTile, Set<Tile> focusTiles) {
 		// playerTiles(with →fucus← or [focuses])
 		// eg: < W3W4W5 > < T7T8T9 > W1 W8 [T4 T5] O3 O5 E N
 		// eg: < W3W4W5 > <[T7T8T9]> W1 W8 T4 T5 O3 O5 E N
@@ -234,26 +246,57 @@ class CliMessager {
 				: MULTI_FOCUS_TAIL;
 		Suit lastSuit = null;
 		boolean lastFocus = false;
-		for (Tile tile : new TreeSet<>(playerTiles.getAliveTiles())) {
+		List<Tile> aliveTiles = new ArrayList<>(playerTiles.getAliveTiles());
+		Collections.sort(aliveTiles, new PlayerTilesViewComparator(drawedTile));
+		for (Tile tile : aliveTiles) {
 			Suit suit = tile.getType().getSuit();
-			if (lastSuit != suit) {
-				str.append(' ');
+			String separation = "";
+			if (tile == drawedTile || lastSuit != suit) {
+				separation = " ";
 				lastSuit = suit;
 			}
 
 			boolean focus = focusTiles.contains(tile);
 			if (!lastFocus && focus)
-				str.append(focusHead);
+				str.append(separation).append(focusHead);
 			else if (lastFocus && !focus)
-				str.append(focusTail);
+				str.append(focusTail).append(separation);
 			else
-				str.append(' ');
+				str.append(' ').append(separation);
 			str.append(toString(tile));
 			lastFocus = focus;
 		}
 		str.append(lastFocus ? focusTail : ' ');
 
 		return str.toString();
+	}
+
+	/**
+	 * 此比较器将drawedTile排到最后，其余Tile按照自然顺序。
+	 * 
+	 * @author blovemaple
+	 */
+	static class PlayerTilesViewComparator implements Comparator<Tile> {
+		private final Tile drawedTile;
+
+		/**
+		 * 新建一个实例。
+		 * 
+		 * @param drawedTile
+		 */
+		PlayerTilesViewComparator(Tile drawedTile) {
+			this.drawedTile = drawedTile;
+		}
+
+		@Override
+		public int compare(Tile o1, Tile o2) {
+			if (o1 == drawedTile)
+				return 1;
+			else if (o2 == drawedTile)
+				return -1;
+			else
+				return o1.compareTo(o2);
+		}
 	}
 
 	private static String toString(Cpk cpk, Set<Tile> focusTiles) {
@@ -306,7 +349,7 @@ class CliMessager {
 			str.append(System.lineSeparator());
 
 			// player tiles with focus to Win tile
-			str.append(toString(playerTiles,
+			str.append(toString(playerTiles, null,
 					isWinner ? Collections.singleton(winInfo.getWinTile())
 							: null));
 			str.append(System.lineSeparator());
@@ -338,8 +381,7 @@ class CliMessager {
 		return str.toString();
 	}
 
-	private static String toString(PlayerLocation location,
-			PlayerLocation myLocation) {
+	static String toString(PlayerLocation location, PlayerLocation myLocation) {
 		String locationStr, relationStr;
 		switch (location) {
 		case EAST:
@@ -381,9 +423,9 @@ class CliMessager {
 	static String toString(Tile tile) {
 		TileType tileType = tile.getType();
 		if (tileType.getSuit().isHonor())
-			return tileType.getSuit().name();
+			return tileType.getSuit().toString();
 		else
-			return tileType.getSuit().name() + tileType.getRank();
+			return tileType.getSuit().toString() + tileType.getRank();
 	}
 
 	static String toString(Set<Tile> tiles) {
@@ -406,23 +448,42 @@ class CliMessager {
 	 *            信息
 	 */
 	void directStatus(String message) {
-		cliView.updateStatus(crtStatus = "[" + message + "]");
+		cliView.updateStatus("[" + message + "]");
+		isTileStatus = false;
 	}
+
+	private String saveStatus;
+	private boolean saveIsTileStatus;
 
 	/**
 	 * 显示临时状态信息。调用此方法后可用{@link #tempStatus(String)}方法恢复之前的状态。
 	 * 
 	 * @param status
 	 *            状态信息
+	 * @throws IllegalStateException
+	 *             当前已是临时状态
 	 */
 	void tempStatus(String status) {
+		if (saveStatus != null)
+			throw new IllegalStateException("当前已是临时状态");
+		saveStatus = cliView.getStatus();
+		saveIsTileStatus = isTileStatus;
+
 		cliView.updateStatus(status);
 	}
 
 	/**
 	 * 取消临时状态信息。
+	 * 
+	 * @throws IllegalStateException
+	 *             当前不是临时状态
 	 */
 	void clearTempStatus() {
-		cliView.updateStatus(crtStatus != null ? crtStatus : "");
+		if (saveStatus == null)
+			throw new IllegalStateException("当前不是临时状态");
+		cliView.updateStatus(saveStatus);
+		isTileStatus = saveIsTileStatus;
+
+		saveStatus = null;
 	}
 }

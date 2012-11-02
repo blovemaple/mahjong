@@ -89,7 +89,7 @@ public class TileType implements Comparable<TileType> {
 	 */
 	public static TileType get(Suit suit) {
 		if (!suit.isHonor())
-			throw new IllegalArgumentException("获取非字牌类型未指定大小" + suit);
+			throw new IllegalArgumentException("获取非字牌类型未指定大小：" + suit.name());
 		return get(suit, HONOR_RANK);
 	}
 
@@ -108,10 +108,10 @@ public class TileType implements Comparable<TileType> {
 		TileType type = types.get(suit).get(rank);
 		if (type == null)
 			if (suit.isHonor())
-				throw new IllegalArgumentException("字牌" + suit + "大小只能为0，不能是"
-						+ rank);
+				throw new IllegalArgumentException("字牌" + suit.name()
+						+ "大小只能为0，不能是" + rank);
 			else
-				throw new IllegalArgumentException("非字牌" + suit
+				throw new IllegalArgumentException("非字牌" + suit.name()
 						+ "大小范围是1-9，不能是" + rank);
 		return type;
 	}
@@ -204,6 +204,16 @@ public class TileType implements Comparable<TileType> {
 		if (suit != other.suit)
 			return false;
 		return true;
+	}
+
+	/**
+	 * Just for debug.
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return suit.toString() + rank;
 	}
 
 }

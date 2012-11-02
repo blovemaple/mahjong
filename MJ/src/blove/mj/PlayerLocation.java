@@ -7,7 +7,7 @@ package blove.mj;
  */
 public enum PlayerLocation {
 	// 顺序勿动。计算位置依赖此枚举的顺序！
-	EAST, SOUTH, WEST, NORTH;
+	EAST, NORTH, WEST, SOUTH;
 
 	/**
 	 * 位置关系。

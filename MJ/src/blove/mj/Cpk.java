@@ -158,6 +158,17 @@ public class Cpk implements Comparable<Cpk> {
 	}
 
 	/**
+	 * Just for debug.
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "[" + type + " " + forTile + " from " + fromRelation
+				+ " to compose " + tiles + "]";
+	}
+
+	/**
 	 * 按照牌的类型比较大小的比较器。牌的类型如果相同则认为相等。
 	 */
 	public static final Comparator<Cpk> tileTypeComparator = new Comparator<Cpk>() {
