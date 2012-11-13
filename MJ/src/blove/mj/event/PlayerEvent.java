@@ -1,6 +1,5 @@
 package blove.mj.event;
 
-import blove.mj.Player;
 import blove.mj.PlayerLocation;
 import blove.mj.board.GameBoard;
 
@@ -21,7 +20,7 @@ public class PlayerEvent extends GameEvent {
 		IN, OUT, READY
 	}
 
-	private final Player player;
+	private final String playerName;
 	private final PlayerLocation location;
 	private final PlayerEventType type;
 
@@ -32,15 +31,15 @@ public class PlayerEvent extends GameEvent {
 	 *            事件源
 	 * @param type
 	 *            类型
-	 * @param player
-	 *            玩家
+	 * @param playerName
+	 *            玩家名称
 	 * @param location
 	 *            位置
 	 */
 	public PlayerEvent(GameBoard source, PlayerEventType type,
-			Player player, PlayerLocation location) {
+			String playerName, PlayerLocation location) {
 		super(source);
-		this.player = player;
+		this.playerName = playerName;
 		this.location = location;
 		this.type = type;
 	}
@@ -55,12 +54,12 @@ public class PlayerEvent extends GameEvent {
 	}
 
 	/**
-	 * 返回玩家。
+	 * 返回玩家名称。
 	 * 
-	 * @return 玩家
+	 * @return 玩家名称
 	 */
-	public Player getPlayer() {
-		return player;
+	public String getPlayerName() {
+		return playerName;
 	}
 
 	/**

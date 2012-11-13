@@ -245,25 +245,4 @@ public class Cpk implements Comparable<Cpk> {
 		return true;
 	}
 
-	/**
-	 * 按照优先级比较吃/碰/杠大小的比较器。
-	 */
-	public static final Comparator<Cpk> priorityComparator = new Comparator<Cpk>() {
-
-		@Override
-		public int compare(Cpk o1, Cpk o2) {
-			int typeCompare = o1.getType().getPriority() > o2.getType()
-					.getPriority() ? 1 : o1.getType().getPriority() == o2
-					.getType().getPriority() ? 0 : -1;
-			if (typeCompare != 0)
-				return typeCompare;
-			int relationCompare = o2.getFromRelation().compareTo(
-					o1.getFromRelation());
-			if (relationCompare != 0)
-				return relationCompare;
-			return o1.compareTo(o2);
-		}
-
-	};
-
 }

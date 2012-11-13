@@ -2,8 +2,6 @@ package blove.mj.event;
 
 import java.util.EventListener;
 
-import blove.mj.GameBoardView;
-
 /**
  * 游戏事件监听器（向游戏桌注册）。
  * 

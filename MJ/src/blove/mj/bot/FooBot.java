@@ -1,4 +1,4 @@
-package blove.mj.bot.foo;
+package blove.mj.bot;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,18 +15,19 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import blove.mj.Cpk;
+import blove.mj.Player;
+import blove.mj.PlayerView;
 import blove.mj.Tile;
 import blove.mj.TileType;
 import blove.mj.TileType.Suit;
 import blove.mj.board.PlayerTiles;
-import blove.mj.bot.AbstractBotPlayer;
 
 /**
  * 机器人玩家“Foo”。
  * 
  * @author blovemaple
  */
-public class FooBot extends AbstractBotPlayer {
+public class FooBot extends Player {
 	private static final int MIN_THINKING_TIME = 3, MAX_THINKING_TIME = 10;
 	private final Random random = new Random();
 
@@ -45,15 +46,28 @@ public class FooBot extends AbstractBotPlayer {
 	}
 
 	@Override
-	protected Cpk chooseCpk(PlayerTiles myTiles, Tile newTile,
-			Set<Cpk> cpkChances, boolean winChance) throws InterruptedException {
+	public CpkwChoice chooseCpk(PlayerView playerView,
+			Set<CpkwChoice> cpkwChances, Tile newTile, boolean drawed)
+			throws InterruptedException {
 		TimeUnit.SECONDS.sleep(MIN_THINKING_TIME
 				+ random.nextInt(MAX_THINKING_TIME - MIN_THINKING_TIME));
 
-		// 如果有和牌机会则和牌
-		if (winChance) {
-			win();
-			return null;
+		PlayerTiles myTiles = playerView.getMyTiles();
+
+		// 提取所有吃/碰/杠机会，并制作其到选择的映射以便返回时查询。
+		Map<Cpk, CpkwChoice> cpkChancesToChoices = new HashMap<>();
+		Set<Cpk> cpkChances = new HashSet<>();
+
+		for (CpkwChoice cpkwChance : cpkwChances) {
+			// 如果有和牌机会则和牌
+			if (cpkwChance.win)
+				return cpkwChance;
+			else {
+				if (cpkwChance.cpk == null)
+					throw new IllegalArgumentException();
+				cpkChances.add(cpkwChance.cpk);
+				cpkChancesToChoices.put(cpkwChance.cpk, cpkwChance);
+			}
 		}
 
 		// 所有牌分组
@@ -89,7 +103,7 @@ public class FooBot extends AbstractBotPlayer {
 					TileType kongTileType = cpkChance.getTiles().iterator()
 							.next().getType();
 					if (faceTileType.equals(kongTileType))
-						return cpkChance;
+						return cpkChancesToChoices.get(cpkChance);
 				}
 			}
 		}
@@ -116,7 +130,7 @@ public class FooBot extends AbstractBotPlayer {
 			return null;
 		} else if (cpkChances.size() == 1) {
 			// 若剩下一个机会，选择之
-			return cpkChances.iterator().next();
+			return cpkChancesToChoices.get(cpkChances.iterator().next());
 		} else {
 			// 若剩下多个机会，取选择后组中剩余牌等牌数量最多者，选择之
 			int mostWaitingTileCount = -1;
@@ -131,15 +145,18 @@ public class FooBot extends AbstractBotPlayer {
 					chanceChoose = cpkChance;
 				}
 			}
-			return chanceChoose;
+			return cpkChancesToChoices.get(chanceChoose);
 		}
 	}
 
 	@Override
-	protected Tile chooseDiscard(PlayerTiles myTiles)
+	public DiscardChoice chooseDiscard(PlayerView playerView,
+			Set<TileType> readyHandTypes, Tile drawedTile)
 			throws InterruptedException {
 		TimeUnit.SECONDS.sleep(MIN_THINKING_TIME
 				+ random.nextInt(MAX_THINKING_TIME - MIN_THINKING_TIME));
+
+		PlayerTiles myTiles = playerView.getMyTiles();
 
 		// 所有牌分组
 		Set<Set<Tile>> groups = group(myTiles.getAliveTiles());
@@ -268,12 +285,9 @@ public class FooBot extends AbstractBotPlayer {
 
 		// 目前已确定打出的牌discardTile
 		// 判断是否可以听牌，若可以听牌则听牌
-		boolean readyHand = getWinStrategy().getReadyHandChances(myTiles)
-				.contains(discardTile);
-		if (readyHand)
-			readyHand();
+		boolean readyHand = readyHandTypes.contains(discardTile.getType());
 
-		return discardTile;
+		return new DiscardChoice(discardTile, readyHand);
 	}
 
 	/**

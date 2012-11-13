@@ -10,7 +10,7 @@ import java.util.List;
 import jline.console.ConsoleReader;
 
 /**
- * 命令行显示。提供信息显示以及最下方的状态栏显示，以及接受用户单字符无回显输入。
+ * 命令行界面。提供信息显示以及最下方的状态栏显示，以及接受用户单字符无回显输入。
  * 
  * @author blovemaple
  */
@@ -104,8 +104,12 @@ public class CliView {
 		}
 		if (wait) {
 			synchronized (handler) {
-				while (charHandlers.contains(handler)) {
-					handler.wait();
+				try {
+					while (charHandlers.contains(handler))
+						handler.wait();
+				} catch (InterruptedException e) {
+					charHandlers.remove(handler);
+					throw e;
 				}
 			}
 		}

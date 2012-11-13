@@ -2,9 +2,9 @@ package blove.mj.board;
 
 import java.util.Map;
 
-import blove.mj.GameBoardView;
 import blove.mj.Player;
 import blove.mj.PlayerLocation;
+import blove.mj.PlayerView;
 import blove.mj.rules.TimeLimitStrategy;
 import blove.mj.rules.WinStrategy;
 
@@ -13,14 +13,7 @@ import blove.mj.rules.WinStrategy;
  * 
  * @author blovemaple
  */
-public interface GameBoard {
-
-	/**
-	 * 返回此桌上目前所有玩家。
-	 * 
-	 * @return 人数
-	 */
-	Map<PlayerLocation, Player> getPlayers();
+public interface GameBoard extends Runnable {
 
 	/**
 	 * 返回此桌目前是否正在进行游戏。
@@ -32,13 +25,13 @@ public interface GameBoard {
 	/**
 	 * 新玩家进入。
 	 * 
-	 * @param name
-	 *            玩家名称
-	 * @return 该玩家的游戏桌视图
+	 * @param player
+	 *            玩家
+	 * @return 玩家视图
 	 * @throws GameBoardFullException
 	 *             此游戏桌已满
 	 */
-	GameBoardView newPlayer(String name) throws GameBoardFullException;
+	PlayerView newPlayer(Player player) throws GameBoardFullException;
 
 	/**
 	 * 返回限时策略。
@@ -53,5 +46,19 @@ public interface GameBoard {
 	 * @return 和牌策略
 	 */
 	WinStrategy getWinStrategy();
+
+	/**
+	 * 返回此桌上目前所有玩家名称。
+	 * 
+	 * @return 位置与玩家名称
+	 */
+	Map<PlayerLocation, String> getPlayerNames();
+
+	/**
+	 * 返回庄家位置。
+	 * 
+	 * @return 位置
+	 */
+	PlayerLocation getDealerLocation();
 
 }

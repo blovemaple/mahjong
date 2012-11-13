@@ -1,8 +1,8 @@
 package blove.mj.event;
 
 import blove.mj.Cpk;
-import blove.mj.GameBoardView;
 import blove.mj.PlayerLocation;
+import blove.mj.PlayerView;
 import blove.mj.Tile;
 import blove.mj.board.GameBoard;
 
@@ -88,14 +88,14 @@ public class PlayerActionEvent extends GameEvent {
 	/**
 	 * 返回牌。
 	 * 
-	 * @param boardView
-	 *            游戏桌视图。用来识别玩家位置。
+	 * @param playerView
+	 *            玩家视图。用来识别玩家位置。
 	 * @return 牌
 	 */
-	public Tile getTile(GameBoardView boardView) {
+	public Tile getTile(PlayerView playerView) {// XXX - 这样并不能真正防止其他玩家看到摸的牌
 		Tile tile;
 		if (type == ActionType.DRAW
-				&& !playerLocation.equals(boardView.getMyLocation()))
+				&& !playerLocation.equals(playerView.getMyLocation()))
 			// 摸牌动作，如果不是自己摸的牌，则返回null
 			tile = null;
 		else

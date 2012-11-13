@@ -1,4 +1,4 @@
-package blove.mj.board.local;
+package blove.mj.local;
 
 /**
  * 因为流局而无法进行某些操作时，抛出此异常。

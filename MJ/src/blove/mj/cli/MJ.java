@@ -5,8 +5,8 @@ import java.util.concurrent.TimeUnit;
 
 import blove.mj.board.GameBoard;
 import blove.mj.board.GameBoardFullException;
-import blove.mj.board.local.LocalGameBoard;
-import blove.mj.bot.foo.FooBot;
+import blove.mj.bot.FooBot;
+import blove.mj.local.LocalGameBoard;
 import blove.mj.rules.DefTimeLimitStrategy;
 
 /**
@@ -21,10 +21,11 @@ public class MJ {
 			GameBoard gameBoard = new LocalGameBoard(new DefTimeLimitStrategy(
 					99, 99, TimeUnit.SECONDS));
 			for (int i = 1; i <= 3; i++)
-				new FooBot("Foo" + i).join(gameBoard);
+				gameBoard.newPlayer(new FooBot("Foo" + i));
 			CliView cliView = new CliView(System.out, System.in);
-			CliGame cliGame = new CliGame(cliView);
-			cliGame.play(gameBoard, args.length == 0 ? "Tom" : args[0]);
+			CliGame cliGame = new CliGame(args.length == 0 ? "Tom" : args[0],
+					cliView);
+			cliGame.join(gameBoard);
 		} catch (GameBoardFullException e) {
 			throw new RuntimeException(e);// 不可能
 		} catch (InterruptedException e) {

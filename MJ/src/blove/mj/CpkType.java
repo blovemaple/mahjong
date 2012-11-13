@@ -23,7 +23,7 @@ public enum CpkType {
 	/**
 	 * 吃
 	 */
-	CHOW(2) {
+	CHOW() {
 
 		@Override
 		public Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
@@ -114,7 +114,7 @@ public enum CpkType {
 	/**
 	 * 碰
 	 */
-	PONG(1) {
+	PONG() {
 
 		@Override
 		Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
@@ -156,7 +156,7 @@ public enum CpkType {
 	/**
 	 * 明杠
 	 */
-	EXPOSED_KONG(0, true) {
+	EXPOSED_KONG(true) {
 		@Override
 		Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
 				Relation fromRelation) {
@@ -215,7 +215,7 @@ public enum CpkType {
 	/**
 	 * 暗杠
 	 */
-	CONCEALED_KONG(0, true) {
+	CONCEALED_KONG(true) {
 		@Override
 		Set<Cpk> getChances(PlayerTiles tiles, Tile newTile,
 				Relation fromRelation) {
@@ -254,15 +254,13 @@ public enum CpkType {
 		}
 	};
 
-	private final int priority;
 	private final boolean isKong;
 
-	private CpkType(int priority) {
-		this(priority, false);
+	private CpkType() {
+		this(false);
 	}
 
-	private CpkType(int priority, boolean isKong) {
-		this.priority = priority;
+	private CpkType(boolean isKong) {
 		this.isKong = isKong;
 	}
 
@@ -352,10 +350,6 @@ public enum CpkType {
 	 */
 	public boolean isKong() {
 		return isKong;
-	}
-
-	int getPriority() {
-		return priority;
 	}
 
 }

@@ -13,7 +13,7 @@ import blove.mj.rules.WinStrategy;
  * @author blovemaple
  */
 public class GameResult {
-	private final Map<PlayerLocation, Player> players;
+	private final Map<PlayerLocation, String> playerNames;
 	private final PlayerLocation dealerLocation;
 	private final WinInfo winInfo;
 	private final PointsResult points;
@@ -24,8 +24,8 @@ public class GameResult {
 	/**
 	 * 新建一个实例。
 	 * 
-	 * @param players
-	 *            所有玩家
+	 * @param playerNames
+	 *            所有玩家名称
 	 * @param winInfo
 	 *            和牌信息。null表示流局。
 	 * @param dealerLocation
@@ -39,11 +39,11 @@ public class GameResult {
 	 * @param winStrategy
 	 *            和牌策略
 	 */
-	public GameResult(Map<PlayerLocation, Player> players, WinInfo winInfo,
+	public GameResult(Map<PlayerLocation, String> playerNames, WinInfo winInfo,
 			PlayerLocation dealerLocation,
 			Map<PlayerLocation, PlayerTiles> tiles,
 			DiscardedTiles discardedTiles, Wall wall, WinStrategy winStrategy) {
-		this.players = players;
+		this.playerNames = playerNames;
 		this.dealerLocation = dealerLocation;
 		this.winInfo = winInfo;
 		this.tiles = tiles;
@@ -54,12 +54,12 @@ public class GameResult {
 	}
 
 	/**
-	 * 返回所有玩家。
+	 * 返回所有玩家名称。
 	 * 
 	 * @return 所有玩家
 	 */
-	public Map<PlayerLocation, Player> getPlayers() {
-		return players;
+	public Map<PlayerLocation, String> getPlayers() {
+		return playerNames;
 	}
 
 	/**

@@ -317,10 +317,10 @@ class CliMessager {
 		StringBuilder str = new StringBuilder();
 
 		WinInfo winInfo = result.getWinInfo();
-		for (Map.Entry<PlayerLocation, Player> locationPlayer : result
+		for (Map.Entry<PlayerLocation, String> locationPlayer : result
 				.getPlayers().entrySet()) {
 			PlayerLocation location = locationPlayer.getKey();
-			Player player = locationPlayer.getValue();
+			String player = locationPlayer.getValue();
 			PlayerTiles playerTiles = result.getTiles().get(location);
 			boolean isWinner = winInfo.getWinnerLocation() == location;
 			boolean isPaoer = winInfo.getPaoerLocation() == location;

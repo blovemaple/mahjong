@@ -1,4 +1,4 @@
-package blove.mj.board.local;
+package blove.mj.local;
 
 import java.util.HashSet;
 import java.util.LinkedList;
