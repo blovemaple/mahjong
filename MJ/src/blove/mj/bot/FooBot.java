@@ -28,7 +28,7 @@ import blove.mj.board.PlayerTiles;
  * @author blovemaple
  */
 public class FooBot extends Player {
-	private static final int MIN_THINKING_TIME = 3, MAX_THINKING_TIME = 10;
+	private static final int MIN_THINKING_TIME = 3, MAX_THINKING_TIME = 5;
 	private final Random random = new Random();
 
 	@SuppressWarnings("unused")
@@ -46,7 +46,16 @@ public class FooBot extends Player {
 	}
 
 	@Override
-	public CpkwChoice chooseCpk(PlayerView playerView,
+	public void forReady(PlayerView playerView) {
+		playerView.readyForGame();
+	}
+
+	@Override
+	public void forLeaving(PlayerView playerView) {
+	}
+
+	@Override
+	public CpkwChoice chooseCpkw(PlayerView playerView,
 			Set<CpkwChoice> cpkwChances, Tile newTile, boolean drawed)
 			throws InterruptedException {
 		TimeUnit.SECONDS.sleep(MIN_THINKING_TIME

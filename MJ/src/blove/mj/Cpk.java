@@ -108,12 +108,12 @@ public class Cpk implements Comparable<Cpk> {
 			smallTileOfThis = orderSetThis.higher(smallTileOfThis);
 			smallTileOfO = orderSetO.higher(smallTileOfO);
 		} while (smallTileOfThis != null && smallTileOfO != null);
-		if (smallTileOfThis == null)
-			return 1;
-		else if (smallTileOfO == null)
-			return -1;
-		else
+		if (smallTileOfThis == null && smallTileOfO == null)
 			return 0;
+		else if (smallTileOfThis == null)
+			return 1;
+		else
+			return -1;
 	}
 
 	@Override

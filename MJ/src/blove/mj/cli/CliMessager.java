@@ -12,7 +12,6 @@ import java.util.TreeSet;
 import blove.mj.Cpk;
 import blove.mj.GameResult;
 import blove.mj.GameResult.WinInfo;
-import blove.mj.Player;
 import blove.mj.PlayerLocation;
 import blove.mj.PlayerLocation.Relation;
 import blove.mj.PointItem;
@@ -82,26 +81,25 @@ class CliMessager {
 	 *            动作
 	 * @param location
 	 *            玩家位置。如果为null表示与具体玩家无关。
-	 * @param player
-	 *            玩家。如果为null表示与具体玩家无关。
+	 * @param playerName
+	 *            玩家名称。如果为null表示与具体玩家无关。
 	 * @param message
 	 *            信息
 	 * @param myLocation
 	 *            当前玩家位置
 	 */
-	void showMessage(String action, PlayerLocation location, Player player,
+	void showMessage(String action, PlayerLocation location, String playerName,
 			String message, PlayerLocation myLocation) {
-		// [ACTION] [LOCATION]player message
+		// [LOCATION]player [ACTION] message
 		StringBuilder messageViewStr = new StringBuilder();
+
+		if (location != null) {
+			messageViewStr.append(String.format("%-20s",
+					toString(location, myLocation) + playerName));
+		}
 
 		messageViewStr.append(String.format("%-10s", "[" + action.toUpperCase()
 				+ "]"));
-
-		if (location != null) {
-			messageViewStr.append(toString(location, myLocation));
-			messageViewStr.append(player);
-			messageViewStr.append(' ');
-		}
 
 		if (message != null) {
 			messageViewStr.append(' ');
@@ -234,6 +232,10 @@ class CliMessager {
 		// eg: < W3W4W5 > < T7T8T9 > W1 W8 [T4 T5] O3 O5 E N
 		// eg: < W3W4W5 > <[T7T8T9]> W1 W8 T4 T5 O3 O5 E N
 		// eg: < W3W4W5 > < T7T8T9 > W1→W8← T4 T5 O3 O5 E N
+
+		if (focusTiles == null)
+			focusTiles = Collections.emptySet();
+
 		StringBuilder str = new StringBuilder();
 		for (Cpk cpk : playerTiles.getCpks()) {
 			str.append(toString(cpk, focusTiles));
@@ -290,7 +292,9 @@ class CliMessager {
 
 		@Override
 		public int compare(Tile o1, Tile o2) {
-			if (o1 == drawedTile)
+			if (o1 == o2)
+				return 0;
+			else if (o1 == drawedTile)
 				return 1;
 			else if (o2 == drawedTile)
 				return -1;
@@ -327,9 +331,7 @@ class CliMessager {
 			boolean isDealer = result.getDealerLocation() == location;
 
 			// [LOCATION][DEALER][WIN][PAO]player
-			str.append('[');
 			str.append(toString(location, myLocation));
-			str.append(']');
 			if (isDealer) {
 				str.append('[');
 				str.append("DEALER");
@@ -373,8 +375,8 @@ class CliMessager {
 		str.append("Points:").append(System.lineSeparator());
 		for (PlayerLocation location : PlayerLocation.values()) {
 			str.append(String.format("%-20s%d", toString(location, myLocation)
-					+ result.getPlayers().get(location)));
-			str.append(points.getPoints(location));
+					+ result.getPlayers().get(location),
+					points.getPoints(location)));
 			str.append(System.lineSeparator());
 		}
 

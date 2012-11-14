@@ -8,7 +8,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import blove.mj.Cpk;
+import blove.mj.CpkType;
 import blove.mj.Player;
+import blove.mj.PlayerLocation;
 import blove.mj.PlayerView;
 import blove.mj.Tile;
 import blove.mj.TileType;
@@ -17,9 +19,16 @@ import blove.mj.board.GameBoardFullException;
 import blove.mj.board.PlayerTiles;
 import blove.mj.cli.CliMessager.PlayerTilesViewComparator;
 import blove.mj.cli.CliView.CharHandler;
+import blove.mj.event.GameEventListener;
+import blove.mj.event.GameOverEvent;
+import blove.mj.event.GameStartEvent;
+import blove.mj.event.PlayerActionEvent;
+import blove.mj.event.PlayerActionEvent.ActionType;
+import blove.mj.event.PlayerEvent;
+import blove.mj.event.TimeLimitEvent;
 
 /**
- * 命令行玩家。
+ * 命令行游戏。
  * 
  * @author blovemaple
  */
@@ -30,6 +39,7 @@ public class CliGame {
 
 	private boolean inGameBoard;// 进入游戏桌前置true，退出游戏桌时置false
 	private Object inGameBoardWaiter = new Object();// play方法在此对象上等待，退出游戏桌时被唤醒
+	private GameBoard gameBoard;
 	private PlayerView playerView;
 
 	/**
@@ -90,24 +100,20 @@ public class CliGame {
 	 */
 	public synchronized void join(GameBoard gameBoard)
 			throws GameBoardFullException, InterruptedException, IOException {
+		playerView = gameBoard.newPlayer(player);
+		playerView.addGameEventListener(new CliGameListener());
+		this.gameBoard = gameBoard;
+
 		this.inGameBoard = true;
 		messager.initView();
 		messager.addCharHandler(quitCharHandler);
 
-		playerView = gameBoard.newPlayer(player);
-
 		synchronized (inGameBoardWaiter) {
-			new Thread() {
-				public void run() {
-					forReady();
-				}
-			}.start();
-
-			while (inGameBoard) {
+			while (inGameBoard)
 				inGameBoardWaiter.wait();
-			}
 		}
 		this.playerView = null;
+		this.gameBoard = null;
 	}
 
 	/**
@@ -138,7 +144,16 @@ public class CliGame {
 		}
 
 		@Override
-		public CpkwChoice chooseCpk(PlayerView playerView,
+		public void forReady(PlayerView playerView) {
+			new Thread() {
+				public void run() {
+					CliGame.this.forReady();
+				}
+			}.start();
+		}
+
+		@Override
+		public CpkwChoice chooseCpkw(PlayerView playerView,
 				Set<CpkwChoice> cpkwChances, Tile newTile, boolean drawed)
 				throws InterruptedException {
 			final PlayerTiles myTiles = playerView.getMyTiles();
@@ -154,26 +169,33 @@ public class CliGame {
 			cpkAsTileTypes.addAll(cpkChances);
 
 			messager.tilesStatus(myTiles, drawedTile,
-					cpkAsTileTypes.first().cpk.getTiles(), winOption, status);
+					cpkAsTileTypes.isEmpty() ? null
+							: cpkAsTileTypes.first().cpk.getTiles(), winOption,
+					status);
 
 			class ChooseCpkCharHandler implements CharHandler {
-				private CpkwChoice crtChoose = cpkAsTileTypes.first();
+				private CpkwChoice crtChoose = cpkAsTileTypes.isEmpty() ? null
+						: cpkAsTileTypes.first();
 				private boolean win;
 
 				@Override
 				public boolean handle(char c) {
 					switch (c) {
 					case ',':
-						crtChoose = cpkAsTileTypes.lower(crtChoose);
-						if (crtChoose == null)
-							crtChoose = cpkAsTileTypes.last();
-						focus();
+						if (!cpkAsTileTypes.isEmpty()) {
+							crtChoose = cpkAsTileTypes.lower(crtChoose);
+							if (crtChoose == null)
+								crtChoose = cpkAsTileTypes.last();
+							focus();
+						}
 						return true;
 					case '.':
-						crtChoose = cpkAsTileTypes.higher(crtChoose);
-						if (crtChoose == null)
-							crtChoose = cpkAsTileTypes.first();
-						focus();
+						if (!cpkAsTileTypes.isEmpty()) {
+							crtChoose = cpkAsTileTypes.higher(crtChoose);
+							if (crtChoose == null)
+								crtChoose = cpkAsTileTypes.first();
+							focus();
+						}
 						return true;
 					case ' ':
 						win = false;
@@ -195,8 +217,11 @@ public class CliGame {
 				}
 
 				private void focus() {
-					messager.tilesStatus(myTiles, drawedTile,
-							crtChoose.cpk.getTiles(), winOption, status);
+					messager.tilesStatus(
+							myTiles,
+							drawedTile,
+							crtChoose != null ? crtChoose.cpk.getTiles() : null,
+							winOption, status);
 				}
 
 				/**
@@ -265,7 +290,8 @@ public class CliGame {
 					new PlayerTilesViewComparator(drawedTile));
 			aliveTiles.addAll(myTiles.getAliveTiles());
 
-			final TreeSet<Tile> readyHandTiles = new TreeSet<>();
+			final TreeSet<Tile> readyHandTiles = new TreeSet<>(
+					new PlayerTilesViewComparator(drawedTile));
 			for (Tile tile : myTiles.getAliveTiles())
 				if (readyHandTypes.contains(tile.getType()))
 					readyHandTiles.add(tile);
@@ -275,12 +301,13 @@ public class CliGame {
 			final String status = "discard";
 			final String statusWithReadyHand = "discard with rh";
 
-			messager.tilesStatus(myTiles, drawedTile,
-					drawedTile != null ? drawedTile : aliveTiles.first(),
-					option, status);
+			final Tile firstFocusTile = drawedTile != null ? drawedTile
+					: aliveTiles.last();
+			messager.tilesStatus(myTiles, drawedTile, firstFocusTile, option,
+					status);
 
 			class ChooseDiscardCharHandler implements CharHandler {
-				private Tile crtTile = aliveTiles.first();
+				private Tile crtTile = firstFocusTile;
 				private boolean readyHand = false;
 
 				@Override
@@ -304,10 +331,9 @@ public class CliGame {
 							readyHand = !readyHand;
 							if (!readyHand) {
 								tilesForChoose = aliveTiles;
-								crtTile = drawedTile;
 							} else {
 								tilesForChoose = readyHandTiles;
-								crtTile = tilesForChoose.first();
+								crtTile = readyHandTiles.first();
 							}
 						}
 						break;
@@ -337,5 +363,97 @@ public class CliGame {
 			return new DiscardChoice(charHandler.getChoice(),
 					charHandler.isReadyHand());
 		}
+
+		@Override
+		public void forLeaving(PlayerView playerView) {
+		}
+	}
+
+	private class CliGameListener implements GameEventListener {
+
+		@Override
+		public void newEvent(PlayerEvent event) {
+			messager.clearTimeStatus();
+
+			String playerName = event.getPlayerName();
+			PlayerLocation location = event.getLocation();
+
+			messager.showMessage(event.getType().toString(), location,
+					playerName, null, playerView.getMyLocation());
+		}
+
+		@Override
+		public void newEvent(GameStartEvent event) {
+			messager.clearTimeStatus();
+			messager.showMessage(
+					"start",
+					null,
+					null,
+					"New game started, dealer is "
+							+ CliMessager.toString(
+									gameBoard.getDealerLocation(),
+									playerView.getMyLocation()),
+					playerView.getMyLocation());
+		}
+
+		@Override
+		public void newEvent(TimeLimitEvent event) {
+			messager.timeStatus(event.getTimeLimit());
+		}
+
+		@Override
+		public void newEvent(PlayerActionEvent event) {
+			PlayerLocation myLocation = playerView.getMyLocation();
+
+			ActionType eventType = event.getType();
+			Tile eventTile = event.getTile(playerView);
+			PlayerLocation eventLocation = event.getPlayerLocation();
+			String eventPlayerName = gameBoard.getPlayerNames().get(
+					eventLocation);
+			String action, message;
+			switch (eventType) {
+			case DEAL_OVER:
+				action = "dealover";
+				message = "Dealing is over";
+				break;
+			case DRAW:
+				action = "draw";
+				message = null;
+				break;
+			case DISCARD:
+				action = "discard";
+				message = CliMessager.toString(eventTile);
+				if (event.isNewReadyHand())
+					message += " (READYHAND)";
+				break;
+			case CPK:
+				Cpk cpk = event.getCpk();
+				action = cpk.getType().name();
+				message = cpk.getType() == CpkType.CONCEALED_KONG ? null
+						: CliMessager.toString(cpk.getTiles());
+				break;
+			default:
+				throw new RuntimeException();// 已列举完，不可能出现
+			}
+
+			if (event.isForTimeOut())
+				message += " (TIMEOUT)";
+
+			messager.showMessage(action, eventLocation, eventPlayerName,
+					message, myLocation);
+
+			messager.clearTimeStatus();
+			messager.tilesStatus(playerView.getMyTiles(),
+					(eventType == ActionType.DRAW ? eventTile : null),
+					(Tile) null, null, null);
+		}
+
+		@Override
+		public void newEvent(GameOverEvent event) {
+			messager.clearTimeStatus();
+			messager.showResult(event.getResult(), playerView.getMyLocation());
+			forReady();
+		}
+
 	}
 }

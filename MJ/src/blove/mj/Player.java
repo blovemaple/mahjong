@@ -34,6 +34,14 @@ public abstract class Player {
 	}
 
 	/**
+	 * 等待玩家准备时调用。
+	 * 
+	 * @param playerView
+	 *            玩家视图
+	 */
+	public abstract void forReady(PlayerView playerView);
+
+	/**
 	 * 从机会中选择吃/碰/杠/和牌。<br>
 	 * 注意：如果选择已无必要，比如优先级更高的吃/碰/杠/和牌被别的玩家确定，则此方法所在的线程将被中断。所以此方法中应该随时检测线程是否被中断，
 	 * 若被中断则抛出 {@link InterruptedException}。
@@ -50,7 +58,7 @@ public abstract class Player {
 	 * @throws InterruptedException
 	 *             被中断
 	 */
-	public abstract CpkwChoice chooseCpk(PlayerView playerView,
+	public abstract CpkwChoice chooseCpkw(PlayerView playerView,
 			Set<CpkwChoice> cpkwChances, Tile newTile, boolean drawed)
 			throws InterruptedException;
 
@@ -94,7 +102,7 @@ public abstract class Player {
 	}
 
 	/**
-	 * 选择一张牌打出。如果听牌，则调用{@link #readyHand()}方法。<br>
+	 * 选择一张牌打出。如果要听牌，则调用{@link #readyHand()}方法。<br>
 	 * 注意：如果选择已无必要，则此方法所在的线程将被中断。所以此方法中应该随时检测线程是否被中断， 若被中断则抛出
 	 * {@link InterruptedException}。
 	 * 
@@ -139,6 +147,14 @@ public abstract class Player {
 		}
 
 	}
+
+	/**
+	 * 玩家即将离开游戏桌时调用。
+	 * 
+	 * @param playerView
+	 *            玩家视图
+	 */
+	public abstract void forLeaving(PlayerView playerView);
 
 	@Override
 	public String toString() {

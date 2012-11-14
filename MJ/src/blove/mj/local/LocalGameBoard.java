@@ -110,6 +110,7 @@ public class LocalGameBoard implements GameBoard {
 			WinStrategy winStrategy) {
 		this.timeStrategy = timeStrategy;
 		this.winStrategy = winStrategy;
+		threadPool.submit(this);
 	}
 
 	@Override
@@ -179,6 +180,16 @@ public class LocalGameBoard implements GameBoard {
 	 * @throws InterruptedException
 	 */
 	private void waitForAllReady() throws InterruptedException {
+		for (final PlayerInfo playerInfo : playerInfos.values()) {
+			submitToThreadPool(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					playerInfo.player.forReady(playerInfo.playerView);
+					return null;
+				}
+			});
+		}
+
 		synchronized (readyWaitingLock) {
 			while (!arePlayersAllReady())
 				readyWaitingLock.wait();
@@ -189,12 +200,13 @@ public class LocalGameBoard implements GameBoard {
 	 * 返回玩家是否全准备好了。
 	 */
 	private boolean arePlayersAllReady() {
-		if (isPlayersFull())
+		if (!isPlayersFull())
 			return false;
 		synchronized (readyWaitingLock) {
-			for (PlayerInfo playerInfo : playerInfos.values())
+			for (PlayerInfo playerInfo : playerInfos.values()) {
 				if (!playerInfo.ready)
 					return false;
+			}
 			return true;
 		}
 	}
@@ -363,13 +375,16 @@ public class LocalGameBoard implements GameBoard {
 		if (handling != null && !handling.isDone())
 			handling.cancel(true);
 
-		PlayerInfo playerInfo = playerInfos.remove(location);
+		PlayerInfo playerInfo = playerInfos.get(location);
+		playerInfo.player.forLeaving(playerInfo.playerView);
+		playerInfos.remove(location);
 
 		firePlayerOut(playerInfo.player.getName(), location);
 	}
 
 	@Override
-	public PlayerView newPlayer(Player player) throws GameBoardFullException {
+	public PlayerView newPlayer(final Player player)
+			throws GameBoardFullException {
 		resultList.clear();
 		PlayerView view = null;
 		PlayerLocation playerLocation = null;
@@ -386,6 +401,16 @@ public class LocalGameBoard implements GameBoard {
 			throw new GameBoardFullException(this);
 
 		firePlayerIn(player.getName(), playerLocation);
+
+		final PlayerView finalView = view;
+		submitToThreadPool(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				player.forReady(finalView);
+				return null;
+			}
+		});
+
 		return view;
 	}
 
@@ -585,11 +610,12 @@ public class LocalGameBoard implements GameBoard {
 		@Override
 		public void readyForGame() {
 			checkNotLeaved();
-			synchronized (LocalGameBoard.this) {
-				checkInGame(false);
+			checkInGame(false);
 
-				synchronized (readyWaitingLock) {
-					playerInfos.get(location).ready = true;
+			synchronized (readyWaitingLock) {
+				PlayerInfo playerInfo = playerInfos.get(location);
+				if (!playerInfo.ready) {
+					playerInfo.ready = true;
 					firePlayerReady(player.getName(), location);
 
 					readyWaitingLock.notifyAll();
@@ -627,13 +653,15 @@ public class LocalGameBoard implements GameBoard {
 
 		private Map<PlayerLocation, Set<CpkwChoice>> cpkwChances = new EnumMap<>(
 				PlayerLocation.class);// 无选择或放弃者置null
-		private Map<PlayerLocation, Future<Void>> playerChoosings;
+		private Map<PlayerLocation, Future<Void>> playerChoosings = new EnumMap<>(
+				PlayerLocation.class);
 
 		private Map<PlayerLocation, CpkwChoice> cpkwChoices = new EnumMap<>(
 				PlayerLocation.class);// 所有做出选择的过程在此对象上同步
 
 		private PlayerLocation finalChoiceLocation;// 最终选择的玩家位置。null表示未确定或无选择。
 		private CpkwChoice finalChoice;// 最终选择。null表示未确定。
+		private boolean finalDecided;
 
 		private TimerAction timerAction = new TimerAction() {
 
@@ -678,7 +706,8 @@ public class LocalGameBoard implements GameBoard {
 
 				LocationAndTile result = null;
 
-				if (!checkForStop()) {
+				checkForStop();
+				if (!finalDecided) {
 					timer.start(timeStrategy.discardLimit(), TimeUnit.SECONDS,
 							timerAction);
 					// 开始各Player选择CPKW的线程
@@ -686,22 +715,26 @@ public class LocalGameBoard implements GameBoard {
 							.values()) {
 						final Set<CpkwChoice> cpkwChances = this.cpkwChances
 								.get(location);
-						if (!cpkwChances.isEmpty()) {
+						if (cpkwChances != null && !cpkwChances.isEmpty()) {
 							Future<Void> choiceFuture = submitToThreadPool(new Callable<Void>() {
 
 								@Override
-								public Void call() throws Exception {
+								public Void call() {
 									PlayerInfo playerInfo = playerInfos
 											.get(location);
-									CpkwChoice choice;
-									choice = playerInfo.player.chooseCpk(
-											playerInfo.playerView, cpkwChances,
-											discardedTile, false);
+									CpkwChoice choice = null;
+									try {
+										choice = playerInfo.player.chooseCpkw(
+												playerInfo.playerView,
+												cpkwChances, discardedTile,
+												false);
+									} catch (InterruptedException e) {
+									}
 									if (choice != null
 											&& !cpkwChances.contains(choice))
 										choice = null;// XXX - 选择错误未处理并视为放弃
 									synchronized (cpkwChoices) {
-										if (Thread.interrupted())
+										if (finalDecided)
 											// 如果被中断则返回，关键是不会执行下面的checkForStop
 											// 因为如果其他玩家线程调用了checkForStop导致最终选择的话，此线程会被中断，checkForStop就不该再次调用。
 											return null;
@@ -749,16 +782,22 @@ public class LocalGameBoard implements GameBoard {
 				PlayerLocation location = playerInfoEntry.getKey();
 				PlayerInfo playerInfo = playerInfoEntry.getValue();
 				if (location != discardedLocation) {
+					PlayerTiles tiles = playerInfo.tiles;
+
 					Set<CpkwChoice> cpkwChoices = new HashSet<>();
 
-					PlayerTiles tiles = playerInfo.tiles;
-					Set<Cpk> cpkChances = CpkType.getAllChances(tiles,
-							discardedTile,
-							location.getRelationOf(discardedLocation));
-					if (!cpkChances.isEmpty()) {
-						for (Cpk cpkChance : cpkChances)
-							cpkwChoices.add(CpkwChoice.chooseCpk(cpkChance));
-					}
+					Set<Cpk> cpkChances;
+					if (!tiles.isReadyHand()) {
+						cpkChances = CpkType.getAllChances(tiles,
+								discardedTile,
+								location.getRelationOf(discardedLocation));
+						if (!cpkChances.isEmpty()) {
+							for (Cpk cpkChance : cpkChances)
+								cpkwChoices
+										.add(CpkwChoice.chooseCpk(cpkChance));
+						}
+					} else
+						cpkChances = Collections.emptySet();
 
 					if (winStrategy.getWinChances(tiles).contains(
 							discardedTile.getType()))
@@ -802,7 +841,7 @@ public class LocalGameBoard implements GameBoard {
 							cpk1.getFromRelation());
 					if (relationCompare != 0)
 						return relationCompare;
-					return cpk1.compareTo(cpk2);
+					return 0;
 				}
 
 			}
@@ -856,12 +895,10 @@ public class LocalGameBoard implements GameBoard {
 		}
 
 		/**
-		 * 检查当前是否可以中止等待。若可以中止则中止，并将{@link #finalChoiceLocation}和
-		 * {@link #finalChoice}两个变量设为合适的值。
-		 * 
-		 * @return 如果已确定最终选择，返回true，否则返回false。
+		 * 检查当前是否可以中止等待。若可以中止则中止，并将{@link #finalChoiceLocation}、
+		 * {@link #finalChoice}和{@link #finalDecided}三个变量设为合适的值。
 		 */
-		private boolean checkForStop() {
+		private void checkForStop() {
 			List<Map.Entry<PlayerLocation, CpkwChoice>> cpkwChances = new ArrayList<>();
 			for (Map.Entry<PlayerLocation, Set<CpkwChoice>> cpkwChancesForOne : this.cpkwChances
 					.entrySet()) {
@@ -873,25 +910,25 @@ public class LocalGameBoard implements GameBoard {
 			List<Map.Entry<PlayerLocation, CpkwChoice>> cpkwChoices = new ArrayList<>();
 			cpkwChoices.addAll(this.cpkwChoices.entrySet());
 
-			Map.Entry<PlayerLocation, CpkwChoice> firstChance = Collections
-					.min(cpkwChances, cpkwChoicePriorityComparator);
-			Map.Entry<PlayerLocation, CpkwChoice> firstChoice = Collections
-					.min(cpkwChoices, cpkwChoicePriorityComparator);
-
-			finalChoiceLocation = null;
-			finalChoice = null;
+			Map.Entry<PlayerLocation, CpkwChoice> firstChance = cpkwChances
+					.isEmpty() ? null : Collections.min(cpkwChances,
+					cpkwChoicePriorityComparator);
+			Map.Entry<PlayerLocation, CpkwChoice> firstChoice = cpkwChoices
+					.isEmpty() ? null : Collections.min(cpkwChoices,
+					cpkwChoicePriorityComparator);
 
 			if (firstChoice != null
 					&& (firstChance == null || cpkwChoicePriorityComparator
-							.compare(firstChoice, firstChance) < 0)) {
+							.compare(firstChoice, firstChance) <= 0)) {
 				// 已经决定动作，就是firstChoice
 				finalChoiceLocation = firstChoice.getKey();
 				finalChoice = firstChoice.getValue();
-				return true;
+				finalDecided = true;
 			} else if (firstChoice == null && firstChance == null) {
-				return true;
-			} else {
-				return false;
+				// 无选择或全部放弃
+				finalChoiceLocation = null;
+				finalChoice = null;
+				finalDecided = true;
 			}
 		}
 
@@ -958,6 +995,7 @@ public class LocalGameBoard implements GameBoard {
 			playerChoosings.clear();
 			finalChoiceLocation = null;
 			finalChoice = null;
+			finalDecided = false;
 		}
 	}
 
@@ -1007,13 +1045,11 @@ public class LocalGameBoard implements GameBoard {
 				throws InterruptedException {
 			try {
 				PlayerLocation drawedLocation = locationAndTile.location;
-				final Tile drawedTile = locationAndTile.tile;
+				Tile drawedTile = locationAndTile.tile;
 
+				final Tile drawedTileBeforeKong = drawedTile;
 				final PlayerInfo playerInfo = playerInfos.get(drawedLocation);
 
-				if (drawedLocation != null)
-					throw new IllegalStateException("在等待位置[" + drawedLocation
-							+ "]的玩家出牌");
 				if (!playerInfo.tiles.isForDiscarding())
 					throw new IllegalStateException(drawedLocation + "玩家不能等待出牌");
 				if (drawedTile != null
@@ -1041,9 +1077,9 @@ public class LocalGameBoard implements GameBoard {
 
 						@Override
 						public CpkwChoice call() throws Exception {
-							return playerInfo.player.chooseCpk(
+							return playerInfo.player.chooseCpkw(
 									playerInfo.playerView, kwChances,
-									drawedTile, true);
+									drawedTileBeforeKong, true);
 						}
 					});
 					try {
@@ -1063,44 +1099,62 @@ public class LocalGameBoard implements GameBoard {
 						// 选择杠牌
 						playerInfo.tiles.importCpk(kwChoice.cpk);
 						fireCpk(drawedLocation, kwChoice.cpk);
+
+						try {
+							drawedTile = draw(drawedLocation, true, false);
+						} catch (DrawGameException e) {
+							// 流局
+							endGame(null, null, null);
+							return null;
+						}
 					}
 				}
 
 				// 让玩家选择出牌
+				final Tile drawedTileAfterKong = drawedTile;
 				Tile discardTile;
 				boolean readyHand = false;
 				boolean timeout = false;
-				choosing = submitToThreadPool(new Callable<DiscardChoice>() {
-
-					@Override
-					public DiscardChoice call() throws Exception {
-						return playerInfo.player.chooseDiscard(
-								playerInfo.playerView, readyHandChances,
-								drawedTile);
-					}
-				});
-				try {
-					DiscardChoice choice = (DiscardChoice) choosing.get();
-					discardTile = choice.discardTile;
-					readyHand = choice.readyHand;
-					if (playerInfo.tiles.getAliveTiles().contains(discardTile)
-							|| (readyHand && !readyHandChances
-									.contains(discardTile.getType()))) {
-						throw new CancellationException();// XXX - 选择错误未处理并视同超时
-					}
-				} catch (ExecutionException | CancellationException e) {
-					if (e instanceof ExecutionException)
-						e.printStackTrace();// XXX - 玩家选择出牌实现中的异常未处理
-
-					// 超时
-					timeout = true;
+				if (playerInfo.tiles.isReadyHand()) {
+					// 如果已经听牌，则直接打出刚摸的牌
+					TimeUnit.SECONDS.sleep(1);
 					discardTile = drawedTile;
-					if (discardTile == null) {
-						for (Tile tile : playerInfos.get(drawedLocation).tiles
-								.getAliveTiles()) {
-							if (discardTile == null
-									|| tile.compareTo(discardTile) > 0)
-								discardTile = tile;
+				} else {
+					try {
+						choosing = submitToThreadPool(new Callable<DiscardChoice>() {
+
+							@Override
+							public DiscardChoice call() throws Exception {
+								return playerInfo.player.chooseDiscard(
+										playerInfo.playerView,
+										readyHandChances, drawedTileAfterKong);
+							}
+						});
+						DiscardChoice choice = (DiscardChoice) choosing.get();
+						discardTile = choice.discardTile;
+						readyHand = playerInfo.tiles.isReadyHand() ? false
+								: choice.readyHand;
+						if (!playerInfo.tiles.getAliveTiles().contains(
+								discardTile)
+								|| (readyHand && !readyHandChances
+										.contains(discardTile.getType()))) {
+							throw new CancellationException();// XXX -
+																// 选择错误未处理并视同超时
+						}
+					} catch (ExecutionException | CancellationException e) {
+						if (e instanceof ExecutionException)
+							e.printStackTrace();// XXX - 玩家选择出牌实现中的异常未处理
+
+						// 超时
+						timeout = true;
+						discardTile = drawedTile;
+						if (discardTile == null) {
+							for (Tile tile : playerInfos.get(drawedLocation).tiles
+									.getAliveTiles()) {
+								if (discardTile == null
+										|| tile.compareTo(discardTile) > 0)
+									discardTile = tile;
+							}
 						}
 					}
 				}
@@ -1108,10 +1162,11 @@ public class LocalGameBoard implements GameBoard {
 
 				return new LocationAndTile(drawedLocation, discardTile);
 			} catch (InterruptedException e) {
-				timer.stop();
+				throw e;
+			} finally {
 				if (choosing != null)
 					choosing.cancel(true);
-				throw e;
+				timer.stop();
 			}
 
 		}

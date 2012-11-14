@@ -20,12 +20,16 @@ public class MJ {
 		try {
 			GameBoard gameBoard = new LocalGameBoard(new DefTimeLimitStrategy(
 					99, 99, TimeUnit.SECONDS));
-			for (int i = 1; i <= 3; i++)
-				gameBoard.newPlayer(new FooBot("Foo" + i));
+
+			gameBoard.newPlayer(new FooBot("Joe"));
+			gameBoard.newPlayer(new FooBot("John"));
+			gameBoard.newPlayer(new FooBot("Jack"));
+
 			CliView cliView = new CliView(System.out, System.in);
 			CliGame cliGame = new CliGame(args.length == 0 ? "Tom" : args[0],
 					cliView);
 			cliGame.join(gameBoard);
+			System.exit(0);
 		} catch (GameBoardFullException e) {
 			throw new RuntimeException(e);// 不可能
 		} catch (InterruptedException e) {

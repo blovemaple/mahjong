@@ -42,7 +42,7 @@ public class CliView {
 	 * 
 	 * @throws IOException
 	 */
-	public void init() throws IOException {
+	public synchronized void init() throws IOException {
 		consoleReader.clearScreen();
 		for (int i = 0; i < consoleReader.getTerminal().getHeight(); i++)
 			out.println();
@@ -55,7 +55,7 @@ public class CliView {
 	 * @param message
 	 *            信息
 	 */
-	public void showMessage(String message) {
+	public synchronized void showMessage(String message) {
 		clearStatus();
 		out.println(message);
 		out.print(status);
@@ -67,7 +67,7 @@ public class CliView {
 	 * @param status
 	 *            状态栏
 	 */
-	public void updateStatus(String status) {
+	public synchronized void updateStatus(String status) {
 		clearStatus();
 		out.print(this.status = status);
 	}
@@ -84,7 +84,7 @@ public class CliView {
 	 * 
 	 * @return 状态栏
 	 */
-	public String getStatus() {
+	public synchronized String getStatus() {
 		return status;
 	}
 

@@ -78,7 +78,8 @@ public class PointsResult {
 			return -basicPoints;
 		}
 
-		boolean winnerIsDealer = location.equals(dealerLocation);
+		boolean winnerIsDealer = winInfo.getWinnerLocation().equals(
+				dealerLocation);
 		int itemPoints = 0;
 		for (PointItem item : pointItems)
 			itemPoints += item.getPoints();
