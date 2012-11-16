@@ -19,7 +19,7 @@ public interface GameEventListener extends EventListener {
 	 * @param event
 	 *            事件
 	 */
-	void newEvent(PlayerEvent event);
+	void newEvent(PlayerEvent event) throws Exception;
 
 	/**
 	 * 游戏开始。
@@ -27,7 +27,7 @@ public interface GameEventListener extends EventListener {
 	 * @param event
 	 *            事件
 	 */
-	void newEvent(GameStartEvent event);
+	void newEvent(GameStartEvent event) throws Exception;
 
 	/**
 	 * 限时变化。
@@ -35,7 +35,7 @@ public interface GameEventListener extends EventListener {
 	 * @param event
 	 *            事件
 	 */
-	void newEvent(TimeLimitEvent event);
+	void newEvent(TimeLimitEvent event) throws Exception;
 
 	/**
 	 * 发牌结束，或者有玩家摸牌、打牌、吃/碰/杠牌。<br>
@@ -44,7 +44,7 @@ public interface GameEventListener extends EventListener {
 	 * @param event
 	 *            事件
 	 */
-	void newEvent(PlayerActionEvent event);
+	void newEvent(PlayerActionEvent event) throws Exception;
 
 	/**
 	 * 游戏结束。
@@ -52,6 +52,6 @@ public interface GameEventListener extends EventListener {
 	 * @param event
 	 *            事件
 	 */
-	void newEvent(GameOverEvent event);
+	void newEvent(GameOverEvent event) throws Exception;
 
 }

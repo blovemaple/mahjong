@@ -41,7 +41,7 @@ public class FooBot extends Player {
 	 *            名字
 	 */
 	public FooBot(String name) {
-		super("[FOO]" + name);
+		super(name);
 		this.name = name;
 	}
 

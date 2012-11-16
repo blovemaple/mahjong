@@ -26,7 +26,7 @@ class Timer {
 		}
 
 		@Override
-		public void run() {
+		public void run() {// XXX - 总是从减少一秒开始计时
 			synchronized (Timer.this) {
 				executor.execute(new Runnable() {
 
@@ -58,21 +58,19 @@ class Timer {
 	 * 开始计时。
 	 * 
 	 * @param time
-	 *            时间
+	 *            时间。如果小于0则不计时。
 	 * @param unit
 	 *            时间单位
 	 * @param action
 	 *            动作
-	 * @throws IllegalArgumentException
-	 *             time<=0
 	 * @throws IllegalStateException
 	 *             当前正在计时
 	 */
 	public synchronized void start(long time, TimeUnit unit, TimerAction action) {
-		if (time <= 0)
-			throw new IllegalArgumentException("时间必须是正数");
 		if (taskFuture != null && !taskFuture.isDone())
 			throw new IllegalStateException("当前正在计时");
+		if (time < 0)
+			return;
 
 		timeout = false;
 		remainSecs = TimeUnit.SECONDS.convert(time, unit);

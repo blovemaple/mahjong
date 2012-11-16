@@ -27,12 +27,14 @@ import blove.mj.event.PlayerActionEvent.ActionType;
 import blove.mj.event.PlayerEvent;
 import blove.mj.event.TimeLimitEvent;
 
+import static blove.mj.cli.CliView.CharHandler.HandlingResult.*;
+
 /**
  * 命令行游戏。
  * 
  * @author blovemaple
  */
-public class CliGame {
+class CliGame {
 	private final CliPlayer player;
 
 	private final CliMessager messager;
@@ -59,31 +61,33 @@ public class CliGame {
 		boolean quitQuerying = false;
 
 		@Override
-		public boolean handle(char c) {
+		public HandlingResult handle(char c) {
 			switch (c) {
-			case 'q':
-				messager.tempStatus("Do you want to quit game?(y/n)");
-				quitQuerying = true;
-				break;
 			case 'y':
-				synchronized (inGameBoardWaiter) {
-					if (quitQuerying) {
+				if (quitQuerying) {
+					synchronized (inGameBoardWaiter) {
 						playerView.leave();
 						inGameBoard = false;
 						quitQuerying = false;
 						inGameBoardWaiter.notifyAll();
-						return false;
+						return ACCEPT_FOR_QUITING;
 					}
+				} else
+					return IGNORE;
+			case 'q':
+				if (!quitQuerying) {
+					messager.tempStatus("Do you want to quit Mahjong?(y/n)");
+					quitQuerying = true;
+					return ACCEPT_FOR_MONOPOLIZATION;
 				}
-				break;
 			default:
 				if (quitQuerying) {
 					messager.clearTempStatus();
 					quitQuerying = false;
-				}
-				break;
+					return ACCEPT;
+				} else
+					return IGNORE;
 			}
-			return true;
 		}
 	};
 
@@ -105,7 +109,6 @@ public class CliGame {
 		this.gameBoard = gameBoard;
 
 		this.inGameBoard = true;
-		messager.initView();
 		messager.addCharHandler(quitCharHandler);
 
 		synchronized (inGameBoardWaiter) {
@@ -120,18 +123,18 @@ public class CliGame {
 	 * 等待用户选择准备好游戏或退出游戏桌。
 	 */
 	private void forReady() {
-		messager.directStatus("If you are ready for new game, press space.");
+		messager.tempStatus("If you are ready for new game, press space.");
 		messager.addCharHandler(new CharHandler() {
 
 			@Override
-			public boolean handle(char c) {
+			public HandlingResult handle(char c) {
 				switch (c) {
 				case ' ':
-					messager.directStatus("Waiting for other players to be ready for game...");
+					messager.tempStatus("Waiting for other players to be ready for game...");
 					playerView.readyForGame();
-					return false;
+					return ACCEPT_FOR_QUITING;
 				default:
-					return true;
+					return IGNORE;
 				}
 			}
 		});
@@ -179,7 +182,7 @@ public class CliGame {
 				private boolean win;
 
 				@Override
-				public boolean handle(char c) {
+				public HandlingResult handle(char c) {
 					switch (c) {
 					case ',':
 						if (!cpkAsTileTypes.isEmpty()) {
@@ -188,7 +191,7 @@ public class CliGame {
 								crtChoose = cpkAsTileTypes.last();
 							focus();
 						}
-						return true;
+						return ACCEPT;
 					case '.':
 						if (!cpkAsTileTypes.isEmpty()) {
 							crtChoose = cpkAsTileTypes.higher(crtChoose);
@@ -196,23 +199,23 @@ public class CliGame {
 								crtChoose = cpkAsTileTypes.first();
 							focus();
 						}
-						return true;
+						return ACCEPT;
 					case ' ':
 						win = false;
-						return false;
+						return ACCEPT_FOR_QUITING;
 					case 'w':
 						if (winChance != null) {
 							win = true;
 							crtChoose = null;
-							return false;
+							return ACCEPT_FOR_QUITING;
 						} else
-							return true;
+							return IGNORE;
 					case 'g':
 						win = false;
 						crtChoose = null;
-						return false;
+						return ACCEPT_FOR_QUITING;
 					default:
-						return true;
+						return IGNORE;
 					}
 				}
 
@@ -311,7 +314,7 @@ public class CliGame {
 				private boolean readyHand = false;
 
 				@Override
-				public boolean handle(char c) {
+				public HandlingResult handle(char c) {
 					TreeSet<Tile> tilesForChoose = readyHand ? readyHandTiles
 							: aliveTiles;
 
@@ -338,14 +341,14 @@ public class CliGame {
 						}
 						break;
 					case ' ':
-						return false;
+						return ACCEPT_FOR_QUITING;
 					default:
-						return true;
+						return IGNORE;
 					}
 
 					messager.tilesStatus(myTiles, drawedTile, crtTile, option,
 							readyHand ? statusWithReadyHand : status);
-					return true;
+					return ACCEPT;
 				}
 
 				boolean isReadyHand() {
@@ -372,7 +375,7 @@ public class CliGame {
 	private class CliGameListener implements GameEventListener {
 
 		@Override
-		public void newEvent(PlayerEvent event) {
+		public void newEvent(PlayerEvent event) throws IOException {
 			messager.clearTimeStatus();
 
 			String playerName = event.getPlayerName();
@@ -383,7 +386,9 @@ public class CliGame {
 		}
 
 		@Override
-		public void newEvent(GameStartEvent event) {
+		public void newEvent(GameStartEvent event) throws IOException {
+			messager.initView();
+			messager.clearTempStatus();
 			messager.clearTimeStatus();
 			messager.showMessage(
 					"start",
@@ -402,7 +407,7 @@ public class CliGame {
 		}
 
 		@Override
-		public void newEvent(PlayerActionEvent event) {
+		public void newEvent(PlayerActionEvent event) throws IOException {
 			PlayerLocation myLocation = playerView.getMyLocation();
 
 			ActionType eventType = event.getType();
@@ -445,11 +450,11 @@ public class CliGame {
 			messager.clearTimeStatus();
 			messager.tilesStatus(playerView.getMyTiles(),
 					(eventType == ActionType.DRAW ? eventTile : null),
-					(Tile) null, null, null);
+					(Tile) null, null, "wait");
 		}
 
 		@Override
-		public void newEvent(GameOverEvent event) {
+		public void newEvent(GameOverEvent event) throws IOException {
 			messager.clearTimeStatus();
 			messager.showResult(event.getResult(), playerView.getMyLocation());
 			forReady();

@@ -568,11 +568,9 @@ public class LocalGameBoard implements GameBoard {
 
 		private void checkInGame(boolean forInGame) {
 			checkNotLeaved();
-			synchronized (LocalGameBoard.this) {
-				if (inGame != forInGame)
-					throw new IllegalStateException((forInGame ? "不" : "已")
-							+ "在游戏中");
-			}
+			if (isInGame() != forInGame)
+				throw new IllegalStateException((forInGame ? "不" : "已")
+						+ "在游戏中");
 		}
 
 		@Override
@@ -610,7 +608,6 @@ public class LocalGameBoard implements GameBoard {
 		@Override
 		public void readyForGame() {
 			checkNotLeaved();
-			checkInGame(false);
 
 			synchronized (readyWaitingLock) {
 				PlayerInfo playerInfo = playerInfos.get(location);

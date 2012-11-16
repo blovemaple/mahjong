@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,8 +32,6 @@ import blove.mj.event.TimeLimitEvent;
  */
 class CliMessager {
 	private final CliView cliView;
-
-	private static final String DEVIDING_LINE = "**************************************************";
 
 	/**
 	 * 新建一个实例。
@@ -87,9 +87,10 @@ class CliMessager {
 	 *            信息
 	 * @param myLocation
 	 *            当前玩家位置
+	 * @throws IOException
 	 */
 	void showMessage(String action, PlayerLocation location, String playerName,
-			String message, PlayerLocation myLocation) {
+			String message, PlayerLocation myLocation) throws IOException {
 		// [LOCATION]player [ACTION] message
 		StringBuilder messageViewStr = new StringBuilder();
 
@@ -106,7 +107,7 @@ class CliMessager {
 			messageViewStr.append(message);
 		}
 
-		cliView.showMessage(messageViewStr.toString());
+		cliView.printMessage(messageViewStr.toString());
 	}
 
 	/**
@@ -116,11 +117,11 @@ class CliMessager {
 	 *            结果
 	 * @param myLocation
 	 *            当前玩家位置
+	 * @throws IOException
 	 */
-	void showResult(GameResult result, PlayerLocation myLocation) {
-		cliView.showMessage(DEVIDING_LINE);
-		cliView.showMessage(toString(result, myLocation));
-		cliView.showMessage(DEVIDING_LINE);
+	void showResult(GameResult result, PlayerLocation myLocation)
+			throws IOException {
+		cliView.printSpecialMessage("RESULT", toString(result, myLocation));
 	}
 
 	private PlayerTiles tiles;
@@ -129,7 +130,7 @@ class CliMessager {
 	private String extraOptions;
 	private String statusInfo;
 	private long time = TimeLimitEvent.STOP_TIME_LIMIT;
-	private boolean isTileStatus = false;
+	private final Deque<String> tempStatuses = new LinkedList<>();
 
 	/**
 	 * 在状态栏显示与本玩家的牌相关的信息。
@@ -178,15 +179,14 @@ class CliMessager {
 	}
 
 	/**
-	 * 在状态栏显示时间信息。
+	 * 状态栏显示时间信息。
 	 * 
 	 * @param time
 	 *            时间
 	 */
 	void timeStatus(long time) {
 		this.time = time;
-		if (isTileStatus)
-			refreshTileStatus();
+		refreshTileStatus();
 	}
 
 	/**
@@ -197,28 +197,28 @@ class CliMessager {
 	}
 
 	private void refreshTileStatus() {
-		// playerTiles <extra options> [STATUS] time
-		StringBuilder status = new StringBuilder();
-		if (tiles != null) {
-			status.append(toString(tiles, drawedTile, focusTiles));
-			if (extraOptions != null) {
-				status.append(" <");
-				status.append(extraOptions);
-				status.append('>');
+		if (tempStatuses.isEmpty()) {
+			// playerTiles <extra options> [STATUS] time
+			StringBuilder status = new StringBuilder();
+			if (tiles != null) {
+				status.append(toString(tiles, drawedTile, focusTiles));
+				if (extraOptions != null) {
+					status.append(" <");
+					status.append(extraOptions);
+					status.append('>');
+				}
+				if (this.statusInfo != null) {
+					status.append(" [");
+					status.append(this.statusInfo.toUpperCase());
+					status.append(']');
+				}
+				if (time != TimeLimitEvent.STOP_TIME_LIMIT) {
+					status.append(' ');
+					status.append(time);
+				}
 			}
-			if (this.statusInfo != null) {
-				status.append(" [");
-				status.append(this.statusInfo.toUpperCase());
-				status.append(']');
-			}
-			if (time != TimeLimitEvent.STOP_TIME_LIMIT) {
-				status.append(' ');
-				status.append(time);
-			}
+			cliView.updateStatus(status.toString());
 		}
-
-		cliView.updateStatus(status.toString());
-		isTileStatus = true;
 	}
 
 	private static final char SINGLE_FOCUS_HEAD = /* '→' */'(';
@@ -444,33 +444,15 @@ class CliMessager {
 	}
 
 	/**
-	 * 在整个状态栏直接显示指定信息。
-	 * 
-	 * @param message
-	 *            信息
-	 */
-	void directStatus(String message) {
-		cliView.updateStatus("[" + message + "]");
-		isTileStatus = false;
-	}
-
-	private String saveStatus;
-	private boolean saveIsTileStatus;
-
-	/**
-	 * 显示临时状态信息。调用此方法后可用{@link #tempStatus(String)}方法恢复之前的状态。
+	 * 显示临时状态信息。调用此方法后必须用{@link #clearTempStatus()}方法恢复之前的状态。
 	 * 
 	 * @param status
 	 *            状态信息
 	 * @throws IllegalStateException
 	 *             当前已是临时状态
 	 */
-	void tempStatus(String status) {
-		if (saveStatus != null)
-			throw new IllegalStateException("当前已是临时状态");
-		saveStatus = cliView.getStatus();
-		saveIsTileStatus = isTileStatus;
-
+	void tempStatus(String status) {// TODO 出现栈式tempStatus的情况：等待ready时退出游戏然后取消
+		tempStatuses.push(status);
 		cliView.updateStatus(status);
 	}
 
@@ -481,11 +463,10 @@ class CliMessager {
 	 *             当前不是临时状态
 	 */
 	void clearTempStatus() {
-		if (saveStatus == null)
-			throw new IllegalStateException("当前不是临时状态");
-		cliView.updateStatus(saveStatus);
-		isTileStatus = saveIsTileStatus;
-
-		saveStatus = null;
+		tempStatuses.pop();
+		if (!tempStatuses.isEmpty())
+			cliView.updateStatus(tempStatuses.peek());
+		else
+			refreshTileStatus();
 	}
 }

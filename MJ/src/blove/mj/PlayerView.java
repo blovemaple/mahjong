@@ -71,8 +71,6 @@ public interface PlayerView {
 	 * 准备好开始一局游戏。
 	 * 
 	 * @throws PlayerLeavedException
-	 * @throws IllegalStateException
-	 *             此时已在游戏中
 	 */
 	void readyForGame();
 
