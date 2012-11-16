@@ -1,5 +1,6 @@
 package blove.mj;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -12,7 +13,9 @@ import java.util.Set;
  * 
  * @author blovemaple
  */
-public class TileType implements Comparable<TileType> {
+public class TileType implements Comparable<TileType>, Serializable {
+	private static final long serialVersionUID = -3922785577958519449L;
+
 	/**
 	 * “花色”。
 	 * 

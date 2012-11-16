@@ -11,8 +11,9 @@ import blove.mj.PointItem;
  * 
  * @author blovemaple
  */
-public abstract class AbstractMatchablePointsItem implements
-		MatchablePointsItem {
+public abstract class AbstractMatchablePointItem implements MatchablePointItem {
+	private static final long serialVersionUID = -437977678739855935L;
+
 	private final String name;
 	private final int points;
 	private final boolean isSpecialWinType;
@@ -30,7 +31,7 @@ public abstract class AbstractMatchablePointsItem implements
 	 * @param coverItems
 	 *            覆盖的得分项目
 	 */
-	public AbstractMatchablePointsItem(String name, int points,
+	public AbstractMatchablePointItem(String name, int points,
 			boolean isSpecialWinType, PointItem... coverItems) {
 		this.name = name;
 		this.points = points;

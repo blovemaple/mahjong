@@ -11,7 +11,7 @@ import blove.mj.board.PlayerTiles;
  * 
  * @author blovemaple
  */
-public interface MatchablePointsItem extends PointItem {
+public interface MatchablePointItem extends PointItem {
 	/**
 	 * 是否为特殊的和牌类型。
 	 * 

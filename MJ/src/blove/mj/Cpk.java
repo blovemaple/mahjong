@@ -1,5 +1,6 @@
 package blove.mj;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +18,9 @@ import blove.mj.PlayerLocation.Relation;
  * 
  * @author blovemaple
  */
-public class Cpk implements Comparable<Cpk> {
+public class Cpk implements Comparable<Cpk>, Serializable {
+	private static final long serialVersionUID = -1900841652498932239L;
+
 	private final CpkType type;
 	private final Set<Tile> tiles;
 	private final Relation fromRelation;

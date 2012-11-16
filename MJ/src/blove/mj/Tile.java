@@ -1,5 +1,6 @@
 package blove.mj;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,7 +14,9 @@ import blove.mj.TileType.Suit;
  * 
  * @author blovemaple
  */
-public class Tile implements Comparable<Tile> {
+public class Tile implements Comparable<Tile>, Serializable {
+	private static final long serialVersionUID = -679070430654466863L;
+
 	private static Set<Tile> tiles;
 	private static Map<TileType, Set<Tile>> tilesForType;
 	static {

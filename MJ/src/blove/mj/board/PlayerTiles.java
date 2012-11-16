@@ -1,5 +1,6 @@
 package blove.mj.board;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,7 +15,9 @@ import blove.mj.Tile;
  * 
  * @author blovemaple
  */
-public class PlayerTiles {
+public class PlayerTiles implements Serializable {
+	private static final long serialVersionUID = 6188183495759025217L;
+
 	protected Set<Tile> aliveTiles;
 	protected List<Cpk> cpks;
 	protected Tile readyHandDiscardTile;// 玩家叫听才算听和

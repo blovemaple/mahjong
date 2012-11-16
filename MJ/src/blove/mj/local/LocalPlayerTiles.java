@@ -15,6 +15,8 @@ import blove.mj.board.PlayerTiles;
  * @author blovemaple
  */
 class LocalPlayerTiles extends PlayerTiles {
+	private static final long serialVersionUID = -4973858966048750566L;
+
 	/**
 	 * 新建一个实例。
 	 */

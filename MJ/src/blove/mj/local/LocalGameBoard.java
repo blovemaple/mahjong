@@ -35,11 +35,9 @@ import blove.mj.PlayerLocation.Relation;
 import blove.mj.PlayerView;
 import blove.mj.Tile;
 import blove.mj.TileType;
-import blove.mj.board.DiscardedTiles;
 import blove.mj.board.GameBoard;
 import blove.mj.board.GameBoardFullException;
 import blove.mj.board.PlayerTiles;
-import blove.mj.board.Wall;
 import blove.mj.event.GameEvent;
 import blove.mj.event.GameEventListener;
 import blove.mj.event.GameOverEvent;
@@ -49,7 +47,7 @@ import blove.mj.event.PlayerEvent;
 import blove.mj.event.PlayerEvent.PlayerEventType;
 import blove.mj.event.TimeLimitEvent;
 import blove.mj.local.Timer.TimerAction;
-import blove.mj.rules.SimpleWinStrategy;
+import blove.mj.record.Recorder;
 import blove.mj.rules.TimeLimitStrategy;
 import blove.mj.rules.WinStrategy;
 
@@ -71,6 +69,7 @@ public class LocalGameBoard implements GameBoard {
 
 	private final TimeLimitStrategy timeStrategy;
 	private final WinStrategy winStrategy;
+	private final Recorder recorder;
 
 	private boolean inGame = false;
 	private PlayerLocation dealerLocation = PlayerLocation.EAST;// 一局结束时设置下局庄家
@@ -89,27 +88,20 @@ public class LocalGameBoard implements GameBoard {
 	private Tile winTile;
 
 	/**
-	 * 新建一个实例，采用默认的和牌策略。
-	 * 
-	 * @param timeStrategy
-	 *            限时策略
-	 */
-	public LocalGameBoard(TimeLimitStrategy timeStrategy) {
-		this(timeStrategy, new SimpleWinStrategy());
-	}
-
-	/**
 	 * 新建一个实例。
 	 * 
 	 * @param timeStrategy
 	 *            限时策略
 	 * @param winStrategy
 	 *            和牌策略
+	 * @param recorder
+	 *            记录管理器
 	 */
 	public LocalGameBoard(TimeLimitStrategy timeStrategy,
-			WinStrategy winStrategy) {
+			WinStrategy winStrategy, Recorder recorder) {
 		this.timeStrategy = timeStrategy;
 		this.winStrategy = winStrategy;
+		this.recorder = recorder;
 		threadPool.submit(this);
 	}
 
@@ -344,12 +336,12 @@ public class LocalGameBoard implements GameBoard {
 			players.put(location, playerInfo.player.getName());
 		}
 
-		DiscardedTiles discardTiles = DiscardedTiles.copyOf(this.discardTiles);
-		Wall wall = Wall.copyOf(this.wall);
-
 		GameResult result = new GameResult(players, winInfo, dealerLocation,
-				tiles, discardTiles, wall, winStrategy);
+				tiles, winStrategy);
 		resultList.add(result);
+
+		if (recorder != null)
+			recorder.addResult(result);
 
 		fireGameOver(result);
 	}
@@ -564,13 +556,6 @@ public class LocalGameBoard implements GameBoard {
 		private void checkNotLeaved() {
 			if (leaved)
 				throw new PlayerLeavedException(player, LocalGameBoard.this);
-		}
-
-		private void checkInGame(boolean forInGame) {
-			checkNotLeaved();
-			if (isInGame() != forInGame)
-				throw new IllegalStateException((forInGame ? "不" : "已")
-						+ "在游戏中");
 		}
 
 		@Override

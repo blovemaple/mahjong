@@ -7,17 +7,7 @@ import blove.mj.GameResult;
  * 
  * @author blovemaple
  */
-public class Recorder {
-	private static Recorder instance = new Recorder();
-
-	/**
-	 * 返回唯一实例。
-	 * 
-	 * @return 实例
-	 */
-	public static Recorder getRecorder() {
-		return instance;
-	}
+public interface Recorder {
 
 	/**
 	 * 返回指定玩家的分数。
@@ -26,10 +16,7 @@ public class Recorder {
 	 *            玩家名称
 	 * @return 分数。如果玩家不存在，则返回0。
 	 */
-	public int getPoints(String playerName) {
-		// TODO
-		return 1000;
-	}
+	public int getPoints(String playerName);
 
 	/**
 	 * 添加一个新记录。
@@ -37,7 +24,6 @@ public class Recorder {
 	 * @param result
 	 *            新记录
 	 */
-	public void addResult(GameResult result) {
-		// TODO
-	}
+	public void addResult(GameResult result);
+
 }

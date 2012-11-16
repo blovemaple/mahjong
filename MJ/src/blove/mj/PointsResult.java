@@ -1,5 +1,6 @@
 package blove.mj;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +14,9 @@ import blove.mj.rules.WinStrategy;
  * 
  * @author blovemaple
  */
-public class PointsResult {
+public class PointsResult implements Serializable {
+	private static final long serialVersionUID = -2700742284298994146L;
+
 	private final int basicPoints;
 	private final Set<PointItem> pointItems;
 	private final WinInfo winInfo;

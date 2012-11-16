@@ -1,5 +1,6 @@
 package blove.mj;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
@@ -7,7 +8,7 @@ import java.util.Comparator;
  * 
  * @author blovemaple
  */
-public interface PointItem {
+public interface PointItem extends Serializable {
 	/**
 	 * 返回项目名称。
 	 * 

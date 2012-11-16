@@ -28,7 +28,7 @@ import blove.mj.board.PlayerTiles;
  * @author blovemaple
  */
 public class FooBot extends Player {
-	private static final int MIN_THINKING_TIME = 3, MAX_THINKING_TIME = 5;
+	private static final int MIN_THINKING_TIME = 2, MAX_THINKING_TIME = 5;
 	private final Random random = new Random();
 
 	@SuppressWarnings("unused")
@@ -58,8 +58,7 @@ public class FooBot extends Player {
 	public CpkwChoice chooseCpkw(PlayerView playerView,
 			Set<CpkwChoice> cpkwChances, Tile newTile, boolean drawed)
 			throws InterruptedException {
-		TimeUnit.SECONDS.sleep(MIN_THINKING_TIME
-				+ random.nextInt(MAX_THINKING_TIME - MIN_THINKING_TIME));
+		delay();
 
 		PlayerTiles myTiles = playerView.getMyTiles();
 
@@ -162,8 +161,7 @@ public class FooBot extends Player {
 	public DiscardChoice chooseDiscard(PlayerView playerView,
 			Set<TileType> readyHandTypes, Tile drawedTile)
 			throws InterruptedException {
-		TimeUnit.SECONDS.sleep(MIN_THINKING_TIME
-				+ random.nextInt(MAX_THINKING_TIME - MIN_THINKING_TIME));
+		delay();
 
 		PlayerTiles myTiles = playerView.getMyTiles();
 
@@ -297,6 +295,18 @@ public class FooBot extends Player {
 		boolean readyHand = readyHandTypes.contains(discardTile.getType());
 
 		return new DiscardChoice(discardTile, readyHand);
+	}
+
+	/**
+	 * 用延时模拟思考时间。
+	 * 
+	 * @throws InterruptedException
+	 */
+	private void delay() throws InterruptedException {
+		TimeUnit.MILLISECONDS
+				.sleep(MIN_THINKING_TIME
+						* 1000
+						+ random.nextInt((MAX_THINKING_TIME - MIN_THINKING_TIME) * 1000));
 	}
 
 	/**

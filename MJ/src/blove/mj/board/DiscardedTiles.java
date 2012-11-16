@@ -1,5 +1,6 @@
 package blove.mj.board;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,7 +13,9 @@ import blove.mj.TileType;
  * 
  * @author blovemaple
  */
-public class DiscardedTiles {
+public class DiscardedTiles implements Serializable {
+	private static final long serialVersionUID = -9017431981336491117L;
+
 	/**
 	 * 所有牌。
 	 */

@@ -1,5 +1,6 @@
 package blove.mj.board;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +12,9 @@ import blove.mj.Tile;
  * 
  * @author blovemaple
  */
-public class Wall {
+public class Wall implements Serializable {
+	private static final long serialVersionUID = 4756624681430629844L;
+
 	/**
 	 * 所有牌。
 	 */

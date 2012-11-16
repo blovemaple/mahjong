@@ -12,6 +12,8 @@ import blove.mj.board.Wall;
  * @author blovemaple
  */
 class LocalWall extends Wall {
+	private static final long serialVersionUID = 670583054103843310L;
+
 	/**
 	 * 新建一个实例。
 	 */

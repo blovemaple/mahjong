@@ -34,19 +34,8 @@ public class SimpleWinStrategy extends AbstractWinStrategy {
 			Set<Tile> aliveTiles) {
 		if (!isWin(playerTiles, aliveTiles))
 			throw new IllegalArgumentException("指定玩家的牌不是和牌");
-
-		return Collections.<PointItem> singleton(new PointItem() {
-
-			@Override
-			public int getPoints() {
-				return 10;
-			}
-
-			@Override
-			public String getName() {
-				return "Win";
-			}
-		});
+		return Collections
+				.<PointItem> singleton(new SimplePointItem("Win", 10));
 	}
 
 }

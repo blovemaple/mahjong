@@ -11,6 +11,8 @@ import blove.mj.board.DiscardedTiles;
  * @author blovemaple
  */
 class LocalDiscardTiles extends DiscardedTiles {
+	private static final long serialVersionUID = -5177012996591944475L;
+
 	/**
 	 * 新建一个实例。
 	 */

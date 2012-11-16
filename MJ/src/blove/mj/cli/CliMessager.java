@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +131,8 @@ class CliMessager {
 	private String extraOptions;
 	private String statusInfo;
 	private long time = TimeLimitEvent.STOP_TIME_LIMIT;
-	private final Deque<String> tempStatuses = new LinkedList<>();
+	private final Deque<String> tempStatusKeys = new LinkedList<>();
+	private final Map<String, String> tempStatuses = new HashMap<>();
 
 	/**
 	 * 在状态栏显示与本玩家的牌相关的信息。
@@ -444,29 +446,43 @@ class CliMessager {
 	}
 
 	/**
-	 * 显示临时状态信息。调用此方法后必须用{@link #clearTempStatus()}方法恢复之前的状态。
+	 * 显示临时状态信息。调用此方法后必须用{@link #clearTempStatus(String)}方法恢复之前的状态。
 	 * 
+	 * @param key
+	 *            信息标识
 	 * @param status
 	 *            状态信息
+	 * 
 	 * @throws IllegalStateException
 	 *             当前已是临时状态
 	 */
-	void tempStatus(String status) {// TODO 出现栈式tempStatus的情况：等待ready时退出游戏然后取消
-		tempStatuses.push(status);
-		cliView.updateStatus(status);
+	void tempStatus(String key, String status) {
+		synchronized (tempStatuses) {
+			tempStatusKeys.addFirst(key);
+			tempStatuses.put(key, status);
+			cliView.updateStatus(status);
+		}
 	}
 
 	/**
 	 * 取消临时状态信息。
 	 * 
+	 * @param key
+	 *            信息标识
 	 * @throws IllegalStateException
 	 *             当前不是临时状态
 	 */
-	void clearTempStatus() {
-		tempStatuses.pop();
-		if (!tempStatuses.isEmpty())
-			cliView.updateStatus(tempStatuses.peek());
-		else
-			refreshTileStatus();
+	void clearTempStatus(String key) {
+		synchronized (tempStatuses) {
+			boolean exist = tempStatusKeys.remove(key);
+			if (exist) {
+				tempStatuses.remove(key);
+				if (!tempStatuses.isEmpty())
+					cliView.updateStatus(tempStatuses.get(tempStatusKeys
+							.getFirst()));
+				else
+					refreshTileStatus();
+			}
+		}
 	}
 }

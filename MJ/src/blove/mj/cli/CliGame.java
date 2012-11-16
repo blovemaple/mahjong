@@ -35,6 +35,8 @@ import static blove.mj.cli.CliView.CharHandler.HandlingResult.*;
  * @author blovemaple
  */
 class CliGame {
+	private static final String WAITING_START_STATUS_KEY = "waiting_for_start";
+
 	private final CliPlayer player;
 
 	private final CliMessager messager;
@@ -58,6 +60,8 @@ class CliGame {
 	}
 
 	private CharHandler quitCharHandler = new CharHandler() {
+		private static final String QUITING_STATUS_KEY = "quiting";
+
 		boolean quitQuerying = false;
 
 		@Override
@@ -76,13 +80,14 @@ class CliGame {
 					return IGNORE;
 			case 'q':
 				if (!quitQuerying) {
-					messager.tempStatus("Do you want to quit Mahjong?(y/n)");
+					messager.tempStatus(QUITING_STATUS_KEY,
+							"Do you want to quit Mahjong?(y/n)");
 					quitQuerying = true;
 					return ACCEPT_FOR_MONOPOLIZATION;
 				}
 			default:
 				if (quitQuerying) {
-					messager.clearTempStatus();
+					messager.clearTempStatus(QUITING_STATUS_KEY);
 					quitQuerying = false;
 					return ACCEPT;
 				} else
@@ -123,14 +128,19 @@ class CliGame {
 	 * 等待用户选择准备好游戏或退出游戏桌。
 	 */
 	private void forReady() {
-		messager.tempStatus("If you are ready for new game, press space.");
+		final String WAITING_READY_STATUS_KEY = "waiting_for_ready";
+
+		messager.tempStatus(WAITING_READY_STATUS_KEY,
+				"If you are ready for new game, press space.");
 		messager.addCharHandler(new CharHandler() {
 
 			@Override
 			public HandlingResult handle(char c) {
 				switch (c) {
 				case ' ':
-					messager.tempStatus("Waiting for other players to be ready for game...");
+					messager.clearTempStatus(WAITING_READY_STATUS_KEY);
+					messager.tempStatus(WAITING_START_STATUS_KEY,
+							"Waiting for other players to be ready for game...");
 					playerView.readyForGame();
 					return ACCEPT_FOR_QUITING;
 				default:
@@ -388,7 +398,7 @@ class CliGame {
 		@Override
 		public void newEvent(GameStartEvent event) throws IOException {
 			messager.initView();
-			messager.clearTempStatus();
+			messager.clearTempStatus(WAITING_START_STATUS_KEY);
 			messager.clearTimeStatus();
 			messager.showMessage(
 					"start",
