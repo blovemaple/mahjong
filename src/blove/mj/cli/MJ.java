@@ -69,7 +69,7 @@ public class MJ {
 			gameBoard.newPlayer(new FooBot(BOT2_NAME));
 			gameBoard.newPlayer(new FooBot(BOT3_NAME));
 
-			CliGame cliGame = new CliGame(myName, cliView);
+			CliGame cliGame = new CliGame(myName, cliView, recorder);
 			cliGame.join(gameBoard);
 			System.exit(0);
 		} catch (GameBoardFullException e) {

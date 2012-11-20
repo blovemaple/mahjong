@@ -26,7 +26,7 @@ import blove.mj.event.PlayerActionEvent;
 import blove.mj.event.PlayerActionEvent.ActionType;
 import blove.mj.event.PlayerEvent;
 import blove.mj.event.TimeLimitEvent;
-
+import blove.mj.record.Recorder;
 import static blove.mj.cli.CliView.CharHandler.HandlingResult.*;
 
 /**
@@ -40,6 +40,7 @@ class CliGame {
 	private final CliPlayer player;
 
 	private final CliMessager messager;
+	private final Recorder recorder;
 
 	private boolean inGameBoard;// 进入游戏桌前置true，退出游戏桌时置false
 	private Object inGameBoardWaiter = new Object();// play方法在此对象上等待，退出游戏桌时被唤醒
@@ -53,13 +54,16 @@ class CliGame {
 	 *            玩家名称
 	 * @param cliView
 	 *            命令行界面
+	 * @param recorder
+	 *            记录管理器
 	 */
-	public CliGame(String name, CliView cliView) {
+	public CliGame(String name, CliView cliView, Recorder recorder) {
 		player = new CliPlayer(name);
 		this.messager = new CliMessager(cliView);
+		this.recorder = recorder;
 	}
 
-	private CharHandler quitCharHandler = new CharHandler() {
+	private final CharHandler quitCharHandler = new CharHandler() {
 		private static final String QUITING_STATUS_KEY = "quiting";
 
 		boolean quitQuerying = false;
@@ -95,6 +99,24 @@ class CliGame {
 			}
 		}
 	};
+	private final CharHandler playerInfoHandler = new CharHandler() {
+
+		@Override
+		public HandlingResult handle(char c) {
+			switch (c) {
+			case 'i':
+				try {
+					messager.showPlayerInfos(gameBoard.getPlayerNames(),
+							recorder, gameBoard.getReadyHandLocations());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return ACCEPT;
+			default:
+				return IGNORE;
+			}
+		}
+	};
 
 	/**
 	 * 加入指定的游戏桌进行游戏，直到退出游戏桌才返回。
@@ -115,6 +137,7 @@ class CliGame {
 
 		this.inGameBoard = true;
 		messager.addCharHandler(quitCharHandler);
+		messager.addCharHandler(playerInfoHandler);
 
 		synchronized (inGameBoardWaiter) {
 			while (inGameBoard)
@@ -466,7 +489,8 @@ class CliGame {
 		@Override
 		public void newEvent(GameOverEvent event) throws IOException {
 			messager.clearTimeStatus();
-			messager.showResult(event.getResult(), playerView.getMyLocation());
+			messager.showResult(event.getResult(), playerView.getMyLocation(),
+					recorder);
 			forReady();
 		}
 

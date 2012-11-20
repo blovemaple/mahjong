@@ -1,6 +1,7 @@
 package blove.mj.board;
 
 import java.util.Map;
+import java.util.Set;
 
 import blove.mj.Player;
 import blove.mj.PlayerLocation;
@@ -53,6 +54,13 @@ public interface GameBoard extends Runnable {
 	 * @return 位置与玩家名称
 	 */
 	Map<PlayerLocation, String> getPlayerNames();
+
+	/**
+	 * 返回听和的玩家位置。
+	 * 
+	 * @return 听和的玩家位置
+	 */
+	Set<PlayerLocation> getReadyHandLocations();
 
 	/**
 	 * 返回庄家位置。

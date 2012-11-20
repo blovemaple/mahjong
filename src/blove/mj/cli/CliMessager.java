@@ -25,6 +25,7 @@ import blove.mj.TileType.Suit;
 import blove.mj.board.PlayerTiles;
 import blove.mj.cli.CliView.CharHandler;
 import blove.mj.event.TimeLimitEvent;
+import blove.mj.record.Recorder;
 
 /**
  * 提供向CliView提供展示信息的便捷方法。
@@ -112,17 +113,64 @@ class CliMessager {
 	}
 
 	/**
+	 * 显示玩家信息。
+	 * 
+	 * @param playerNames
+	 *            玩家名称
+	 * @param recorder
+	 *            记录管理器
+	 * @param readyHandLocations
+	 *            听和的玩家位置
+	 * @throws IOException
+	 */
+	void showPlayerInfos(Map<PlayerLocation, String> playerNames,
+			Recorder recorder, Set<PlayerLocation> readyHandLocations)
+			throws IOException {
+		final int width = 10;
+
+		StringBuilder locationStr = new StringBuilder();
+		StringBuilder playerNameStr = new StringBuilder();
+		StringBuilder pointsStr = new StringBuilder();
+		StringBuilder readyHandStr = new StringBuilder();
+
+		for (Map.Entry<PlayerLocation, String> playerNameEntry : playerNames
+				.entrySet()) {
+			PlayerLocation location = playerNameEntry.getKey();
+			String playerName = playerNameEntry.getValue();
+			int point = recorder.getPoints(playerName);
+			boolean readyHand = readyHandLocations.contains(location);
+
+			locationStr.append(String.format("%-" + width + "s", "[" + location
+					+ "]"));
+			playerNameStr.append(String.format("%-" + width + "s", playerName));
+			pointsStr.append(String.format("%-" + width + "d", point));
+			readyHandStr.append(String.format("%-" + width + "s",
+					readyHand ? "(READYHAND)" : ""));
+		}
+
+		String playerInfos = locationStr + System.lineSeparator()
+				+ playerNameStr + System.lineSeparator() + pointsStr;
+		if (!readyHandLocations.isEmpty())
+			playerInfos += System.lineSeparator() + readyHandStr;
+
+		cliView.printSpecialMessage("Player Information", playerInfos);
+	}
+
+	/**
 	 * 显示一局结果。
 	 * 
 	 * @param result
 	 *            结果
 	 * @param myLocation
 	 *            当前玩家位置
+	 * @param recorder
+	 *            记录管理器。如果提供了此参数，则会显示当前各玩家总分。
 	 * @throws IOException
 	 */
-	void showResult(GameResult result, PlayerLocation myLocation)
-			throws IOException {
-		cliView.printSpecialMessage("RESULT", toString(result, myLocation));
+	void showResult(GameResult result, PlayerLocation myLocation,
+			Recorder recorder) throws IOException {
+		cliView.printSpecialMessage("RESULT",
+				toString(result, myLocation, recorder));
 	}
 
 	private PlayerTiles tiles;
@@ -319,7 +367,8 @@ class CliMessager {
 		return str.toString();
 	}
 
-	private static String toString(GameResult result, PlayerLocation myLocation) {
+	private static String toString(GameResult result,
+			PlayerLocation myLocation, Recorder recorder) {
 		StringBuilder str = new StringBuilder();
 
 		WinInfo winInfo = result.getWinInfo();
@@ -376,9 +425,23 @@ class CliMessager {
 
 		str.append("Points:").append(System.lineSeparator());
 		for (PlayerLocation location : PlayerLocation.values()) {
-			str.append(String.format("%-20s%d", toString(location, myLocation)
-					+ result.getPlayers().get(location),
-					points.getPoints(location)));
+			String playerPoints;
+			String player = toString(location, myLocation)
+					+ result.getPlayers().get(location);
+			if (recorder == null)
+				playerPoints = String.format("%-20s%4d", player,
+						points.getPoints(location));
+			else {
+				int crtPoint = recorder.getPoints(result.getPlayers().get(
+						location));
+				int deltaPoint = points.getPoints(location);
+				char deltaSign = deltaPoint > 0 ? '+' : deltaPoint < 0 ? '-'
+						: ' ';
+				int oldPoint = crtPoint - deltaPoint;
+				playerPoints = String.format("%-20s%3d %c %3d = %3d", player,
+						oldPoint, deltaSign, Math.abs(deltaPoint), crtPoint);
+			}
+			str.append(playerPoints);
 			str.append(System.lineSeparator());
 		}
 

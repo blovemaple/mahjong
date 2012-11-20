@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -425,6 +426,24 @@ public class LocalGameBoard implements GameBoard {
 					playerInfoEntry.getValue().player.getName());
 		}
 		return players;
+	}
+
+	@Override
+	public Set<PlayerLocation> getReadyHandLocations() {
+		if (!isInGame())
+			return Collections.emptySet();
+
+		Set<PlayerLocation> readyHandLocations = EnumSet
+				.noneOf(PlayerLocation.class);
+		for (Map.Entry<PlayerLocation, PlayerInfo> playerInfoEntry : playerInfos
+				.entrySet()) {
+			PlayerLocation location = playerInfoEntry.getKey();
+			PlayerInfo playerInfo = playerInfoEntry.getValue();
+			boolean readyHand = playerInfo.tiles.isReadyHand();
+			if (readyHand)
+				readyHandLocations.add(location);
+		}
+		return readyHandLocations;
 	}
 
 	@Override
