@@ -126,7 +126,7 @@ class CliMessager {
 	void showPlayerInfos(Map<PlayerLocation, String> playerNames,
 			Recorder recorder, Set<PlayerLocation> readyHandLocations)
 			throws IOException {
-		final int width = 10;
+		final int width = 15;
 
 		StringBuilder locationStr = new StringBuilder();
 		StringBuilder playerNameStr = new StringBuilder();
