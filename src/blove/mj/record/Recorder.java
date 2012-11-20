@@ -1,6 +1,9 @@
 package blove.mj.record;
 
+import java.io.IOException;
+
 import blove.mj.GameResult;
+import blove.mj.PlayerLocation;
 
 /**
  * 记录管理器。
@@ -8,6 +11,13 @@ import blove.mj.GameResult;
  * @author blovemaple
  */
 public interface Recorder {
+
+	/**
+	 * 返回最近一局的庄家位置。
+	 * 
+	 * @return 庄家位置。如果没有记录，则返回null。
+	 */
+	public PlayerLocation getLastDealerLocation();
 
 	/**
 	 * 返回指定玩家的分数。
@@ -23,7 +33,8 @@ public interface Recorder {
 	 * 
 	 * @param result
 	 *            新记录
+	 * @throws IOException
 	 */
-	public void addResult(GameResult result);
+	public void addResult(GameResult result) throws IOException;
 
 }

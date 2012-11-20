@@ -1,5 +1,6 @@
 package blove.mj.local;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.channels.CancelledKeyException;
@@ -72,7 +73,7 @@ public class LocalGameBoard implements GameBoard {
 	private final Recorder recorder;
 
 	private boolean inGame = false;
-	private PlayerLocation dealerLocation = PlayerLocation.EAST;// 一局结束时设置下局庄家
+	private PlayerLocation dealerLocation;
 
 	private DiscardedHandler discardedHandler = new DiscardedHandler();
 	private DiscardingHandler discardingHandler = new DiscardingHandler();
@@ -220,6 +221,11 @@ public class LocalGameBoard implements GameBoard {
 		discardTiles.init();
 		for (PlayerInfo info : playerInfos.values())
 			info.tiles.init();
+		PlayerLocation lastDealer = recorder.getLastDealerLocation();
+		if (lastDealer == null)
+			dealerLocation = PlayerLocation.EAST;
+		else
+			dealerLocation = lastDealer.getLocationOf(Relation.NEXT);
 		inGame = true;
 	}
 
@@ -312,13 +318,16 @@ public class LocalGameBoard implements GameBoard {
 		if (!inGame)
 			throw new IllegalStateException("未在游戏中");
 
-		recordResult(winner, paoer, winTile);
-		dealerLocation = dealerLocation.getLocationOf(Relation.NEXT);
+		try {
+			recordResult(winner, paoer, winTile);
+		} catch (IOException e) {
+			e.printStackTrace();// XXX - 记录结果IO异常直接打印
+		}
 		stopGame();
 	}
 
 	private void recordResult(PlayerLocation winnerLocation,
-			PlayerLocation paoerLocation, Tile winTile) {
+			PlayerLocation paoerLocation, Tile winTile) throws IOException {
 		Map<PlayerLocation, String> players = new EnumMap<>(
 				PlayerLocation.class);
 		WinInfo winInfo = new WinInfo(winnerLocation, winTile, paoerLocation);

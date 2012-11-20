@@ -17,12 +17,12 @@ import blove.mj.PlayerLocation;
 import blove.mj.PointsResult;
 
 /**
- * 位于本地的当前系统用户的记录管理器。
+ * 位于本地的当前系统用户的记录管理器，记录完整的游戏结果信息。
  * 
  * @author blovemaple
  */
-public class UserRecorder implements Recorder {
-	private static UserRecorder instance;
+public class LocalFullRecorder implements Recorder {
+	private static LocalFullRecorder instance;
 
 	/**
 	 * 返回唯一实例。
@@ -30,11 +30,11 @@ public class UserRecorder implements Recorder {
 	 * @return 实例
 	 * @throws IOException
 	 */
-	public static UserRecorder getRecorder() throws IOException {
+	public static LocalFullRecorder getRecorder() throws IOException {
 		if (instance == null) {
-			synchronized (UserRecorder.class) {
+			synchronized (LocalFullRecorder.class) {
 				if (instance == null)
-					instance = new UserRecorder();
+					instance = new LocalFullRecorder();
 			}
 		}
 		return instance;
@@ -49,7 +49,7 @@ public class UserRecorder implements Recorder {
 	private final ConcurrentNavigableMap<Date, GameResult> recordsMap;
 	private final ConcurrentMap<String, Integer> recordsStatsMap;
 
-	private UserRecorder() throws IOException {
+	private LocalFullRecorder() throws IOException {
 		// 确保recordsDB在程序退出前被关闭
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -67,6 +67,12 @@ public class UserRecorder implements Recorder {
 		recordsMap = recordsDB.getTreeMap(RECORDS_MAP_NAME);
 		recordsStatsMap = recordsDB.getHashMap(RECORDS_STATS_MAP_NAME);
 
+	}
+
+	@Override
+	public PlayerLocation getLastDealerLocation() {
+		// TODO FullRecorder返回庄家位置没有实现
+		return null;
 	}
 
 	@Override
@@ -91,7 +97,7 @@ public class UserRecorder implements Recorder {
 			PlayerLocation location = player.getKey();
 			String playerName = player.getValue();
 
-			Integer point = getPoints(playerName);
+			int point = getPoints(playerName);
 			point += pointsResult.getPoints(location);
 			recordsStatsMap.put(playerName, point);
 		}

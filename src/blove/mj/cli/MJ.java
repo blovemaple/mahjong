@@ -6,7 +6,8 @@ import blove.mj.board.GameBoard;
 import blove.mj.board.GameBoardFullException;
 import blove.mj.bot.FooBot;
 import blove.mj.local.LocalGameBoard;
-import blove.mj.record.UserRecorder;
+import blove.mj.record.LocalSimpleRecorder;
+import blove.mj.record.Recorder;
 import blove.mj.rules.NoTimeLimitStrategy;
 import blove.mj.rules.SimpleWinStrategy;
 
@@ -36,10 +37,12 @@ public class MJ {
 			BOT3_NAME = "Jack";
 
 	private final CliView cliView;
+	private final Recorder recorder;
 	private final String myName = System.getProperty("user.name", "You");
 
-	public MJ(CliView cliView) {
+	public MJ(CliView cliView) throws IOException {
 		this.cliView = cliView;
+		recorder = LocalSimpleRecorder.getRecorder();
 	}
 
 	public void printHead() throws IOException {
@@ -48,7 +51,6 @@ public class MJ {
 				.append(System.lineSeparator());
 		head.append(System.lineSeparator());
 		head.append("Current points:").append(System.lineSeparator());
-		UserRecorder recorder = UserRecorder.getRecorder();
 		for (String playerName : new String[] { myName, BOT1_NAME, BOT2_NAME,
 				BOT3_NAME }) {
 			head.append(String.format("%-13s",
@@ -61,7 +63,7 @@ public class MJ {
 	public void startGame() throws InterruptedException, IOException {
 		try {
 			GameBoard gameBoard = new LocalGameBoard(new NoTimeLimitStrategy(),
-					new SimpleWinStrategy(), UserRecorder.getRecorder());
+					new SimpleWinStrategy(), recorder);
 
 			gameBoard.newPlayer(new FooBot(BOT1_NAME));
 			gameBoard.newPlayer(new FooBot(BOT2_NAME));
