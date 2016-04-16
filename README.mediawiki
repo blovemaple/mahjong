@@ -1,4 +1,13 @@
-== Introduction ==
-Mahjong is a command-line Chinese Mahjong game, written in Java 7.
+==这是什么==
+用Java写的命令行麻将游戏。
 
-This project is being developed now. Maybe it will last a long time, because I am just writting for fun in my spare time! :)
+待实现：
+#机器人AI
+#国标麻将番种
+#入口设置
+
+==如何运行==
+入口类：
+ com.github.blovemaple.mj.cli.CliRunner
+编译后可执行jar包：
+ mahjong-*-jar-with-dependencies.jar
