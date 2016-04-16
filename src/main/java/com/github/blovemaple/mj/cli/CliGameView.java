@@ -22,7 +22,6 @@ import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.standard.StandardActionType;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameResult;
-import com.github.blovemaple.mj.game.rule.FanType;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -30,6 +29,7 @@ import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileGroupType;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
+import com.github.blovemaple.mj.rule.FanType;
 import com.github.blovemaple.mj.object.TileSuit;
 import com.github.blovemaple.mj.utils.LanguageManager.Message;
 import com.github.blovemaple.mj.utils.MyUtils;
@@ -276,7 +276,14 @@ public class CliGameView {
 
 		switch ((StandardActionType) action.getType()) {
 		case DEAL:
-			showActionStr(location, DEAL_DONE.str());
+			PlayerLocation.Relation zhuangRelation = contextView.getMyLocation()
+					.getRelationOf(contextView.getZhuangLocation());
+			StringBuilder showStr = new StringBuilder();
+			showStr.append(DEAL_DONE.str());
+			showStr.append(' ').append(ZHUANG.str());
+			showStr.append(':').append(str(zhuangRelation)).append(str(contextView.getZhuangLocation()));
+			showStr.append(' ').append(str(contextView.getTableView().getPlayerName(contextView.getZhuangLocation())));
+			showActionStr(location, showStr);
 			break;
 		case CHI:
 		case PENG:

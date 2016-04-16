@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.game.rule;
+package com.github.blovemaple.mj.rule;
 
 import java.util.Set;
 

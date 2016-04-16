@@ -22,12 +22,11 @@ import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.ActionTypeAndLocation;
 import com.github.blovemaple.mj.action.IllegalActionException;
-import com.github.blovemaple.mj.event.GameEventListener;
-import com.github.blovemaple.mj.game.rule.GameStrategy;
-import com.github.blovemaple.mj.game.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
+import com.github.blovemaple.mj.rule.GameStrategy;
+import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
 /**
  * 麻将游戏。
@@ -48,7 +47,7 @@ public class MahjongGame {
 	}
 
 	/**
-	 * 进行一局麻将游戏，结束后记录并返回结果。
+	 * 进行一局麻将游戏，结束后返回结果。
 	 * 
 	 * @return 结果
 	 * @throws InterruptedException
@@ -99,19 +98,19 @@ public class MahjongGame {
 
 			// 决定一个要执行的动作
 			logger.info("Start choose action...");
-			ActionAndLocation finalAction = chooseAction(context, table,
+			ActionAndLocation action = chooseAction(context, table,
 					listeners);
 			logger.info("End choose action");
-			if (finalAction != null) {
+			if (action != null) {
 				// 如果有动作要执行，则执行动作
 				try {
-					doAction(context, finalAction.getLocation(),
-							finalAction.getAction(), listeners);
+					doAction(context, action.getLocation(),
+							action.getAction(), listeners);
 				} catch (IllegalActionException e) {
 					// 玩家默认动作或默认动作不合法（玩家选择的动作已经经过了合法性判断）
 					throw new RuntimeException(
-							"Illegal action: " + finalAction.getLocation()
-									+ ", " + finalAction.getAction());
+							"Illegal action: " + action.getLocation()
+									+ ", " + action.getAction());
 				}
 			}
 
@@ -122,7 +121,7 @@ public class MahjongGame {
 				return context.getGameResult();
 			}
 
-			if (finalAction == null && !end) {
+			if (action == null && !end) {
 				// 如果既没有动作可执行，游戏又没有结束，则是异常状态
 				throw new RuntimeException(
 						"Nothing to do. Context: " + context);
@@ -138,7 +137,7 @@ public class MahjongGame {
 			Map<PlayerLocation, GameEventListener> listeners)
 			throws InterruptedException {
 		// 查找所有玩家可以做的动作类型
-		Map<PlayerLocation, Set<ActionType>> choisesByLocation = new HashMap<>();
+		Map<PlayerLocation, Set<ActionType>> choicesByLocation = new HashMap<>();
 		table.getPlayerInfos().forEach((location, playerInfo) -> {
 			// 从策略获取所有动作类型
 			Set<ActionType> choises = (playerInfo.isTing()
@@ -149,12 +148,12 @@ public class MahjongGame {
 									location))
 							.collect(Collectors.<ActionType> toSet());
 			if (!choises.isEmpty())
-				choisesByLocation.put(location, choises);
+				choicesByLocation.put(location, choises);
 		});
 
-		logger.info(() -> "Action choises: " + choisesByLocation);
+		logger.info(() -> "Action choices: " + choicesByLocation);
 
-		if (!choisesByLocation.isEmpty()) {
+		if (!choicesByLocation.isEmpty()) {
 
 			// 存在玩家可以做的动作
 
@@ -162,13 +161,13 @@ public class MahjongGame {
 			// 玩家做出动作之后判断合法性，如果不合法则继续询问
 
 			ScheduledExecutorService executor = Executors
-					.newScheduledThreadPool(choisesByLocation.size() * 2 + 1);
+					.newScheduledThreadPool(choicesByLocation.size() * 2 + 1);
 			// （这个map必须支持null value，因为需要用null value表示选择不做动作）
 			Map<PlayerLocation, Action> choseActionByLocation = new EnumMap<>(
 					PlayerLocation.class);
 			Map<PlayerLocation, CompletableFuture<Action>> chooseFutures = new EnumMap<>(
 					PlayerLocation.class);
-			choisesByLocation.forEach((location, choisesAndPriority) -> {
+			choicesByLocation.forEach((location, choisesAndPriority) -> {
 				CompletableFuture<Action> chooseFuture = playerChooseActionAsync(
 						context, table, location, choisesAndPriority, executor,
 						choseActionByLocation);
@@ -177,7 +176,7 @@ public class MahjongGame {
 
 			// 用限时策略获取最长等待时间，如果超时则从策略获取每个玩家的默认动作
 			Integer timeLimit = timeStrategy.getLimit(context,
-					choisesByLocation);
+					choicesByLocation);
 			if (timeLimit != null) {
 				AtomicInteger secondsToGo = new AtomicInteger(timeLimit);
 				executor.scheduleAtFixedRate(() -> {
@@ -196,7 +195,7 @@ public class MahjongGame {
 												+ location);
 								Action defAction = gameStrategy
 										.getPlayerDefaultAction(context,
-												location, choisesByLocation
+												location, choicesByLocation
 														.get(location));
 								chooseFuture.complete(defAction);
 								logger.info(() -> "End get player def action: "
@@ -212,14 +211,14 @@ public class MahjongGame {
 			synchronized (choseActionByLocation) {
 				while (true) {
 					ActionAndLocation action = determineAction(
-							choseActionByLocation, choisesByLocation, context);
+							choseActionByLocation, choicesByLocation, context);
 					if (action != null) {
 						// 动作已决定
 						// 中断未作出选择的玩家的选择逻辑并返回
 						logger.info("Action determined: " + action);
 						executor.shutdownNow();
 						return action;
-					} else if (choseActionByLocation.size() == choisesByLocation
+					} else if (choseActionByLocation.size() == choicesByLocation
 							.size()) {
 						// 所有玩家都做出选择仍不能决定（即所有玩家都选择不做动作）
 						logger.info("Action not determined at final.");
@@ -235,7 +234,7 @@ public class MahjongGame {
 		// 如果上面没有产生要做的动作，则从策略获取默认动作
 		logger.info("Start get def action...");
 		ActionAndLocation defAction = gameStrategy.getDefaultAction(context,
-				choisesByLocation);
+				choicesByLocation);
 		logger.info("End get def action: " + defAction);
 		return defAction;
 	}
@@ -246,7 +245,7 @@ public class MahjongGame {
 	 * @param context
 	 * @param table
 	 * @param location
-	 * @param choises
+	 * @param choices
 	 * @param executor
 	 *            使用这个executor，以便主线程可以中断玩家的选择过程
 	 * @param choseActionByLocation
@@ -256,11 +255,11 @@ public class MahjongGame {
 	 */
 	private CompletableFuture<Action> playerChooseActionAsync(
 			GameContext context, MahjongTable table, PlayerLocation location,
-			Set<ActionType> choises, Executor executor,
+			Set<ActionType> choices, Executor executor,
 			Map<PlayerLocation, Action> choseActionByLocation) {
 		Player player = table.getPlayerByLocation(location);
 
-		boolean canPass = choises.stream()
+		boolean canPass = choices.stream()
 				.allMatch(actionType -> actionType.canPass(context, location));
 
 		try {
@@ -269,7 +268,7 @@ public class MahjongGame {
 						// 让玩家选择动作
 						logger.info("Start choose action...: " + location);
 						Action testedAction = player.chooseAction(
-								context.getPlayerView(location), choises);
+								context.getPlayerView(location), choices);
 						logger.info("End choose action: " + location
 								+ testedAction);
 						// 检查选择的动作合法性，如果不合法则循环重新选择
@@ -281,7 +280,7 @@ public class MahjongGame {
 							logger.info("Start choose action again...: "
 									+ location);
 							testedAction = player.chooseAction(
-									context.getPlayerView(location), choises,
+									context.getPlayerView(location), choices,
 									testedAction);
 							logger.info("End choose action again: " + location
 									+ testedAction);

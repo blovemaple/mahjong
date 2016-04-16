@@ -1,9 +1,8 @@
-package com.github.blovemaple.mj.event;
+package com.github.blovemaple.mj.game;
 
 import java.util.EventListener;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerLocation;
 
 /**

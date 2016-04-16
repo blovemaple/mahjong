@@ -19,14 +19,11 @@ import static com.github.blovemaple.mj.utils.LambdaUtils.*;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class CliRunner {
-	private static final Logger logger = Logger
-			.getLogger(CliRunner.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(CliRunner.class.getSimpleName());
 
-	public static void main(String[] args)
-			throws IOException, URISyntaxException {
+	public static void main(String[] args) throws IOException, URISyntaxException {
 		// 让日志输出到文件
-		LogManager.getLogManager().readConfiguration(CliRunner.class
-				.getResource("/logging.properties").openStream());
+		LogManager.getLogManager().readConfiguration(CliRunner.class.getResource("/logging.properties").openStream());
 
 		logger.info("Started");
 
@@ -35,6 +32,7 @@ public class CliRunner {
 		} catch (InterruptedException e) {
 		}
 
+		System.out.println();
 	}
 
 	private final CliView cliView;
@@ -78,12 +76,11 @@ public class CliRunner {
 	}
 
 	private void setup() throws InterruptedException {
-		localGame = new LocalGame(new CliPlayer(myName, cliView),
-				rethrowSupplier(() -> {
-					cliView.updateStatus(NEW_GAME_QUESTION.str());
-					cliView.addCharHandler(NEW_GAME_CHAR_HANDLER, true);
-					return newGame;
-				}));
+		localGame = new LocalGame(new CliPlayer(myName, cliView), rethrowSupplier(() -> {
+			cliView.updateStatus(NEW_GAME_QUESTION.str());
+			cliView.addCharHandler(NEW_GAME_CHAR_HANDLER, true);
+			return newGame;
+		}));
 	}
 
 	private void play() throws IOException, InterruptedException {

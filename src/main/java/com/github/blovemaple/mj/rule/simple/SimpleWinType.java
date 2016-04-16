@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.game.rule.simple;
+package com.github.blovemaple.mj.rule.simple;
 
 import static com.github.blovemaple.mj.object.StandardTileUnitType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
@@ -12,13 +12,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.blovemaple.mj.game.rule.WinType;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
-import static com.github.blovemaple.mj.object.TileSuit.*;
-import static com.github.blovemaple.mj.object.TileRank.NumberRank.*;
+import com.github.blovemaple.mj.rule.WinType;
 
 /**
  * 普通和牌（相对于七对等特殊和牌类型而言）。
@@ -32,18 +29,6 @@ public class SimpleWinType implements WinType {
 		return !parseAllTileUnits(
 				aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles(),
 				true).isEmpty();
-	}
-
-	public static void main(String[] args) {
-		Set<Tile> aliveTiles = new HashSet<>();
-		aliveTiles.add(Tile.of(TileType.of(BING, WU), 0));
-		aliveTiles.add(Tile.of(TileType.of(BING, WU), 1));
-		aliveTiles.add(Tile.of(TileType.of(TIAO, QI), 0));
-		aliveTiles.add(Tile.of(TileType.of(TIAO, BA), 0));
-		aliveTiles.add(Tile.of(TileType.of(TIAO, JIU), 0));
-		Set<Set<TileUnit>> result = SimpleWinType.parseAllTileUnits(aliveTiles,
-				false);
-		result.forEach(System.out::println);
 	}
 
 	/**

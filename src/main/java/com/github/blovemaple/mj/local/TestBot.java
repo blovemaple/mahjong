@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.event.GameEventListener;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameEventListener;
 import com.github.blovemaple.mj.object.Player;
 
 /**

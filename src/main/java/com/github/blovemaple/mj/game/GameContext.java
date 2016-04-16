@@ -10,11 +10,11 @@ import java.util.logging.Logger;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
-import com.github.blovemaple.mj.game.rule.GameStrategy;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.rule.GameStrategy;
 
 /**
  * 一局游戏进行中的上下文信息。

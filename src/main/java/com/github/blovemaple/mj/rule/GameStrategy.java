@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.game.rule;
+package com.github.blovemaple.mj.rule;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -94,7 +94,7 @@ public interface GameStrategy {
 	public Map<? extends FanType, Set<? extends FanType>> getAllCoveredFanTypes();
 
 	/**
-	 * 根据当前状态判断游戏是否结束。如果结束则返回游戏结果，如果未结束则返回null。
+	 * 根据当前状态判断游戏是否结束。
 	 */
 	public boolean tryEndGame(GameContext context);
 }

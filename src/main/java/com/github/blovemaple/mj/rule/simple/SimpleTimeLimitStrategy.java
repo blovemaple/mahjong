@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.game.rule.simple;
+package com.github.blovemaple.mj.rule.simple;
 
 import java.util.Map;
 import java.util.Set;
@@ -6,8 +6,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.object.PlayerLocation;
+import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
 /**
  * 简单的限时策略，采用固定限时。

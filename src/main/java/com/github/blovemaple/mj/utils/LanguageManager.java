@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.game.rule.FanType;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileSuit;
+import com.github.blovemaple.mj.rule.FanType;
 
 /**
  * 语言管理器，屏蔽对语言的设置。
@@ -106,6 +106,10 @@ public class LanguageManager {
 		 * 发牌结束的提示
 		 */
 		DEAL_DONE,
+		/**
+		 * 庄家
+		 */
+		ZHUANG,
 		/**
 		 * 听牌
 		 */

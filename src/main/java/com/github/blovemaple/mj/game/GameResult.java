@@ -3,10 +3,10 @@ package com.github.blovemaple.mj.game;
 import java.io.Serializable;
 import java.util.Map;
 
-import com.github.blovemaple.mj.game.rule.FanType;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.rule.FanType;
 
 /**
  * 一局游戏的结果。winnerLocation为null表示流局。

@@ -1,7 +1,7 @@
-package com.github.blovemaple.mj.game.rule.simple;
+package com.github.blovemaple.mj.rule.simple;
 
-import com.github.blovemaple.mj.game.rule.FanType;
 import com.github.blovemaple.mj.object.PlayerInfo;
+import com.github.blovemaple.mj.rule.FanType;
 
 /**
  * 简单番种，和牌即算。

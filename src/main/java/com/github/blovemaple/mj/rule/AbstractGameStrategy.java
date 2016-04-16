@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.game.rule;
+package com.github.blovemaple.mj.rule;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 
@@ -18,7 +18,6 @@ import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.ActionTypeAndLocation;
 import com.github.blovemaple.mj.action.standard.StandardActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.rule.simple.SimpleGameStrategy;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.PlayerLocation.Relation;
@@ -32,9 +31,10 @@ import com.github.blovemaple.mj.object.Tile;
 public abstract class AbstractGameStrategy implements GameStrategy {
 
 	/**
+	 * {@inheritDoc}<br>
 	 * 桌上所有位置都有玩家就返回true。
 	 * 
-	 * @see com.github.blovemaple.mj.game.rule.GameStrategy#checkReady(com.github.blovemaple.mj.object.MahjongTable)
+	 * @see com.github.blovemaple.mj.rule.GameStrategy#checkReady(com.github.blovemaple.mj.object.MahjongTable)
 	 */
 	@Override
 	public boolean checkReady(MahjongTable table) {
@@ -48,9 +48,10 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 	}
 
 	/**
+	 * {@inheritDoc}<br>
 	 * 在一局开始之前设置庄家位置。
 	 * 
-	 * @see com.github.blovemaple.mj.game.rule.GameStrategy#readyContext(com.github.blovemaple.mj.game.GameContext)
+	 * @see com.github.blovemaple.mj.rule.GameStrategy#readyContext(com.github.blovemaple.mj.game.GameContext)
 	 */
 	@Override
 	public void readyContext(GameContext context) {
@@ -90,7 +91,7 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 	/**
 	 * 和>杠>碰>吃>其他，相同的比较与上次动作的玩家位置关系。
 	 * 
-	 * @see com.github.blovemaple.mj.game.rule.GameStrategy#getActionPriorityComparator()
+	 * @see com.github.blovemaple.mj.rule.GameStrategy#getActionPriorityComparator()
 	 */
 	@Override
 	public Comparator<ActionTypeAndLocation> getActionPriorityComparator() {
@@ -104,18 +105,6 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 					: lastLocation.getRelationOf(a.getLocation());
 		});
 		return c;
-	}
-
-	public static void main(String[] args) {
-		GameContext context = new GameContext(null, null);
-		context.actionDone(new Action(DISCARD), PlayerLocation.SOUTH);
-		ActionTypeAndLocation a1 = new ActionTypeAndLocation(DRAW,
-				PlayerLocation.EAST, context);
-		ActionTypeAndLocation a2 = new ActionTypeAndLocation(DRAW,
-				PlayerLocation.EAST, context);
-		int i = new SimpleGameStrategy().getActionPriorityComparator()
-				.compare(a1, a2);
-		System.out.println(i);
 	}
 
 	@Override

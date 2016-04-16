@@ -17,10 +17,10 @@ import com.github.blovemaple.mj.action.ActionTypeAndLocation;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.game.GameResult;
-import com.github.blovemaple.mj.game.rule.FanType;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.rule.FanType;
 
 /**
  * 动作类型“和牌”。

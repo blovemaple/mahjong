@@ -5,11 +5,11 @@ import static com.github.blovemaple.mj.object.PlayerLocation.*;
 import java.util.function.Supplier;
 
 import com.github.blovemaple.mj.game.MahjongGame;
-import com.github.blovemaple.mj.game.rule.GameStrategy;
-import com.github.blovemaple.mj.game.rule.TimeLimitStrategy;
-import com.github.blovemaple.mj.game.rule.simple.SimpleGameStrategy;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.Player;
+import com.github.blovemaple.mj.rule.GameStrategy;
+import com.github.blovemaple.mj.rule.TimeLimitStrategy;
+import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 
 /**
  * 本地游戏。

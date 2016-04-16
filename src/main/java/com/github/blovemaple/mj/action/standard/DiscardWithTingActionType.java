@@ -8,11 +8,11 @@ import java.util.Set;
 
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContext.PlayerView;
-import com.github.blovemaple.mj.game.rule.GameStrategy;
-import com.github.blovemaple.mj.game.rule.WinType;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.rule.GameStrategy;
+import com.github.blovemaple.mj.rule.WinType;
 
 /**
  * 动作类型“打牌的同时听牌”。与打牌动作的区别是：
