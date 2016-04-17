@@ -192,8 +192,6 @@ class CliView {
 	public static interface CharHandler {
 		/**
 		 * 处理结果。由处理方法返回。
-		 * 
-		 * @author blovemaple
 		 */
 		enum HandlingResult {
 			/**

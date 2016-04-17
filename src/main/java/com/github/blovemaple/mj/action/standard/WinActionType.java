@@ -3,17 +3,15 @@ package com.github.blovemaple.mj.action.standard;
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.AbstractActionType;
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionTypeAndLocation;
+import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.game.GameResult;
@@ -35,18 +33,11 @@ public class WinActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected Collection<ActionTypeAndLocation> getLastActionPrecondition(
-			PlayerLocation location) {
+	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
 		// 必须是发牌、自己摸牌，或别人打牌后
-		List<ActionTypeAndLocation> otherDiscard = Stream
-				.of(PlayerLocation.values())
-				.filter(l -> location.getRelationOf(l).isOther())
-				.map(otherLocation -> new ActionTypeAndLocation(DISCARD,
-						otherLocation))
-				.collect(Collectors.toList());
-		return newMergedSet(otherDiscard, //
-				new ActionTypeAndLocation(DEAL, null),
-				new ActionTypeAndLocation(DRAW, location));
+		return (al, location) -> DEAL.matchBy(al.getActionType())
+				|| (al.getLocation() == location && DRAW.matchBy(al.getActionType()))
+				|| (al.getLocation() != location && DISCARD.matchBy(al.getActionType()));
 	}
 
 	@Override
@@ -55,7 +46,7 @@ public class WinActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
+	public boolean isLegalActionWithPreconition(PlayerView context,
 			Set<Tile> tiles) {
 		PlayerInfo playerInfo = context.getMyInfo();
 		Action lastAction = context.getLastAction();

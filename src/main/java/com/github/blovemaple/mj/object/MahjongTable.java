@@ -18,7 +18,7 @@ public class MahjongTable {
 	/**
 	 * 牌墙。从0处摸牌。一局开始时如果产生底牌，应该把底牌从开头挪到尾部。
 	 */
-	private final List<Tile> tileWall;
+	private List<Tile> tileWall;
 	/**
 	 * 一局开始时的底牌数量。
 	 */
@@ -30,9 +30,9 @@ public class MahjongTable {
 	/**
 	 * 所有玩家信息。
 	 */
-	private final Map<PlayerLocation, PlayerInfo> playerInfos;
+	private Map<PlayerLocation, PlayerInfo> playerInfos;
 
-	public MahjongTable() {
+	public void init() {
 		tileWall = new ArrayList<Tile>();
 		playerInfos = new EnumMap<>(PlayerLocation.class);
 		for (PlayerLocation location : PlayerLocation.values()) {
@@ -40,8 +40,23 @@ public class MahjongTable {
 		}
 	}
 
-	public List<Tile> getTileWall() {
-		return tileWall;
+	/**
+	 * 初始化，准备开始一局。即清空玩家的牌、洗牌、摆牌墙。
+	 */
+	public void readyForGame(Set<Tile> allTiles) {
+		playerInfos.values().forEach(PlayerInfo::clear);
+		tileWall.clear();
+		tileWall.addAll(allTiles);
+		Collections.shuffle(tileWall);
+		initBottomSize = 0;
+		drawedBottomSize = 0;
+	}
+
+	/**
+	 * 返回牌墙中的剩余牌数。
+	 */
+	public int getTileWallSize() {
+		return tileWall.size();
 	}
 
 	public int getInitBottomSize() {
@@ -90,6 +105,10 @@ public class MahjongTable {
 		return playerInfos;
 	}
 
+	protected void setPlayerInfos(Map<PlayerLocation, PlayerInfo> playerInfos) {
+		this.playerInfos = playerInfos;
+	}
+
 	public Player getPlayerByLocation(PlayerLocation location) {
 		PlayerInfo info = playerInfos.get(location);
 		return info == null ? null : info.getPlayer();
@@ -102,18 +121,6 @@ public class MahjongTable {
 			playerInfos.put(location, playerInfo);
 		}
 		playerInfo.setPlayer(player);
-	}
-
-	/**
-	 * 初始化，准备开始一局。即清空玩家的牌、洗牌、摆牌墙。
-	 */
-	public void init(Set<Tile> allTiles) {
-		playerInfos.values().forEach(PlayerInfo::clear);
-		tileWall.clear();
-		tileWall.addAll(allTiles);
-		Collections.shuffle(tileWall);
-		initBottomSize = 0;
-		drawedBottomSize = 0;
 	}
 
 	private final Map<PlayerLocation, PlayerView> playerViews = new HashMap<>();
@@ -159,33 +166,33 @@ public class MahjongTable {
 		}
 
 		/**
-		 * 返回牌墙（只读）。
+		 * 返回牌墙中的剩余牌数。
 		 */
-		public List<Tile> getTileWall() {
-			return Collections.unmodifiableList(tileWall);
+		public int getTileWallSize() {
+			return MahjongTable.this.getTileWallSize();
 		}
 
 		/**
 		 * 返回此局开始时的底牌数量。
 		 */
 		public int getInitBottomSize() {
-			return initBottomSize;
+			return MahjongTable.this.getInitBottomSize();
 		}
 
 		/**
 		 * 返回已经从底部摸牌的数量。
 		 */
 		public int getDrawedBottomSize() {
-			return drawedBottomSize;
+			return MahjongTable.this.getDrawedBottomSize();
 		}
 
 		/**
 		 * 返回所有玩家已经打出的牌。
 		 */
-		public Map<PlayerLocation, List<Tile>> getDiscardedTiles() {
+		public Map<PlayerLocation, PlayerInfo.PlayerView> getPlayerInfoView() {
 			return playerInfos.entrySet().stream()
-					.collect(Collectors.toMap(entry -> entry.getKey(),
-							entry -> entry.getValue().getDiscardedTiles()));
+					.collect(Collectors.toMap(entry -> entry.getKey()
+							, entry -> entry.getValue().getOtherPlayerView()));
 		}
 
 	}

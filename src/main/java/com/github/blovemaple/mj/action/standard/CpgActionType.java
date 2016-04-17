@@ -6,13 +6,14 @@ import static com.github.blovemaple.mj.utils.MyUtils.*;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.AbstractActionType;
+import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.action.ActionTypeAndLocation;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
@@ -73,15 +74,10 @@ public class CpgActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected Collection<ActionTypeAndLocation> getLastActionPrecondition(
-			PlayerLocation location) {
+	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
 		// 必须是指定关系的人出牌后
-		return Stream.of(PlayerLocation.values())
-				.filter(l -> lastActionRelations
-						.contains(location.getRelationOf(l)))
-				.map(otherLocation -> new ActionTypeAndLocation(DISCARD,
-						otherLocation))
-				.collect(Collectors.toList());
+		return (al, location) -> DISCARD.matchBy(al.getActionType())
+				&& lastActionRelations.contains(location.getRelationOf(al.getLocation()));
 	}
 
 	@Override

@@ -40,6 +40,7 @@ public class LocalGame {
 	public void play() throws InterruptedException {
 		try {
 			MahjongTable table = new MahjongTable();
+			table.init();
 			table.setPlayer(EAST, localPlayer);
 			table.setPlayer(SOUTH, botPlayerClass.newInstance());
 			table.setPlayer(WEST, botPlayerClass.newInstance());

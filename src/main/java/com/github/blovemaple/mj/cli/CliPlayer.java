@@ -25,7 +25,6 @@ import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.cli.CliView.CharHandler;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameEventListener;
 import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -65,34 +64,6 @@ public class CliPlayer implements Player {
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public GameEventListener getEventListener() {
-		return new GameEventListener() {
-			@Override
-			public void timeLimit(PlayerView contextView, Integer secondsToGo) {
-				view.setTimeLimit(secondsToGo);
-			}
-
-			@Override
-			public void actionDone(PlayerView contextView,
-					PlayerLocation actionLocation, Action action) {
-				try {
-					if (DEAL.matchBy(action.getType()))
-						view.setContext(contextView);
-					view.showAction(actionLocation, action);
-				} catch (IOException e) {
-					try {
-						logger.log(Level.SEVERE, e.toString(), e);
-						view.getCliView()
-								.printMessage("[ERROR] " + e.toString());
-					} catch (IOException e1) {
-						logger.log(Level.SEVERE, e.toString(), e);
-					}
-				}
-			}
-		};
 	}
 
 	@Override
@@ -300,6 +271,27 @@ public class CliPlayer implements Player {
 		if (canPass)
 			options.put(PASS_KEY_MESSAGE, PASS);
 		view.setOptions(options);
+	}
+
+	@Override
+	public void timeLimit(PlayerView contextView, Integer secondsToGo) {
+		view.setTimeLimit(secondsToGo);
+	}
+
+	@Override
+	public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
+		try {
+			if (DEAL.matchBy(action.getType()))
+				view.setContext(contextView);
+			view.showAction(actionLocation, action);
+		} catch (IOException e) {
+			try {
+				logger.log(Level.SEVERE, e.toString(), e);
+				view.getCliView().printMessage("[ERROR] " + e.toString());
+			} catch (IOException e1) {
+				logger.log(Level.SEVERE, e.toString(), e);
+			}
+		}
 	}
 
 }

@@ -15,6 +15,7 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.rule.GameStrategy;
+import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
 /**
  * 一局游戏进行中的上下文信息。
@@ -28,13 +29,16 @@ public class GameContext {
 
 	private final MahjongTable table;
 	private GameStrategy gameStrategy;
+	private TimeLimitStrategy timeLimitStrategy;
+	
 	private PlayerLocation zhuangLocation;
 	private List<ActionAndLocation> doneActions = new ArrayList<>();
 	private GameResult gameResult;
 
-	public GameContext(MahjongTable table, GameStrategy gameStrategy) {
+	public GameContext(MahjongTable table, GameStrategy gameStrategy, TimeLimitStrategy timeLimitStrategy) {
 		this.table = table;
 		this.gameStrategy = gameStrategy;
+		this.timeLimitStrategy = timeLimitStrategy;
 	}
 
 	public MahjongTable getTable() {
@@ -43,6 +47,10 @@ public class GameContext {
 
 	public GameStrategy getGameStrategy() {
 		return gameStrategy;
+	}
+	
+	public TimeLimitStrategy getTimeLimitStrategy() {
+		return timeLimitStrategy;
 	}
 
 	public PlayerInfo getPlayerInfoByLocation(PlayerLocation location) {
@@ -89,6 +97,10 @@ public class GameContext {
 		return doneActions;
 	}
 
+	protected void setDoneActions(List<ActionAndLocation> doneActions) {
+		this.doneActions = doneActions;
+	}
+
 	public GameResult getGameResult() {
 		return gameResult;
 	}
@@ -132,6 +144,10 @@ public class GameContext {
 			return gameStrategy;
 		}
 
+		public TimeLimitStrategy getTimeLimitStrategy() {
+			return timeLimitStrategy;
+		}
+
 		public PlayerLocation getMyLocation() {
 			return myLocation;
 		}
@@ -141,31 +157,28 @@ public class GameContext {
 		}
 
 		public PlayerLocation getZhuangLocation() {
-			return zhuangLocation;
+			return GameContext.this.getZhuangLocation();
 		}
 
 		/**
 		 * 返回到目前为止做出的最后一个动作和玩家位置。
 		 */
 		public ActionAndLocation getLastActionAndLocation() {
-			return doneActions.isEmpty() ? null
-					: doneActions.get(doneActions.size() - 1);
+			return GameContext.this.getLastActionAndLocation();
 		}
 
 		/**
 		 * 返回到目前为止做出的最后一个动作。
 		 */
 		public Action getLastAction() {
-			ActionAndLocation lastAction = getLastActionAndLocation();
-			return lastAction == null ? null : lastAction.getAction();
+			return GameContext.this.getLastAction();
 		}
 
 		/**
 		 * 返回到目前为止做出的最后一个动作的玩家位置。
 		 */
 		public PlayerLocation getLastActionLocation() {
-			ActionAndLocation lastAction = getLastActionAndLocation();
-			return lastAction == null ? null : lastAction.getLocation();
+			return GameContext.this.getLastActionLocation();
 		}
 
 		/**
@@ -183,11 +196,11 @@ public class GameContext {
 		}
 
 		public List<ActionAndLocation> getDoneActions() {
-			return doneActions;
+			return GameContext.this.getDoneActions();
 		}
 
 		public GameResult getGameResult() {
-			return gameResult;
+			return GameContext.this.getGameResult();
 		}
 
 	}

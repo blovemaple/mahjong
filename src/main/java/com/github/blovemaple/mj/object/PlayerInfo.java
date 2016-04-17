@@ -95,4 +95,52 @@ public class PlayerInfo {
 		isTing = false;
 	}
 
+	private PlayerView otherPlayerView;
+
+	/**
+	 * 获取其他玩家的视图。
+	 */
+	public PlayerView getOtherPlayerView() {
+		if (otherPlayerView == null) { // 不需要加锁，因为多创建了也没事
+			otherPlayerView = new PlayerView();
+		}
+		return otherPlayerView;
+	}
+
+	/**
+	 * 一个位置的玩家的视图。需要限制一些权限。
+	 * 
+	 * @author blovemaple <blovemaple2010(at)gmail.com>
+	 */
+	public class PlayerView {
+
+		/**
+		 * 返回玩家名称。
+		 */
+		public String getPlayerName() {
+			Player player = getPlayer();
+			return player != null ? getPlayer().getName() : null;
+		}
+
+		/**
+		 * 返回手中的牌数。
+		 */
+		public int getAliveTileSize() {
+			return getAliveTiles().size();
+		}
+
+		public List<Tile> getDiscardedTiles() {
+			return discardedTiles;
+		}
+
+		public List<TileGroup> getTileGroups() {
+			return tileGroups; // FIXME 会看到暗杠
+		}
+
+		public boolean isTing() {
+			return isTing;
+		}
+
+	}
+
 }

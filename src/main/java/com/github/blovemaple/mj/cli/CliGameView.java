@@ -231,8 +231,7 @@ public class CliGameView {
 		str.append(lastFocused ? FOCUS_END_STR : ' ');
 		lastFocused = false;
 		if (lastSuit.getRankClass() == NumberRank.class)
-			str.append(str(lastSuit)).append(' ');
-		str.append(' ');
+			str.append(str(lastSuit));
 	}
 
 	private void appendTingStatus(StringBuilder str) {
@@ -240,8 +239,7 @@ public class CliGameView {
 			return;
 		if (playerInfo.isTing())
 			// [空格](听)
-			str.append(' ').append(DESC_START_STR).append(TING.str())
-					.append(DESC_END_STR);
+			str.append(' ').append(DESC_START_STR).append(TING.str()).append(DESC_END_STR);
 	}
 
 	private void appendOptions(StringBuilder str) {
@@ -264,7 +262,7 @@ public class CliGameView {
 			return;
 
 		// [空格](time)
-		str.append(TIME_START_STR).append(timeLimit).append(TIME_END_STR);
+		str.append(' ').append(TIME_START_STR).append(timeLimit).append(TIME_END_STR);
 	}
 
 	public void showAction(PlayerLocation location, Action action)

@@ -23,6 +23,10 @@ public class ActionAndLocation {
 		return action;
 	}
 
+	public ActionType getActionType() {
+		return action.getType();
+	}
+
 	public PlayerLocation getLocation() {
 		return location;
 	}

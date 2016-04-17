@@ -5,6 +5,7 @@ import static com.github.blovemaple.mj.utils.MyUtils.*;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -45,52 +46,41 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现调用相应方法对上一个动作和活牌数量进行限制，进行判断。
 	 */
 	protected boolean meetPrecondition(GameContext.PlayerView context) {
-		// aliveTiles数量
+		// 验证aliveTiles数量条件
 		Predicate<Integer> aliveTileSizeCondition = getAliveTileSizePrecondition();
 		if (aliveTileSizeCondition != null)
 			if (!aliveTileSizeCondition
 					.test(context.getMyInfo().getAliveTiles().size()))
 				return false;
 
-		// 上一个动作
-		Collection<ActionTypeAndLocation> lastActionPrecondition = getLastActionPrecondition(
-				context.getMyLocation());
-		if (lastActionPrecondition != null
-				&& !lastActionPrecondition.isEmpty()) {
-			Action lastAction = context.getLastAction();
-			PlayerLocation lastLocation = context.getLastActionLocation();
-			if (lastAction == null)
-				return false;
-			if (lastActionPrecondition.stream()
-					.noneMatch(atl -> atl.getActionType()
-							.matchBy(lastAction.getType())
-							&& (atl.getLocation() == null
-									|| atl.getLocation() == lastLocation)))
-				return false;
+		// 验证上一个动作条件
+		BiPredicate<ActionAndLocation, PlayerLocation> lastActionPrecondition = getLastActionPrecondition();
+		if (lastActionPrecondition != null) {
+			ActionAndLocation lastAction = context.getLastActionAndLocation();
+			if (lastAction != null)
+				if (!lastActionPrecondition.test(lastAction, context.getMyLocation()))
+					return false;
 		}
 
 		return true;
 	}
 
 	/**
-	 * 返回进行此类型动作时对上一个动作的限制条件。即：上一个动作符合返回的集合中任意一种ActionType和PlayerLocation的组合时，
-	 * 才算满足做出此类型动作的前提条件。<br>
-	 * 返回的ActionType是实际type的super类也可以。<br>
-	 * 返回的PlayerLocation为null者表示不限制玩家位置。<br>
+	 * 返回进行此类型动作时对上一个动作和本家位置的限制条件。<br>
+	 * 不允许返回null，不限制应该返回恒null的函数。默认返回恒null。<br>
 	 * 此方法用于{@link #meetPrecondition}的默认实现。
 	 */
-	protected Collection<ActionTypeAndLocation> getLastActionPrecondition(
-			PlayerLocation location) {
-		return null;
+	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
+		return (al, l) -> true;
 	}
 
 	/**
 	 * 返回进行此类型动作时对对活牌数量的限制条件。<br>
-	 * 返回null表示不限制。<br>
+	 * 不允许返回null，不限制应该返回恒null的函数。默认返回恒null。<br>
 	 * 此方法用于{@link #meetPrecondition}的默认实现。
 	 */
 	protected Predicate<Integer> getAliveTileSizePrecondition() {
-		return null;
+		return s -> true;
 	}
 
 	/**

@@ -8,11 +8,12 @@ import java.util.concurrent.TimeUnit;
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameEventListener;
+import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.object.Player;
+import com.github.blovemaple.mj.object.PlayerLocation;
 
 /**
- * 测试机器人。
+ * 测试用的机器人，无脑摸牌无脑出牌（出牌之前假装想一会儿），别的不干。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
@@ -38,8 +39,11 @@ public class TestBot implements Player {
 	}
 
 	@Override
-	public GameEventListener getEventListener() {
-		return null;
+	public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
+	}
+
+	@Override
+	public void timeLimit(PlayerView contextView, Integer secondsToGo) {
 	}
 
 }
