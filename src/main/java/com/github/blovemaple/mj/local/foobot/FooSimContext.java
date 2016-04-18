@@ -24,7 +24,13 @@ import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
 /**
- * TODO
+ * TODO <br>
+ * 一个FooSimContext的生命周期：
+ * <li>根据上一个context新建——顶层由FooBot，非顶层由模拟玩家；
+ * <li>（非顶层）模拟一步，到达此context需要表示的状态——模拟玩家；
+ * <li>作为任务被提交，等待处理——顶层由FooBot，非顶层由模拟玩家；
+ * <li>开始处理，让模拟玩家根据选择动作——gameTool（MahjongGame）；
+ * <li>将此context进行分割或结束模拟——模拟玩家。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
@@ -40,20 +46,25 @@ public class FooSimContext extends GameContext implements Runnable {
 	private int level;
 
 	/**
-	 * 进行模拟时记录的，达到此状态前的最后一个模拟动作。
+	 * 进行处理时记录的，达到此状态前的最后一个模拟动作。
 	 */
 	private ActionAndLocation lastSimActionAndLocation;
 
 	/**
-	 * 进行模拟后得出的下一个动作是否是被动的（即概率性的，别家出牌或本家摸牌）。
+	 * 进行处理时得出的下一个动作是否是被动的（即概率性的，别家出牌或本家摸牌）。
 	 */
 	private boolean isNextActionPassive;
 	/**
-	 * 进行模拟后得出的下一个动作（如果是被动的）每种牌型的概率。
+	 * 进行处理时得出的下一个动作（如果是被动的）每种牌型的概率。
 	 */
 	private Map<TileType, Double> nextDiscardAndProb;
 	/**
-	 * 进行模拟后得出此状态下其他玩家直接和牌的概率。
+	 * 是否已进行处理，即分割或结束。防止一个context被处理多次。
+	 */
+	private boolean handled = false;
+
+	/**
+	 * 下一个动作进行处理时得出此状态下其他玩家直接和牌的概率。
 	 */
 	private Map<PlayerLocation.Relation, Double> otherPlayerWinProb;
 
@@ -73,11 +84,13 @@ public class FooSimContext extends GameContext implements Runnable {
 	 */
 	private Action bestAction;
 
-	public FooSimContext(GameContext.PlayerView realContextView, MahjongGame gameTool,
+	public FooSimContext(GameContext.PlayerView realContextView,
+			MahjongGame gameTool,
 			BiConsumer<FooSimContext, Collection<FooSimContext>> splitSubmitter,
 			Consumer<FooSimContext> doneSubmitter) {
-		super(new FooMahjongTable(realContextView.getTableView(), realContextView.getMyInfo()),
-				gameTool.getGameStrategy(), TimeLimitStrategy.NO_LIMIT);
+		super(new FooMahjongTable(realContextView.getTableView(),
+				realContextView.getMyInfo()), gameTool.getGameStrategy(),
+				TimeLimitStrategy.NO_LIMIT);
 		setZhuangLocation(realContextView.getZhuangLocation());
 		// XXX - doneActions列表比较大，可能导致耗资源过多
 		setDoneActions(new ArrayList<>(realContextView.getDoneActions()));
@@ -89,7 +102,8 @@ public class FooSimContext extends GameContext implements Runnable {
 	}
 
 	public FooSimContext(FooSimContext lastContext) {
-		super(new FooMahjongTable((FooMahjongTable) lastContext.getTable()), lastContext.getGameStrategy(),
+		super(new FooMahjongTable((FooMahjongTable) lastContext.getTable()),
+				lastContext.getGameStrategy(),
 				lastContext.getTimeLimitStrategy());
 		setZhuangLocation(lastContext.getZhuangLocation());
 		// XXX - doneActions列表比较大，可能导致耗资源过多
@@ -138,7 +152,8 @@ public class FooSimContext extends GameContext implements Runnable {
 
 	@Override
 	public ActionAndLocation getLastActionAndLocation() {
-		return lastSimActionAndLocation != null ? lastSimActionAndLocation : super.getLastActionAndLocation();
+		return lastSimActionAndLocation != null ? lastSimActionAndLocation
+				: super.getLastActionAndLocation();
 	}
 
 	public boolean isNextActionPassive() {
@@ -153,7 +168,8 @@ public class FooSimContext extends GameContext implements Runnable {
 		return nextDiscardAndProb;
 	}
 
-	public void setNextDiscardAndProb(Map<TileType, Double> nextDiscardAndProb) {
+	public void setNextDiscardAndProb(
+			Map<TileType, Double> nextDiscardAndProb) {
 		this.nextDiscardAndProb = nextDiscardAndProb;
 	}
 
@@ -161,7 +177,8 @@ public class FooSimContext extends GameContext implements Runnable {
 		return otherPlayerWinProb;
 	}
 
-	public void setOtherPlayerWinProb(PlayerLocation.Relation relation, Double winProb) {
+	public void setOtherPlayerWinProb(PlayerLocation.Relation relation,
+			Double winProb) {
 		// TODO
 	}
 
@@ -169,7 +186,8 @@ public class FooSimContext extends GameContext implements Runnable {
 		return nextActionAndWinProb;
 	}
 
-	public void setNextActionAndWinProb(Map<Action, Double> nextActionAndWinProb) {
+	public void setNextActionAndWinProb(
+			Map<Action, Double> nextActionAndWinProb) {
 		this.nextActionAndWinProb = nextActionAndWinProb;
 	}
 
@@ -193,22 +211,28 @@ public class FooSimContext extends GameContext implements Runnable {
 
 		private int wallSize;
 
-		public FooMahjongTable(MahjongTable.PlayerView tableView, PlayerInfo myInfo) {
+		public FooMahjongTable(MahjongTable.PlayerView tableView,
+				PlayerInfo myInfo) {
 			setInitBottomSize(tableView.getInitBottomSize());
 			setDrawedBottomSize(tableView.getDrawedBottomSize());
-			Map<PlayerLocation, PlayerInfo> playerInfos = new EnumMap<>(PlayerLocation.class);
+			Map<PlayerLocation, PlayerInfo> playerInfos = new EnumMap<>(
+					PlayerLocation.class);
 			tableView.getPlayerInfoView()
-					.forEach((location, infoView) -> playerInfos.put(location, location == tableView.getMyLocation()
-							? new FooSimPlayerInfo(myInfo) : new FooSimPlayerInfo(infoView)));
+					.forEach((location, infoView) -> playerInfos.put(location,
+							location == tableView.getMyLocation()
+									? new FooSimPlayerInfo(myInfo)
+									: new FooSimPlayerInfo(infoView)));
 			setPlayerInfos(playerInfos);
 		}
 
 		public FooMahjongTable(FooMahjongTable table) {
 			setInitBottomSize(table.getInitBottomSize());
 			setDrawedBottomSize(table.getDrawedBottomSize());
-			Map<PlayerLocation, PlayerInfo> playerInfos = new EnumMap<>(PlayerLocation.class);
-			table.getPlayerInfos().forEach(
-					(location, info) -> playerInfos.put(location, new FooSimPlayerInfo((FooSimPlayerInfo) info)));
+			Map<PlayerLocation, PlayerInfo> playerInfos = new EnumMap<>(
+					PlayerLocation.class);
+			table.getPlayerInfos()
+					.forEach((location, info) -> playerInfos.put(location,
+							new FooSimPlayerInfo((FooSimPlayerInfo) info)));
 			setPlayerInfos(playerInfos);
 		}
 
@@ -254,7 +278,8 @@ public class FooSimContext extends GameContext implements Runnable {
 
 		public FooSimPlayerInfo(FooSimPlayerInfo info) {
 			setPlayer(info.getPlayer());
-			setAliveTiles(info.getAliveTiles() == null ? null : new HashSet<>(info.getAliveTiles()));
+			setAliveTiles(info.getAliveTiles() == null ? null
+					: new HashSet<>(info.getAliveTiles()));
 			setLastDrawedTile(info.getLastDrawedTile());
 			setDiscardedTiles(new ArrayList<>(info.getDiscardedTiles()));
 			setTileGroups(new ArrayList<>(info.getTileGroups()));
@@ -279,22 +304,23 @@ public class FooSimContext extends GameContext implements Runnable {
 		}
 
 		@Override
-		public Action chooseAction(PlayerView contextView, Set<ActionType> actionTypes, Action illegalAction)
+		public Action chooseAction(PlayerView contextView,
+				Set<ActionType> actionTypes, Action illegalAction)
 				throws InterruptedException {
+			// 如果可以和，则模拟结束
+			// 非摸牌动作作为主动任务分割
+			// 摸牌动作作为被动任务分割
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
-		public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
-			// TODO Auto-generated method stub
-
+		public void actionDone(PlayerView contextView,
+				PlayerLocation actionLocation, Action action) {
 		}
 
 		@Override
 		public void timeLimit(PlayerView contextView, Integer secondsToGo) {
-			// TODO Auto-generated method stub
-
 		}
 
 	}
@@ -307,22 +333,24 @@ public class FooSimContext extends GameContext implements Runnable {
 		}
 
 		@Override
-		public Action chooseAction(PlayerView contextView, Set<ActionType> actionTypes, Action illegalAction)
+		public Action chooseAction(PlayerView contextView,
+				Set<ActionType> actionTypes, Action illegalAction)
 				throws InterruptedException {
+			// 如果可以SimWin（符合和牌的前提条件），则先估算和牌概率，写入上一个context
+
+			// 如果可以SimDiscard，则分割
+
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
-		public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
-			// TODO Auto-generated method stub
-
+		public void actionDone(PlayerView contextView,
+				PlayerLocation actionLocation, Action action) {
 		}
 
 		@Override
 		public void timeLimit(PlayerView contextView, Integer secondsToGo) {
-			// TODO Auto-generated method stub
-
 		}
 
 	}

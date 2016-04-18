@@ -30,7 +30,8 @@ import com.github.blovemaple.mj.object.PlayerLocation;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class FooBot implements Player {
-	private static final Logger logger = Logger.getLogger(FooBot.class.getSimpleName());
+	private static final Logger logger = Logger
+			.getLogger(FooBot.class.getSimpleName());
 
 	private String name;
 
@@ -52,8 +53,10 @@ public class FooBot implements Player {
 	// 每个模拟线程处理完后，或者模拟过程被中断后，应该在simStopCondition上notify，确保主线程及时知道doingContexts的清空。
 
 	// 当模拟过程被中断时，应该尽快清空doingContexts。这样，如果某个模拟任务没有及时中止，也可以发现处理的context不在doingContexts中而及时中止。
-	private final Set<FooSimContext> doingContexts = Collections.synchronizedSet(new HashSet<>());
-	private final List<FooSimContext> doneContexts = Collections.synchronizedList(new LinkedList<>());
+	private final Set<FooSimContext> doingContexts = Collections
+			.synchronizedSet(new HashSet<>());
+	private final List<FooSimContext> doneContexts = Collections
+			.synchronizedList(new LinkedList<>());
 	private final Lock lock = new ReentrantLock();
 	private final Condition simStopCondition = lock.newCondition();
 
@@ -65,20 +68,23 @@ public class FooBot implements Player {
 	private Executor simExecutor;
 
 	@Override
-	public synchronized Action chooseAction(PlayerView contextView, Set<ActionType> actionTypes)
-			throws InterruptedException {
+	public synchronized Action chooseAction(PlayerView contextView,
+			Set<ActionType> actionTypes) throws InterruptedException {
 		try {
 			// 创建顶层的context
-			MahjongGame gameTool = new MahjongGame(new FooSimGameStrategy(contextView.getGameStrategy()),
+			MahjongGame gameTool = new MahjongGame(
+					new FooSimGameStrategy(contextView.getGameStrategy()),
 					contextView.getTimeLimitStrategy());
-			FooSimContext topContext = new FooSimContext(contextView, gameTool, this::submitSplitContextForSim,
-					this::submitDoneContext);
+			FooSimContext topContext = new FooSimContext(contextView, gameTool,
+					this::submitSplitContextForSim, this::submitDoneContext);
 
 			// 新建simExecutor并提交顶层context，开始模拟
 			int processorCount = Runtime.getRuntime().availableProcessors();
-			ExecutorService simExecutor = new ThreadPoolExecutor(processorCount, processorCount, 0L,
-					TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>(11,
-							Comparator.comparing(task -> ((FooSimContext) task).getLevel())));
+			ExecutorService simExecutor = new ThreadPoolExecutor(processorCount,
+					processorCount, 0L, TimeUnit.MILLISECONDS,
+					new PriorityBlockingQueue<Runnable>(11,
+							Comparator.comparing(task -> ((FooSimContext) task)
+									.getLevel())));
 			this.simExecutor = simExecutor;
 			submitContextForSim(topContext);
 
@@ -108,24 +114,33 @@ public class FooBot implements Player {
 	}
 
 	/**
-	 * 提交模拟任务。任务目的是将指定的context进行一步动作，确定结果或者拆分为若干context。<br>
-	 * 具体做法是将指定的context用gameTool选择一次动作，此时gameTool就会调用模拟玩家，由模拟玩家确定结果或拆分context。
+	 * 提交一个模拟任务。
 	 */
 	private void submitContextForSim(FooSimContext context) {
 		doingContexts.add(context);
 		simExecutor.execute(context);
 	}
 
-	private void submitSplitContextForSim(FooSimContext oriContext, Collection<FooSimContext> newContexts) {
-		// TODO
-
-		doingContexts.addAll(newContexts);
-		newContexts.forEach(simExecutor::execute);
+	/**
+	 * 分割模拟任务。
+	 */
+	private void submitSplitContextForSim(FooSimContext oriContext,
+			Collection<FooSimContext> newContexts) {
+		boolean removed = doingContexts.remove(oriContext);
+		if (removed) {
+			doingContexts.addAll(newContexts);
+			newContexts.forEach(simExecutor::execute);
+		}
 	}
 
+	/**
+	 * 模拟任务结束。
+	 */
 	private void submitDoneContext(FooSimContext oriContext) {
-		// TODO
-
+		boolean removed = doingContexts.remove(oriContext);
+		if (removed) {
+			doneContexts.add(oriContext);
+		}
 	}
 
 	private Action computeFinalAction() {
@@ -141,14 +156,16 @@ public class FooBot implements Player {
 	}
 
 	@Override
-	public Action chooseAction(PlayerView contextView, Set<ActionType> actionTypes, Action illegalAction)
+	public Action chooseAction(PlayerView contextView,
+			Set<ActionType> actionTypes, Action illegalAction)
 			throws InterruptedException {
 		logger.severe("Selected illegal action: " + illegalAction);
 		return null;
 	}
 
 	@Override
-	public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
+	public void actionDone(PlayerView contextView,
+			PlayerLocation actionLocation, Action action) {
 	}
 
 	@Override
