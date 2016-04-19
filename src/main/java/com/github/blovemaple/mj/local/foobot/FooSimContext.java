@@ -20,17 +20,17 @@ import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
 /**
  * TODO <br>
  * 一个FooSimContext的生命周期：
- * <li>根据上一个context新建——顶层由FooBot，非顶层由模拟玩家；
- * <li>（非顶层）模拟一步，到达此context需要表示的状态——模拟玩家；
- * <li>作为任务被提交，等待处理——顶层由FooBot，非顶层由模拟玩家；
- * <li>开始处理，让模拟玩家根据选择动作——gameTool（MahjongGame）；
- * <li>将此context进行分割或结束模拟——模拟玩家。
+ * <li>根据上一个context新建——顶层由FooBot，非顶层由上一个FooSimContext；
+ * <li>（非顶层）模拟一步，到达此context需要表示的状态——上一个FooSimContext；
+ * <li>作为任务被提交，等待处理——顶层由FooBot，非顶层由上一个FooSimContext；
+ * <li>开始处理，让模拟玩家选择动作——gameTool（MahjongGame）；
+ * <li>模拟玩家给出可能的动作以及概率——模拟玩家；
+ * <li>将此context进行分割或结束模拟——上一个FooSimContext。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
@@ -41,48 +41,60 @@ public class FooSimContext extends GameContext implements Runnable {
 	private Consumer<FooSimContext> doneSubmitter;
 
 	/**
+	 * 上一个context。
+	 */
+	private FooSimContext lastContext;
+	/**
 	 * 此状态的层级，即达到此状态已经模拟的动作数。层级小的会先处理。
 	 */
 	private int level;
 
 	/**
-	 * 进行处理时记录的，达到此状态前的最后一个模拟动作。
+	 * 上一个context进行处理时记录的，达到此状态前的最后一个模拟动作。
 	 */
 	private ActionAndLocation lastSimActionAndLocation;
 
+	// 进行处理时产生以下信息
+
 	/**
-	 * 进行处理时得出的下一个动作是否是被动的（即概率性的，别家出牌或本家摸牌）。
+	 * 模拟非本家选择动作时记录的，每个模拟玩家可能选择的动作，以及可能性。
 	 */
-	private boolean isNextActionPassive;
+	private Map<PlayerLocation, Map<Action, Double>> othersActionProbs;
 	/**
-	 * 进行处理时得出的下一个动作（如果是被动的）每种牌型的概率。
+	 * 模拟本家选择动作时记录的，本家可以选择的动作集合。
 	 */
-	private Map<TileType, Double> nextDiscardAndProb;
+	private Set<Action> selfActions;
 	/**
-	 * 是否已进行处理，即分割或结束。防止一个context被处理多次。
+	 * 上面两个集合都记录完毕后，算出的：本家选择动作 -> (最终决定动作 -> 决定动作的概率)
+	 */
+	private Map<Action, Map<ActionAndLocation, Double>> finalProbs;
+	/**
+	 * 是否已进行处理，即分割或结束。
 	 */
 	private boolean handled = false;
 
 	/**
-	 * 下一个动作进行处理时得出此状态下其他玩家直接和牌的概率。
+	 * 进行处理时得出的，此状态下其他玩家直接和牌的概率。
 	 */
 	private Map<PlayerLocation.Relation, Double> otherPlayerWinProb;
 
+	// 计算结果时产生以下信息
+
 	/**
-	 * 计算结果时记录的每种下一个动作的胜率。
+	 * 计算结果时记录的，finalProbs中的每种下一个动作进行后本家的胜率。
 	 */
-	private Map<Action, Double> nextActionAndWinProb;
+	private Map<ActionAndLocation, Double> nextActionAndWinProb;
 
 	/**
 	 * 计算结果时得出的此context状态下的胜率。<br>
-	 * 如果模拟动作时已经确定当前状态下可以和牌或流局，则模拟动作时写入（这样的情况即此context是最底层的）。
+	 * 如果模拟动作时已经确定当前状态下本家可以和牌或流局，则模拟动作时写入（这样的情况即此context是最底层的）。
 	 */
-	private double winProb;
+	private double selfWinProb;
 	/**
-	 * 计算结果时得出的保证胜率需要做出的主动动作。如果此状态下需要做的动作是被动的，或没有后续动作，则为null。（null也表示主动但放弃）<br>
-	 * 如果模拟动作时已经确定当前状态下可以和牌或流局，则模拟动作时写入。
+	 * 计算结果时得出的保证胜率本家需要做出的主动动作，即finalProbs的一个key。<br>
+	 * 如果模拟动作时已经确定当前状态下本家可以和牌或流局，则模拟动作时写入。
 	 */
-	private Action bestAction;
+	private Action bestSelfAction;
 
 	public FooSimContext(GameContext.PlayerView realContextView,
 			MahjongGame gameTool,
@@ -99,6 +111,8 @@ public class FooSimContext extends GameContext implements Runnable {
 		this.gameTool = gameTool;
 		this.splitSubmitter = splitSubmitter;
 		this.doneSubmitter = doneSubmitter;
+
+		this.level = 0;
 	}
 
 	public FooSimContext(FooSimContext lastContext) {
@@ -113,6 +127,9 @@ public class FooSimContext extends GameContext implements Runnable {
 		this.gameTool = lastContext.gameTool;
 		this.splitSubmitter = lastContext.splitSubmitter;
 		this.doneSubmitter = lastContext.doneSubmitter;
+
+		this.lastContext = lastContext;
+		this.level = lastContext.level + 1;
 	}
 
 	/**
@@ -138,73 +155,19 @@ public class FooSimContext extends GameContext implements Runnable {
 	public void run() {
 		try {
 			gameTool.chooseAction(this);
+			// TODO
 		} catch (InterruptedException e) {
 		}
 	}
 
-	protected int getLevel() {
+	public int getLevel() {
 		return level;
-	}
-
-	protected void setLevel(int level) {
-		this.level = level;
 	}
 
 	@Override
 	public ActionAndLocation getLastActionAndLocation() {
 		return lastSimActionAndLocation != null ? lastSimActionAndLocation
 				: super.getLastActionAndLocation();
-	}
-
-	public boolean isNextActionPassive() {
-		return isNextActionPassive;
-	}
-
-	public void setNextActionPassive(boolean isNextActionPassive) {
-		this.isNextActionPassive = isNextActionPassive;
-	}
-
-	public Map<TileType, Double> getNextDiscardAndProb() {
-		return nextDiscardAndProb;
-	}
-
-	public void setNextDiscardAndProb(
-			Map<TileType, Double> nextDiscardAndProb) {
-		this.nextDiscardAndProb = nextDiscardAndProb;
-	}
-
-	public Map<PlayerLocation.Relation, Double> getOtherPlayerWinProb() {
-		return otherPlayerWinProb;
-	}
-
-	public void setOtherPlayerWinProb(PlayerLocation.Relation relation,
-			Double winProb) {
-		// TODO
-	}
-
-	public Map<Action, Double> getNextActionAndWinProb() {
-		return nextActionAndWinProb;
-	}
-
-	public void setNextActionAndWinProb(
-			Map<Action, Double> nextActionAndWinProb) {
-		this.nextActionAndWinProb = nextActionAndWinProb;
-	}
-
-	public double getWinProb() {
-		return winProb;
-	}
-
-	public void setWinProb(double winProb) {
-		this.winProb = winProb;
-	}
-
-	public Action getBestAction() {
-		return bestAction;
-	}
-
-	public void setBestAction(Action bestAction) {
-		this.bestAction = bestAction;
 	}
 
 	private static class FooMahjongTable extends MahjongTable {
@@ -255,7 +218,7 @@ public class FooSimContext extends GameContext implements Runnable {
 
 	private static class FooSimPlayerInfo extends PlayerInfo {
 		/**
-		 * 初始化非本家。
+		 * 新建顶层context的非本家信息。
 		 */
 		public FooSimPlayerInfo(PlayerInfo.PlayerView infoView) {
 			setPlayer(new FooSimOthers());
@@ -265,7 +228,7 @@ public class FooSimContext extends GameContext implements Runnable {
 		}
 
 		/**
-		 * 初始化本家。
+		 * 新建顶层context的本家信息。
 		 */
 		public FooSimPlayerInfo(PlayerInfo info) {
 			setPlayer(new FooSimSelf());
@@ -276,14 +239,17 @@ public class FooSimContext extends GameContext implements Runnable {
 			setTing(info.isTing());
 		}
 
-		public FooSimPlayerInfo(FooSimPlayerInfo info) {
-			setPlayer(info.getPlayer());
-			setAliveTiles(info.getAliveTiles() == null ? null
-					: new HashSet<>(info.getAliveTiles()));
-			setLastDrawedTile(info.getLastDrawedTile());
-			setDiscardedTiles(new ArrayList<>(info.getDiscardedTiles()));
-			setTileGroups(new ArrayList<>(info.getTileGroups()));
-			setTing(info.isTing());
+		/**
+		 * 新建非顶层context的玩家信息。
+		 */
+		public FooSimPlayerInfo(FooSimPlayerInfo infoOfLastContext) {
+			setPlayer(infoOfLastContext.getPlayer());
+			setAliveTiles(infoOfLastContext.getAliveTiles() == null ? null
+					: new HashSet<>(infoOfLastContext.getAliveTiles()));
+			setLastDrawedTile(infoOfLastContext.getLastDrawedTile());
+			setDiscardedTiles(new ArrayList<>(infoOfLastContext.getDiscardedTiles()));
+			setTileGroups(new ArrayList<>(infoOfLastContext.getTileGroups()));
+			setTing(infoOfLastContext.isTing());
 		}
 
 		@Override

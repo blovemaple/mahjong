@@ -2,6 +2,7 @@ package com.github.blovemaple.mj.local.foobot;
 
 import static com.github.blovemaple.mj.object.PlayerLocation.Relation.*;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -52,13 +53,14 @@ public class FooSimDiscardActionType extends AbstractActionType {
 
 	@Override
 	protected Set<Tile> getActionTilesRange(PlayerView context, PlayerLocation location) {
-		// TODO 可以模拟所有未出现的牌
-		return super.getActionTilesRange(context, location);
+		// 牌数为0，干脆用空集。
+		return Collections.emptySet();
 	}
 
 	@Override
 	protected int getActionTilesSize() {
-		return 1;
+		//牌的数量设为0，只要符合前提条件就可选，让context处理打出各种牌的可能性。
+		return 0;
 	}
 
 	@Override
