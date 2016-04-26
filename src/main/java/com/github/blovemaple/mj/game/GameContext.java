@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -27,13 +29,15 @@ public class GameContext {
 	private static final Logger logger = Logger
 			.getLogger(GameContext.class.getSimpleName());
 
-	private final MahjongTable table;
+	private MahjongTable table;
 	private GameStrategy gameStrategy;
 	private TimeLimitStrategy timeLimitStrategy;
 	
 	private PlayerLocation zhuangLocation;
 	private List<ActionAndLocation> doneActions = new ArrayList<>();
 	private GameResult gameResult;
+	
+	private Map<PlayerLocation, Set<ActionType>> choicesByLocation;
 
 	public GameContext(MahjongTable table, GameStrategy gameStrategy, TimeLimitStrategy timeLimitStrategy) {
 		this.table = table;
@@ -48,7 +52,7 @@ public class GameContext {
 	public GameStrategy getGameStrategy() {
 		return gameStrategy;
 	}
-	
+
 	public TimeLimitStrategy getTimeLimitStrategy() {
 		return timeLimitStrategy;
 	}
@@ -109,6 +113,15 @@ public class GameContext {
 		this.gameResult = gameResult;
 	}
 
+	public Map<PlayerLocation, Set<ActionType>> getChoicesByLocation() {
+		return choicesByLocation;
+	}
+
+	public void setChoicesByLocation(
+			Map<PlayerLocation, Set<ActionType>> choicesByLocation) {
+		this.choicesByLocation = choicesByLocation;
+	}
+
 	private final Map<PlayerLocation, PlayerView> playerViews = new HashMap<>();
 
 	/**
@@ -117,10 +130,14 @@ public class GameContext {
 	public PlayerView getPlayerView(PlayerLocation location) {
 		PlayerView view = playerViews.get(location);
 		if (view == null) { // 不需要加锁，因为多创建了也没事
-			view = new PlayerView(location);
+			view = newPlayerView(location);
 			playerViews.put(location, view);
 		}
 		return view;
+	}
+
+	protected PlayerView newPlayerView(PlayerLocation location) {
+		return new PlayerView(location);
 	}
 
 	/**
@@ -132,7 +149,7 @@ public class GameContext {
 
 		private final PlayerLocation myLocation;
 
-		private PlayerView(PlayerLocation myLocation) {
+		protected PlayerView(PlayerLocation myLocation) {
 			this.myLocation = myLocation;
 		}
 

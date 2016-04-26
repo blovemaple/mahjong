@@ -139,6 +139,7 @@ public class MahjongGame {
 			if (!choises.isEmpty())
 				choicesByLocation.put(location, choises);
 		});
+		context.setChoicesByLocation(choicesByLocation);
 
 		logger.info(() -> "Action choices: " + choicesByLocation);
 
@@ -187,7 +188,7 @@ public class MahjongGame {
 			// 如果出现目前等待的玩家中优先级最高的动作，或者所有玩家都做出了动作，则进行做出的优先级最高的动作
 			synchronized (choseActionByLocation) {
 				while (true) {
-					ActionAndLocation action = determineAction(choseActionByLocation, choicesByLocation, context);
+					ActionAndLocation action = determineAction(choseActionByLocation, context);
 					if (action != null) {
 						// 动作已决定
 						// 中断未作出选择的玩家的选择逻辑并返回
@@ -282,11 +283,15 @@ public class MahjongGame {
 		}
 	}
 
-	private ActionAndLocation determineAction(Map<PlayerLocation, Action> choseActionByLocation,
-			Map<PlayerLocation, Set<ActionType>> choisesByLocation, GameContext context) {
+	private ActionAndLocation determineAction(
+			Map<PlayerLocation, Action> choseActionByLocation,
+			GameContext context) {
+		Map<PlayerLocation, Set<ActionType>> choicesByLocation = context
+				.getChoicesByLocation();
+
 		logger.info("determining...");
 		logger.info("chosed:" + choseActionByLocation);
-		logger.info("choises:" + choisesByLocation);
+		logger.info("choises:" + choicesByLocation);
 
 		if (choseActionByLocation.isEmpty())
 			return null;
@@ -307,7 +312,7 @@ public class MahjongGame {
 		if (chosePriorAction == null)
 			return null;
 
-		if (choseActionByLocation.size() == choisesByLocation.size()) {
+		if (choseActionByLocation.size() == choicesByLocation.size()) {
 			// 所有玩家都做出了选择，直接返回已选的优先级最高的动作
 			return chosePriorAction;
 		}
@@ -315,7 +320,7 @@ public class MahjongGame {
 		// 还有玩家没做出选择，看没做出选择的里面是否可能有优先级更高的动作类型
 
 		// 得出未选动作类型中优先级最高的
-		ActionTypeAndLocation priorAction = choisesByLocation.entrySet().stream()
+		ActionTypeAndLocation priorAction = choicesByLocation.entrySet().stream()
 				// 过滤掉已选择的玩家
 				.filter(entry -> !choseActionByLocation.containsKey(entry.getKey()))
 				// 在剩下的所有选择中取优先级最高的

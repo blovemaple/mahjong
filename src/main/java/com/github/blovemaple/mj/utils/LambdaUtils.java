@@ -1,6 +1,7 @@
 package com.github.blovemaple.mj.utils;
 
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -21,6 +22,11 @@ public class LambdaUtils {
 	@FunctionalInterface
 	public interface Function_WithExceptions<T, R, E extends Exception> {
 		R apply(T t) throws E;
+	}
+	
+	@FunctionalInterface
+	public interface BiFunction_WithExceptions<T, U, R, E extends Exception> {
+		R apply(T t, U u) throws E;
 	}
 
 	@FunctionalInterface
@@ -60,6 +66,18 @@ public class LambdaUtils {
 		return t -> {
 			try {
 				return function.apply(t);
+			} catch (Exception exception) {
+				throwActualException(exception);
+				return null;
+			}
+		};
+	}
+
+	public static <T, U, R, E extends Exception> BiFunction<T, U, R> rethrowBiFunction(
+			BiFunction_WithExceptions<T, U, R, E> function) throws E {
+		return (t, u) -> {
+			try {
+				return function.apply(t, u);
 			} catch (Exception exception) {
 				throwActualException(exception);
 				return null;

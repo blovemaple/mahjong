@@ -3,6 +3,7 @@ package com.github.blovemaple.mj.action;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -102,6 +103,8 @@ public abstract class AbstractActionType implements ActionType {
 	@Override
 	public Collection<Set<Tile>> getLegalActionTiles(
 			GameContext.PlayerView context) {
+		if (!meetPrecondition(context))
+			return Collections.emptySet();
 		return legalActionTilesStream(context).collect(Collectors.toSet());
 	}
 
@@ -213,5 +216,10 @@ public abstract class AbstractActionType implements ActionType {
 	 */
 	protected abstract void doLegalAction(GameContext context,
 			PlayerLocation location, Set<Tile> tiles);
+
+	@Override
+	public String toString() {
+		return name();
+	}
 
 }

@@ -32,6 +32,35 @@ public class ActionAndLocation {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((action == null) ? 0 : action.hashCode());
+		result = prime * result
+				+ ((location == null) ? 0 : location.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof ActionAndLocation))
+			return false;
+		ActionAndLocation other = (ActionAndLocation) obj;
+		if (action == null) {
+			if (other.action != null)
+				return false;
+		} else if (!action.equals(other.action))
+			return false;
+		if (location != other.location)
+			return false;
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		return location + action.toString();
 	}

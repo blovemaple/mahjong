@@ -34,24 +34,31 @@ public class FooSimGameStrategy implements GameStrategy {
 
 	public FooSimGameStrategy(GameStrategy realStrategy) {
 		this.realStrategy = realStrategy;
-		actionTypesInGame = simActionTypes(realStrategy.getAllActionTypesInGame());
-		actionTypesInTing = simActionTypes(realStrategy.getAllActionTypesInTing());
+		actionTypesInGame = simActionTypes(
+				realStrategy.getAllActionTypesInGame());
+		actionTypesInTing = simActionTypes(
+				realStrategy.getAllActionTypesInTing());
 	}
 
 	private Set<ActionType> simActionTypes(Set<? extends ActionType> oriTypes) {
 		Set<ActionType> simTypes = new HashSet<ActionType>();
 		simTypes.addAll(oriTypes);
 
+		simTypes.add(FooSimSelfDrawActionType.type());
+
 		if (!oriTypes.contains(DISCARD))
 			throw new IllegalArgumentException("No discard type.");
-		simTypes.add(FooSimDiscardActionType.type());
+		simTypes.add(FooSimOthersDiscardActionType.type());
 
-		List<ActionType> winTypes = oriTypes.stream().filter(WIN::matchBy).collect(Collectors.toList());
+		List<ActionType> winTypes = oriTypes.stream().filter(WIN::matchBy)
+				.collect(Collectors.toList());
 		if (winTypes.size() != 1)
-			throw new IllegalArgumentException("More than 1 win types: " + winTypes);
+			throw new IllegalArgumentException(
+					"More than 1 win types: " + winTypes);
 		ActionType oriWinType = winTypes.get(0);
 		if (oriWinType != WIN)
-			throw new IllegalArgumentException("Unsupported win type: " + oriWinType);
+			throw new IllegalArgumentException(
+					"Unsupported win type: " + oriWinType);
 		simTypes.remove(oriWinType);
 		simTypes.add(FooSimWinActionType.type());
 
@@ -67,15 +74,29 @@ public class FooSimGameStrategy implements GameStrategy {
 	}
 
 	public Comparator<ActionTypeAndLocation> getActionPriorityComparator() {
-		Comparator<ActionTypeAndLocation> ori = realStrategy.getActionPriorityComparator();
-		return (o1, o2) -> ori.compare(realActionType(o1), realActionType(o2));
+		// 永远把empty action放在最低优先级，确保gametool让所有模拟玩家都完成选择逻辑
+		return (o1, o2) -> {
+			if (o1.getActionType() == FooSimEmptyActionType.type()
+					&& o2.getActionType() == FooSimEmptyActionType.type())
+				return 0;
+			else if (o1.getActionType() == FooSimEmptyActionType.type())
+				return 1;
+			else if (o2.getActionType() == FooSimEmptyActionType.type())
+				return -1;
+			else
+				return realStrategy.getActionPriorityComparator()
+						.compare(realActionType(o1), realActionType(o2));
+		};
 	}
 
 	private ActionTypeAndLocation realActionType(ActionTypeAndLocation o) {
-		if (o.getActionType() == FooSimDiscardActionType.type())
-			return new ActionTypeAndLocation(DISCARD, o.getLocation());
+		if (o.getActionType() == FooSimOthersDiscardActionType.type())
+			// simdiscard应该当作draw，因为实际上是在应该draw的时候做，把draw跳过去
+			return new ActionTypeAndLocation(DRAW, o.getLocation(),
+					o.getContext());
 		if (o.getActionType() == FooSimWinActionType.type())
-			return new ActionTypeAndLocation(WIN, o.getLocation());
+			return new ActionTypeAndLocation(WIN, o.getLocation(),
+					o.getContext());
 		return o;
 	}
 
@@ -97,12 +118,19 @@ public class FooSimGameStrategy implements GameStrategy {
 		return realStrategy.getDealAction(context);
 	}
 
-	public Action getPlayerDefaultAction(GameContext context, PlayerLocation location, Set<ActionType> choises) {
+	public Action getPlayerDefaultAction(GameContext context,
+			PlayerLocation location, Set<ActionType> choises) {
 		return realStrategy.getPlayerDefaultAction(context, location, choises);
 	}
 
-	public ActionAndLocation getDefaultAction(GameContext context, Map<PlayerLocation, Set<ActionType>> choises) {
-		return realStrategy.getDefaultAction(context, choises);
+	public ActionAndLocation getDefaultAction(GameContext context,
+			Map<PlayerLocation, Set<ActionType>> choises) {
+		ActionAndLocation defAction = realStrategy.getDefaultAction(context,
+				choises);
+		// 原策略默认动作如果有，必须是流局
+		if (defAction != null && !LIUJU.matchBy(defAction.getActionType()))
+			throw new RuntimeException("Not def liuju action: " + defAction);
+		return defAction;
 	}
 
 	public Set<? extends WinType> getAllWinTypes() {
