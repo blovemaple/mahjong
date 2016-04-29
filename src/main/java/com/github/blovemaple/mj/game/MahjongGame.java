@@ -139,7 +139,6 @@ public class MahjongGame {
 			if (!choises.isEmpty())
 				choicesByLocation.put(location, choises);
 		});
-		context.setChoicesByLocation(choicesByLocation);
 
 		logger.info(() -> "Action choices: " + choicesByLocation);
 
@@ -188,7 +187,8 @@ public class MahjongGame {
 			// 如果出现目前等待的玩家中优先级最高的动作，或者所有玩家都做出了动作，则进行做出的优先级最高的动作
 			synchronized (choseActionByLocation) {
 				while (true) {
-					ActionAndLocation action = determineAction(choseActionByLocation, context);
+					ActionAndLocation action = determineAction(
+							choicesByLocation, choseActionByLocation, context);
 					if (action != null) {
 						// 动作已决定
 						// 中断未作出选择的玩家的选择逻辑并返回
@@ -284,11 +284,9 @@ public class MahjongGame {
 	}
 
 	private ActionAndLocation determineAction(
+			Map<PlayerLocation, Set<ActionType>> choicesByLocation,
 			Map<PlayerLocation, Action> choseActionByLocation,
 			GameContext context) {
-		Map<PlayerLocation, Set<ActionType>> choicesByLocation = context
-				.getChoicesByLocation();
-
 		logger.info("determining...");
 		logger.info("chosed:" + choseActionByLocation);
 		logger.info("choises:" + choicesByLocation);

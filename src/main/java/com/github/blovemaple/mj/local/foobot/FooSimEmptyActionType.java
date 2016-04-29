@@ -53,14 +53,12 @@ public class FooSimEmptyActionType implements ActionType {
 	}
 
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location,
-			Action action) {
+	public boolean isLegalAction(GameContext context, PlayerLocation location, Action action) {
 		return true;
 	}
 
 	@Override
-	public void doAction(GameContext context, PlayerLocation location,
-			Action action) throws IllegalActionException {
+	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
 		return;
 	}
 

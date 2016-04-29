@@ -3,11 +3,8 @@ package com.github.blovemaple.mj.action.standard;
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.github.blovemaple.mj.action.AbstractActionType;
 import com.github.blovemaple.mj.action.Action;
@@ -18,7 +15,6 @@ import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.rule.FanType;
 
 /**
  * 动作类型“和牌”。
@@ -53,13 +49,11 @@ public class WinActionType extends AbstractActionType {
 		Set<Tile> aliveTiles = DISCARD.matchBy(lastAction.getType())
 				? newMergedSet(playerInfo.getAliveTiles(), lastAction.getTile())
 				: null;
-		return context.getGameStrategy().getAllWinTypes().stream()
-				.anyMatch(winType -> winType.canWin(playerInfo, aliveTiles));
+		return context.getGameStrategy().canWin(playerInfo, aliveTiles);
 	}
 
 	@Override
-	protected void doLegalAction(GameContext context, PlayerLocation location,
-			Set<Tile> tiles) {
+	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
 		Action lastAction = context.getLastAction();
 
 		GameResult result = new GameResult(context.getTable().getPlayerInfos(),
@@ -74,26 +68,8 @@ public class WinActionType extends AbstractActionType {
 		}
 
 		// 算番
-
-		PlayerInfo playerInfo = context.getPlayerInfoByLocation(location);
-		Map<? extends FanType, Integer> allFanTypes = context.getGameStrategy()
-				.getAllFanTypes();
-		// 在所有番种中过滤出所有符合的番种
-		Set<FanType> fanTypes = allFanTypes.keySet().stream()
-				.filter(fanType -> fanType.match(playerInfo))
-				.collect(Collectors.toSet());
-		// 去除被覆盖的番种
-		Map<? extends FanType, Set<? extends FanType>> coveredFanTypes = context
-				.getGameStrategy().getAllCoveredFanTypes();
-		if (coveredFanTypes != null)
-			coveredFanTypes.forEach((type, covered) -> {
-				if (fanTypes.contains(type))
-					fanTypes.removeAll(covered);
-			});
-		// 查询番数组成map
-		Map<FanType, Integer> fans = fanTypes.stream().collect(
-				Collectors.toMap(Function.identity(), allFanTypes::get));
-		result.setFans(fans);
+		result.setFans(context.getGameStrategy()
+				.getFans(context.getPlayerInfoByLocation(location), null));
 
 		context.setGameResult(result);
 	}

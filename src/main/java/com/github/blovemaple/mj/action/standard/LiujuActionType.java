@@ -36,14 +36,12 @@ public class LiujuActionType implements ActionType {
 	}
 
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location,
-			Action action) {
+	public boolean isLegalAction(GameContext context, PlayerLocation location, Action action) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void doAction(GameContext context, PlayerLocation location,
-			Action action) throws IllegalActionException {
+	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
 		GameResult result = new GameResult(context.getTable().getPlayerInfos(),
 				context.getZhuangLocation());
 		context.setGameResult(result);

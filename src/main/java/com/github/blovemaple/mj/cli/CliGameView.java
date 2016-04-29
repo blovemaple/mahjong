@@ -55,11 +55,11 @@ public class CliGameView {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static final Comparator<Tile> TILE_COMPARATOR = Comparator
 			// 先按花色
-			.<Tile, TileSuit> comparing(tile -> tile.getType().getSuit())
+			.<Tile, TileSuit> comparing(tile -> tile.type().getSuit())
 			// 再按种类
-			.<TileRank> thenComparing(tile -> tile.getType().getRank())
+			.<TileRank> thenComparing(tile -> tile.type().getRank())
 			// 再按ID
-			.<Integer> thenComparing(tile -> tile.getId());
+			.<Integer> thenComparing(tile -> tile.id());
 
 	private static final char GROUP_START_STR = '<', GROUP_END_STR = '>';
 	private static final char FOCUS_START_STR = '[', FOCUS_END_STR = ']';
@@ -153,7 +153,7 @@ public class CliGameView {
 				.collect(Collectors.toList());
 		if (!huas.isEmpty()) {
 			str.append(GROUP_START_STR);
-			huas.forEach(hua -> str.append(str(hua.getType().getRank())));
+			huas.forEach(hua -> str.append(str(hua.type().getRank())));
 			str.append(GROUP_END_STR);
 			str.append(' ');
 		}
@@ -168,18 +168,18 @@ public class CliGameView {
 							&& focusedGroups.contains(group);
 					str.append(focused ? FOCUS_START_STR : GROUP_START_STR);
 					List<TileSuit> suits = groupTiles.stream()
-							.map(tile -> tile.getType().getSuit()).distinct()
+							.map(tile -> tile.type().getSuit()).distinct()
 							.collect(Collectors.toList());
 					if (suits.size() == 1) {
 						groupTiles.forEach(tile -> str
-								.append(str(tile.getType().getRank())));
+								.append(str(tile.type().getRank())));
 						TileSuit suit = suits.get(0);
 						if (suit.getRankClass() == NumberRank.class)
 							str.append(str(suits.get(0)));
 					} else {
 						groupTiles.forEach(tile -> {
-							str.append(str(tile.getType().getRank()));
-							TileSuit suit = tile.getType().getSuit();
+							str.append(str(tile.type().getRank()));
+							TileSuit suit = tile.type().getSuit();
 							if (suit.getRankClass() == NumberRank.class)
 								str.append(str(suit));
 						});
@@ -210,7 +210,7 @@ public class CliGameView {
 		boolean lastFocused = false;
 		TileSuit lastSuit = null;
 		for (Tile tile : aliveTileList) {
-			TileSuit suit = tile.getType().getSuit();
+			TileSuit suit = tile.type().getSuit();
 			if ((lastSuit != null && lastSuit != suit)
 					|| tile.equals(justDrawed)) {
 				str.append(lastFocused ? FOCUS_END_STR : ' ');
@@ -224,7 +224,7 @@ public class CliGameView {
 					&& focusedAliveTiles.contains(tile);
 			str.append(!lastFocused && focused ? FOCUS_START_STR
 					: lastFocused && !focused ? FOCUS_END_STR : ' ');
-			str.append(str(tile.getType().getRank()));
+			str.append(str(tile.type().getRank()));
 			lastFocused = focused;
 		}
 
@@ -295,7 +295,7 @@ public class CliGameView {
 			break;
 		case BUGANG:
 			showActionStr(location, getDefaultActionStr(action.getType(),
-					Tile.allOfType(action.getTile().getType())));
+					Tile.allOfType(action.getTile().type())));
 			break;
 		case ANGANG:
 			showActionStr(location,
@@ -397,20 +397,20 @@ public class CliGameView {
 		if (!(actionTiles == null || actionTiles.isEmpty())) {
 			actionStr.append(' ');
 			List<TileSuit> suits = actionTiles.stream()
-					.map(tile -> tile.getType().getSuit()).distinct()
+					.map(tile -> tile.type().getSuit()).distinct()
 					.collect(Collectors.toList());
 			List<Tile> actionTileList = actionTiles.stream()
 					.sorted(TILE_COMPARATOR).collect(Collectors.toList());
 			if (suits.size() == 1) {
 				actionTileList.forEach(tile -> actionStr
-						.append(str(tile.getType().getRank())));
+						.append(str(tile.type().getRank())));
 				TileSuit suit = suits.get(0);
 				if (suit.getRankClass() == NumberRank.class)
 					actionStr.append(str(suit));
 			} else {
 				actionTileList.forEach(tile -> {
-					actionStr.append(str(tile.getType().getRank()));
-					TileSuit suit = tile.getType().getSuit();
+					actionStr.append(str(tile.type().getRank()));
+					TileSuit suit = tile.type().getSuit();
 					if (suit.getRankClass() == NumberRank.class)
 						actionStr.append(str(suit));
 				});

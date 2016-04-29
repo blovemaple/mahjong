@@ -77,16 +77,14 @@ public class FooSimOthersDiscardActionType extends DiscardActionType {
 	}
 
 	@Override
-	protected void doLegalAction(GameContext context, PlayerLocation location,
-			Set<Tile> tiles) {
+	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
 		super.doLegalAction(context, location, tiles);
 		// 虽然免去了一个摸牌动作，但还是要在牌墙中减去一个
 		((FooSimContext) context).decreaseWallSize();
 	}
 	
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location,
-			Action action) {
+	public boolean isLegalAction(GameContext context, PlayerLocation location, Action action) {
 		return super.isLegalAction(context, location, action);
 	}
 

@@ -344,7 +344,7 @@ public class FooSimContext extends GameContext implements Runnable {
 			tileTypeAndTiles = getGameStrategy().getAllTiles().stream()
 					.filter(tile -> !existTiles.contains(tile))
 					.peek(tile -> tileCount.incrementAndGet())
-					.collect(Collectors.groupingBy(Tile::getType));
+					.collect(Collectors.groupingBy(Tile::type));
 			tileTypeAndProbs = new HashMap<>();
 			tileTypeAndTiles.forEach((tileType, tiles) -> tileTypeAndProbs
 					.put(tileType, (double) tiles.size() / tileCount.get()));
@@ -419,7 +419,7 @@ public class FooSimContext extends GameContext implements Runnable {
 			for (Action action : selfActions) {
 				result = prime * result + action.getType().hashCode();
 				for (Tile tile : action.getTiles())
-					result = prime * result + tile.getType().hashCode();
+					result = prime * result + tile.type().hashCode();
 			}
 		}
 		return result;
@@ -596,7 +596,7 @@ public class FooSimContext extends GameContext implements Runnable {
 					return;
 				Set<Set<TileType>> typesDistinct = new HashSet<>();
 				actionType.getLegalActionTiles(contextView).forEach(tiles -> {
-					Set<TileType> types = tiles.stream().map(Tile::getType)
+					Set<TileType> types = tiles.stream().map(Tile::type)
 							.collect(Collectors.toSet());
 					if (typesDistinct.add(types))
 						selfActions.add(new Action(actionType, tiles));

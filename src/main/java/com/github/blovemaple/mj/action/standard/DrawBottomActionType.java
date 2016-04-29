@@ -26,8 +26,7 @@ public class DrawBottomActionType extends DrawActionType {
 	}
 
 	@Override
-	protected void doLegalAction(GameContext context, PlayerLocation location,
-			Set<Tile> tiles) {
+	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
 		Tile tile = context.getTable().drawBottom(1).get(0);
 		context.getPlayerInfoByLocation(location).getAliveTiles().add(tile);
 		context.getPlayerInfoByLocation(location).setLastDrawedTile(tile);

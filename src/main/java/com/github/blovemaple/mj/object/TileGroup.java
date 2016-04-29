@@ -96,22 +96,6 @@ public class TileGroup implements Serializable {
 		return gotTile;
 	}
 
-	public void setType(TileGroupType type) {
-		this.type = type;
-	}
-
-	public void setTiles(Set<Tile> tiles) {
-		this.tiles = tiles;
-	}
-
-	public void setFromRelation(Relation fromRelation) {
-		this.fromRelation = fromRelation;
-	}
-
-	public void setGotTile(Tile gotTile) {
-		this.gotTile = gotTile;
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;

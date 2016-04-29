@@ -40,14 +40,12 @@ public class DealActionType implements ActionType {
 	}
 
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location,
-			Action action) {
+	public boolean isLegalAction(GameContext context, PlayerLocation location, Action action) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void doAction(GameContext context, PlayerLocation location,
-			Action action) throws IllegalActionException {
+	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
 		MahjongTable table = context.getTable();
 		PlayerLocation zhuang = context.getZhuangLocation();
 		for (int i = 0; i < 4; i++) {

@@ -65,7 +65,7 @@ public class FooBotTest {
 	public void tearDown() throws Exception {
 	}
 
-	@Test
+	//@Test
 	public void testChooseAction() throws InterruptedException {
 		Set<ActionType> actionTypes = new HashSet<>();
 		actionTypes.add(DISCARD);

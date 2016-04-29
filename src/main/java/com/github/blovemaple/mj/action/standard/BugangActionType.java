@@ -3,6 +3,7 @@ package com.github.blovemaple.mj.action.standard;
 import static com.github.blovemaple.mj.object.TileGroupType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -58,8 +59,12 @@ public class BugangActionType extends AbstractActionType {
 		playerInfo.getAliveTiles().removeAll(tiles);
 
 		// 把碰组改为补杠组，并加上动作牌
-		group.setTiles(newMergedSet(group.getTiles(), tiles));
-		group.setType(BUGANG_GROUP);
+		TileGroup newGroup = new TileGroup(BUGANG_GROUP, group.getGotTile(),
+				group.getFromRelation(), newMergedSet(group.getTiles(), tiles));
+		List<TileGroup> groups = playerInfo.getTileGroups();
+		int groupIndex = groups.indexOf(group);
+		groups.remove(groupIndex);
+		groups.add(groupIndex, newGroup);
 	}
 
 	/**

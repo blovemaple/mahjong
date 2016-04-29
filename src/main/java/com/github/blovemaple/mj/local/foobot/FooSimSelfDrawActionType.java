@@ -53,8 +53,7 @@ public class FooSimSelfDrawActionType extends DrawActionType {
 	}
 
 	@Override
-	protected void doLegalAction(GameContext context, PlayerLocation location,
-			Set<Tile> tiles) {
+	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
 		// 就不判断tiles数量了，但必须是1个
 		((FooSimContext) context).decreaseWallSize();
 		context.getPlayerInfoByLocation(location).getAliveTiles().addAll(tiles);

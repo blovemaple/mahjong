@@ -1,8 +1,11 @@
 package com.github.blovemaple.mj.rule;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
@@ -10,6 +13,7 @@ import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.ActionTypeAndLocation;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.MahjongTable;
+import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
@@ -81,9 +85,48 @@ public interface GameStrategy {
 	public Set<? extends WinType> getAllWinTypes();
 
 	/**
+	 * 判断指定条件下是否可和牌。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
+	 * 否则利用playerInfo中的aliveTiles做出判断。<br>
+	 * 默认实现为使用此策略支持的所有和牌类型进行判断，至少有一种和牌类型判断可以和牌则可以和牌。
+	 */
+	public default boolean canWin(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
+		return getAllWinTypes().stream()
+				.anyMatch(winType -> winType.canWin(playerInfo, aliveTiles));
+		//TODO 缓存
+	}
+
+	/**
 	 * 获取此策略支持的所有番种和番数。
 	 */
 	public Map<? extends FanType, Integer> getAllFanTypes();
+
+	/**
+	 * 检查和牌的所有番种和番数。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
+	 * 否则利用playerInfo中的aliveTiles做出判断。<br>
+	 * 默认实现为先判断和牌，然后使用此策略支持的所有番种和番数进行统计。
+	 */
+	public default Map<FanType, Integer> getFans(PlayerInfo playerInfo,
+			Set<Tile> aliveTiles) {
+		if (!canWin(playerInfo, aliveTiles))
+			return Collections.emptyMap();
+
+		// 在所有番种中过滤出所有符合的番种
+		Set<FanType> fanTypes = getAllFanTypes().keySet().stream()
+				.filter(fanType -> fanType.match(playerInfo, null))
+				.collect(Collectors.toSet());
+		// 去除被覆盖的番种
+		Map<? extends FanType, Set<? extends FanType>> coveredFanTypes = getAllCoveredFanTypes();
+		if (coveredFanTypes != null)
+			coveredFanTypes.forEach((type, covered) -> {
+				if (fanTypes.contains(type))
+					fanTypes.removeAll(covered);
+			});
+		// 查询番数组成map
+		return fanTypes.stream().collect(
+				Collectors.toMap(Function.identity(), getAllFanTypes()::get));
+
+		//TODO 缓存
+	}
 
 	/**
 	 * 获取所有番种和被覆盖的番种。如果覆盖的番种和被覆盖的番种同时存在，则不计被覆盖的番种。<br>

@@ -77,7 +77,8 @@ public class CpgActionType extends AbstractActionType {
 	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
 		// 必须是指定关系的人出牌后
 		return (al, location) -> DISCARD.matchBy(al.getActionType())
-				&& lastActionRelations.contains(location.getRelationOf(al.getLocation()));
+				&& lastActionRelations
+						.contains(location.getRelationOf(al.getLocation()));
 	}
 
 	@Override

@@ -3,9 +3,11 @@ package com.github.blovemaple.mj.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -68,6 +70,53 @@ public class MyUtils {
 		Set<E> set = new HashSet<>(collection);
 		set.addAll(Arrays.asList(newElement));
 		return set;
+	}
+
+	/**
+	 * 将指定的集合流按照标识符去重。标识符用指定的函数获取。
+	 * 
+	 * @param stream
+	 *            集合流
+	 * @param identifierFunction
+	 *            获取标识符的函数
+	 * @return 去重后的集合流
+	 */
+	public static <E> Stream<Set<E>> distinctBy(Stream<Set<E>> stream,
+			Function<E, ?> identifierFunction) {
+		Set<Integer> existIdHashCodes = Collections
+				.synchronizedSet(new HashSet<>());
+		return stream.filter(eSet -> {
+			int idHashCode = eSet.stream().map(identifierFunction)
+					.mapToInt(Object::hashCode).sum();
+			return existIdHashCodes.add(idHashCode);
+		});
+	}
+
+	/**
+	 * 判断指定两个集合中的元素是否没有任何标识符重复。标识符用指定的函数获取。
+	 * 
+	 * @param c1
+	 *            集合1
+	 * @param c2
+	 *            集合2
+	 * @param identifierFunction
+	 *            获取标识符的函数
+	 * @return 没有重复返回true，否则返回false。
+	 */
+	public static <E> boolean disjointBy(Collection<E> c1, Collection<E> c2,
+			Function<E, ?> identifierFunction) {
+		if (c1.isEmpty() || c2.isEmpty())
+			return true;
+		Collection<E> contains = c2;
+		Collection<E> iterate = c1;
+		if (c1.size() > c2.size()) {
+			iterate = c2;
+			contains = c1;
+		}
+		Set<?> ids = contains.stream().map(identifierFunction)
+				.collect(Collectors.toSet());
+		return iterate.stream().map(identifierFunction)
+				.noneMatch(ids::contains);
 	}
 
 	/**

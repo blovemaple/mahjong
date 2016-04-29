@@ -59,7 +59,8 @@ public abstract class AbstractActionType implements ActionType {
 		if (lastActionPrecondition != null) {
 			ActionAndLocation lastAction = context.getLastActionAndLocation();
 			if (lastAction != null)
-				if (!lastActionPrecondition.test(lastAction, context.getMyLocation()))
+				if (!lastActionPrecondition.test(lastAction,
+						context.getMyLocation()))
 					return false;
 		}
 
@@ -112,9 +113,8 @@ public abstract class AbstractActionType implements ActionType {
 	 * {@inheritDoc}<br>
 	 * 默认实现为将action为null的和动作类型不符合的报异常，然后用{@link #isLegalActionTiles}检查是否合法。
 	 * 
-	 * @see com.github.blovemaple.mj.action.ActionType#isLegalAction(com.github.blovemaple.mj.game.GameContext,
-	 *      com.github.blovemaple.mj.object.PlayerLocation,
-	 *      com.github.blovemaple.mj.action.Action)
+	 * @see com.github.blovemaple.mj.action.ActionType#isLegalAction(GameContext,
+	 *      PlayerLocation, com.github.blovemaple.mj.action.Action)
 	 */
 	@Override
 	public boolean isLegalAction(GameContext context, PlayerLocation location,
@@ -134,9 +134,8 @@ public abstract class AbstractActionType implements ActionType {
 	 * {@inheritDoc}<br>
 	 * 默认实现为用{@link #isLegalAction}检查是否合法，如果合法则调用{@link #doLegalAction}执行动作。
 	 * 
-	 * @see com.github.blovemaple.mj.action.ActionType#doAction(com.github.blovemaple.mj.game.GameContext,
-	 *      com.github.blovemaple.mj.object.PlayerLocation,
-	 *      com.github.blovemaple.mj.action.Action)
+	 * @see com.github.blovemaple.mj.action.ActionType#doAction(GameContext,
+	 *      PlayerLocation, com.github.blovemaple.mj.action.Action)
 	 */
 	@Override
 	public void doAction(GameContext context, PlayerLocation location,

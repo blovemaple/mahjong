@@ -39,7 +39,7 @@ public class Tile implements Serializable {
 	 * 返回指定牌型的所有牌的集合。
 	 */
 	public static Set<Tile> allOfType(TileType type) {
-		return all.stream().filter(tile -> tile.getType() == type)
+		return all.stream().filter(tile -> tile.type() == type)
 				.collect(Collectors.toSet());
 	}
 
@@ -48,7 +48,7 @@ public class Tile implements Serializable {
 	 */
 	public static Tile of(TileType type, int id) {
 		return all.stream()
-				.filter(tile -> tile.getType() == type && tile.getId() == id)
+				.filter(tile -> tile.type() == type && tile.id() == id)
 				.findAny().orElse(null);
 	}
 
@@ -63,14 +63,14 @@ public class Tile implements Serializable {
 	/**
 	 * 返回牌型。
 	 */
-	public TileType getType() {
+	public TileType type() {
 		return type;
 	}
 
 	/**
 	 * 返回ID，同一牌型从0开始，通常是[0,3]。
 	 */
-	public int getId() {
+	public int id() {
 		return id;
 	}
 

@@ -10,7 +10,7 @@ import java.util.Set;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class PlayerInfo {
+public class PlayerInfo implements Cloneable {
 	/**
 	 * 玩家。
 	 */
@@ -93,6 +93,21 @@ public class PlayerInfo {
 		discardedTiles.clear();
 		tileGroups.clear();
 		isTing = false;
+	}
+
+	public PlayerInfo clone() {
+		PlayerInfo c;
+		try {
+			c = (PlayerInfo) super.clone();
+		} catch (CloneNotSupportedException e) {
+			// 不可能，因为PlayerInfo已经实现了Cloneable
+			throw new RuntimeException(e);
+		}
+		// deep copy
+		c.aliveTiles = new HashSet<>(aliveTiles);
+		c.discardedTiles = new ArrayList<>(discardedTiles);
+		c.tileGroups = new ArrayList<>(tileGroups);
+		return c;
 	}
 
 	private PlayerView otherPlayerView;

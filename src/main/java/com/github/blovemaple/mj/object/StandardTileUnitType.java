@@ -19,7 +19,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	JIANG(2) {
 		@Override
 		public boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
-			return tiles.stream().map(Tile::getType).distinct().count() == 1;
+			return tiles.stream().map(Tile::type).distinct().count() == 1;
 		}
 	},
 	/**
@@ -29,18 +29,18 @@ public enum StandardTileUnitType implements TileUnitType {
 		@Override
 		public boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
 			// rank类型非NumberRank的，非法
-			if (tiles.iterator().next().getType().getSuit()
+			if (tiles.iterator().next().type().getSuit()
 					.getRankClass() != NumberRank.class)
 				return false;
 
 			// 花色有多种的，非法
-			if (tiles.stream().map(tile -> tile.getType().getSuit()).distinct()
+			if (tiles.stream().map(tile -> tile.type().getSuit()).distinct()
 					.count() > 1)
 				return false;
 
 			// rank不连续的，非法
 			int[] numbers = tiles.stream().mapToInt(
-					tile -> ((NumberRank) tile.getType().getRank()).getNumber())
+					tile -> ((NumberRank) tile.type().getRank()).getNumber())
 					.sorted().toArray();
 			int crtNumber = 0;
 			for (int number : numbers) {
@@ -59,7 +59,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	KEZI(3) {
 		@Override
 		public boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
-			return tiles.stream().map(Tile::getType).distinct().count() == 1;
+			return tiles.stream().map(Tile::type).distinct().count() == 1;
 		}
 	},
 	/**
@@ -68,7 +68,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	GANGZI(4) {
 		@Override
 		protected boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
-			return tiles.stream().map(Tile::getType).distinct().count() == 1;
+			return tiles.stream().map(Tile::type).distinct().count() == 1;
 		}
 	},
 	/**
@@ -78,7 +78,7 @@ public enum StandardTileUnitType implements TileUnitType {
 		@Override
 		protected boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
 			return tiles.stream()
-					.allMatch(tile -> tile.getType().getSuit() == HUA);
+					.allMatch(tile -> tile.type().getSuit() == HUA);
 		}
 	};
 

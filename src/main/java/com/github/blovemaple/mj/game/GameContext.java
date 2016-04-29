@@ -6,12 +6,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
-import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -37,8 +35,6 @@ public class GameContext {
 	private List<ActionAndLocation> doneActions = new ArrayList<>();
 	private GameResult gameResult;
 	
-	private Map<PlayerLocation, Set<ActionType>> choicesByLocation;
-
 	public GameContext(MahjongTable table, GameStrategy gameStrategy, TimeLimitStrategy timeLimitStrategy) {
 		this.table = table;
 		this.gameStrategy = gameStrategy;
@@ -111,15 +107,6 @@ public class GameContext {
 
 	public void setGameResult(GameResult gameResult) {
 		this.gameResult = gameResult;
-	}
-
-	public Map<PlayerLocation, Set<ActionType>> getChoicesByLocation() {
-		return choicesByLocation;
-	}
-
-	public void setChoicesByLocation(
-			Map<PlayerLocation, Set<ActionType>> choicesByLocation) {
-		this.choicesByLocation = choicesByLocation;
 	}
 
 	private final Map<PlayerLocation, PlayerView> playerViews = new HashMap<>();

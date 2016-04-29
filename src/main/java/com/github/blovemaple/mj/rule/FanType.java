@@ -1,6 +1,9 @@
 package com.github.blovemaple.mj.rule;
 
+import java.util.Set;
+
 import com.github.blovemaple.mj.object.PlayerInfo;
+import com.github.blovemaple.mj.object.Tile;
 
 /**
  * 番种。
@@ -14,7 +17,8 @@ public interface FanType {
 	public String name();
 
 	/**
-	 * 检查和牌是否符合此番种。
+	 * 检查和牌是否符合此番种。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
+	 * 否则利用playerInfo中的aliveTiles做出判断。
 	 */
-	public boolean match(PlayerInfo playerInfo);
+	public boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles);
 }

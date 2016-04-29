@@ -99,8 +99,7 @@ public enum StandardActionType implements ActionType {
 	}
 
 	@Override
-	public void doAction(GameContext context, PlayerLocation location,
-			Action action) throws IllegalActionException {
+	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
 		type.doAction(context, location, action);
 	}
 
@@ -120,8 +119,7 @@ public enum StandardActionType implements ActionType {
 	}
 
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location,
-			Action action) {
+	public boolean isLegalAction(GameContext context, PlayerLocation location, Action action) {
 		return type.isLegalAction(context, location, action);
 	}
 

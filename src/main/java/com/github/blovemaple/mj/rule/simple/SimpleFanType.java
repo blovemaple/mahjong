@@ -1,6 +1,9 @@
 package com.github.blovemaple.mj.rule.simple;
 
+import java.util.Set;
+
 import com.github.blovemaple.mj.object.PlayerInfo;
+import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.rule.FanType;
 
 /**
@@ -17,7 +20,7 @@ public class SimpleFanType implements FanType {
 	}
 
 	@Override
-	public boolean match(PlayerInfo playerInfo) {
+	public boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
 		return true;
 	}
 

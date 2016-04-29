@@ -47,8 +47,7 @@ public class DiscardActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected void doLegalAction(GameContext context, PlayerLocation location,
-			Set<Tile> tiles) {
+	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
 		PlayerInfo playerInfo = context.getPlayerInfoByLocation(location);
 		playerInfo.getAliveTiles().removeAll(tiles);
 		playerInfo.getDiscardedTiles().addAll(tiles);

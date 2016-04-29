@@ -22,7 +22,7 @@ public class CliRunner {
 	private static final Logger logger = Logger.getLogger(CliRunner.class.getSimpleName());
 
 	public static void main(String[] args) throws IOException, URISyntaxException {
-		// 让日志输出到文件
+		// 让日志输出到文件，不要在控制台显示
 		LogManager.getLogManager().readConfiguration(CliRunner.class.getResource("/logging.properties").openStream());
 
 		logger.info("Started");
@@ -33,6 +33,7 @@ public class CliRunner {
 		}
 
 		System.out.println();
+		System.exit(0);
 	}
 
 	private final CliView cliView;
