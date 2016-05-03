@@ -41,6 +41,10 @@ public enum TileGroupType {
 		this.unitType = unitType;
 	}
 
+	public TileUnitType getUnitType() {
+		return unitType;
+	}
+
 	/**
 	 * 返回一个单元中有几张牌。
 	 */

@@ -4,7 +4,6 @@ import static com.github.blovemaple.mj.object.StandardTileUnitType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,48 +23,47 @@ import com.github.blovemaple.mj.rule.WinType;
  */
 public class SimpleWinType implements WinType {
 
-	@Override
-	public boolean canWin(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
-		return !parseAllTileUnits(
-				aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles(),
-				true).isEmpty();
-	}
-
 	/**
-	 * 全部解析成完整的TileUnit集合的所有可能或任意可能，包括将牌和若干个顺子/刻子，失败返回空集合。
+	 * 全部解析成完整的TileUnit集合的流，包括将牌和若干个顺子/刻子，失败返回空集合。
 	 * 
 	 * @param aliveTiles
 	 * @param anyOne
 	 *            true表示最多只解析一种可能的集合，用于快速判断是否可解析
-	 * @return 完整的TileUnit集合的所有可能或任意可能
+	 * @return 完整的TileUnit集合的流
 	 */
-	public static Set<Set<TileUnit>> parseAllTileUnits(Set<Tile> aliveTiles,
-			boolean anyOne) {
-		// 所有可能的将牌
-		Stream<Set<TileUnit>> stream = combinationStream(aliveTiles,
-				JIANG.size()).filter(JIANG::isLegalTiles)
-						// 针对每一种可能的将牌，寻找剩下的牌全部解析成顺子/刻子的所有可能
-						.flatMap(jiang -> {
-							TileUnit jiangUnit = new TileUnit(JIANG, jiang);
-							List<Tile> otherTiles = new ArrayList<Tile>(
-									aliveTiles);
-							otherTiles.removeAll(jiang);
-							return parseShunKes(otherTiles)
-									.peek(shunKes -> shunKes.add(jiangUnit));
-						});
+	public Stream<Set<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo,
+			Set<Tile> aliveTiles) {
+		Set<TileUnit> groupUnits = genGroupUnits(playerInfo);
 
-		if (anyOne) {
-			return stream.findAny().map(Collections::singleton)
-					.orElse(Collections.emptySet());
-		} else {
-			return stream.collect(Collectors.toSet());
-		}
+		// 所有可能的将牌
+		return combinationStream(aliveTiles, JIANG.size())
+				.filter(JIANG::isLegalTiles)
+				// 针对每一种可能的将牌，寻找剩下的牌全部解析成顺子/刻子的所有可能
+				.flatMap(jiang -> {
+					TileUnit jiangUnit = new TileUnit(JIANG, jiang);
+					List<Tile> otherTiles = new ArrayList<Tile>(aliveTiles);
+					otherTiles.removeAll(jiang);
+					return parseShunKes(otherTiles)
+							.peek(shunKes -> shunKes.add(jiangUnit));
+				})
+				// 加上牌组生成的单元
+				.peek(set -> set.addAll(groupUnits));
+	}
+
+	/**
+	 * 从玩家的所有牌组生成单元集合。
+	 */
+	protected Set<TileUnit> genGroupUnits(PlayerInfo playerInfo) {
+		return playerInfo.getTileGroups().stream()
+				.map(group -> new TileUnit(group.getType().getUnitType(),
+						group.getTiles()))
+				.collect(Collectors.toSet());
 	}
 
 	/**
 	 * 全部解析成顺子/刻子集合的可行情况组成的流，失败返回空流。
 	 */
-	private static Stream<Set<TileUnit>> parseShunKes(List<Tile> tiles) {
+	private Stream<Set<TileUnit>> parseShunKes(List<Tile> tiles) {
 		if (tiles.isEmpty())
 			return Stream.of(new HashSet<>());
 		// 取出第一张牌 XXX

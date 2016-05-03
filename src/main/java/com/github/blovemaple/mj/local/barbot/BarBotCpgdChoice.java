@@ -142,11 +142,15 @@ class BarBotCpgdChoice {
 	/**
 	 * 判断指定的换牌是否被已经判断和牌的换牌所覆盖。
 	 */
-	public boolean isCoveredByWin(Set<Tile> removedTiles,
+	private boolean isCoveredByWin(Set<Tile> removedTiles,
 			Set<Tile> addedTiles) {
 		return winChangingByChangeCount.values().stream().flatMap(List::stream)
 				.anyMatch(winChanging -> winChanging.isCovered(removedTiles,
 						addedTiles));
+	}
+
+	public BarBotCpgdSelectTask getTask() {
+		return task;
 	}
 
 	public GameContext.PlayerView getBaseContextView() {

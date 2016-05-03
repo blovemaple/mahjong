@@ -5,8 +5,10 @@ import static com.github.blovemaple.mj.object.TileGroupType.*;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -19,6 +21,7 @@ import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroup;
+import com.github.blovemaple.mj.object.TileType;
 
 /**
  * TODO 换牌n个：remove n，add n+1
@@ -35,6 +38,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	private Set<ActionType> actionTypes;
 	private PlayerInfo playerInfo;
 
+	@SuppressWarnings("unused")
 	private boolean stopRequest = false;
 
 	public BarBotCpgdSelectTask(PlayerView contextView,
@@ -51,6 +55,10 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		List<BarBotCpgdChoice> choices = allChoices();
 		if (choices.isEmpty())
 			return null;
+
+		// 如果只有一个选择，就直接选择
+		if (choices.size() == 1)
+			return choices.get(0).getAction();
 
 		// 从0次换牌开始，计算每个状态换牌后和牌的概率
 		AtomicInteger minChangeCount = new AtomicInteger(-1);
@@ -95,6 +103,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	}
 
 	private Set<Tile> remainTiles;
+	private Map<TileType, Long> remainTilesByType;
 
 	/**
 	 * 返回所有剩余牌（本家看不到的所有牌）。
@@ -114,10 +123,22 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 								.forEach(existTiles::addAll);
 						existTiles.addAll(playerInfo.getDiscardedTiles());
 					});
-			contextView.getGameStrategy().getAllTiles().stream()
+			remainTiles = contextView.getGameStrategy().getAllTiles().stream()
 					.filter(existTiles::contains).collect(Collectors.toSet());
+			remainTilesByType = remainTiles.stream()
+					.collect(Collectors.groupingBy(Tile::type, HashMap::new,
+							Collectors.counting()));
 		}
 		return remainTiles;
+	}
+
+	public Map<TileType, Long> remainTileCountByType() {
+		remainTiles();
+		return remainTilesByType;
+	}
+
+	public int remainTileCount() {
+		return remainTiles().size();
 	}
 
 	/**

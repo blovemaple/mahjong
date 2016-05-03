@@ -26,6 +26,7 @@ import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 
+@SuppressWarnings("unused")
 public class FooBotTest {
 
 	private static FooBot bot = new FooBot("Foo");

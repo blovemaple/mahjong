@@ -17,15 +17,12 @@ public class Tile implements Serializable {
 	private static final Set<Tile> all;
 	static {
 		// 初始化所有牌
-		all = Collections
-				.unmodifiableSet(
-						TileType.all().stream()
-								.flatMap(type -> IntStream
-										.range(0,
-												type.getSuit()
-														.getTileCountByType())//
-										.mapToObj(id -> new Tile(type, id)))
-								.collect(Collectors.toSet()));
+		Set<Tile> allTiles = TileType.all().stream()
+				.flatMap(type -> IntStream
+						.range(0, type.getSuit().getTileCountByType())
+						.mapToObj(id -> new Tile(type, id)))
+				.collect(Collectors.toSet());
+		all = Collections.unmodifiableSet(allTiles);
 	}
 
 	/**
