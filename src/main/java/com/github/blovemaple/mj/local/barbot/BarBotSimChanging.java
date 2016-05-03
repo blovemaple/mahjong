@@ -2,6 +2,7 @@ package com.github.blovemaple.mj.local.barbot;
 
 import static com.github.blovemaple.mj.object.StandardTileUnitType.*;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -18,16 +19,16 @@ import com.github.blovemaple.mj.object.TileUnit;
 class BarBotSimChanging {
 	private BarBotCpgdChoice choice;
 
-	private Set<Tile> removedTiles;
-	private Set<Tile> addedTiles;
+	private Collection<Tile> removedTiles;
+	private Collection<Tile> addedTiles;
 
 	private Set<Tile> aliveTiles;
 
 	private Integer winPoint;
 	private Double prob;
 
-	public BarBotSimChanging(BarBotCpgdChoice choice, Set<Tile> removedTiles,
-			Set<Tile> addedTiles) {
+	public BarBotSimChanging(BarBotCpgdChoice choice, Collection<Tile> removedTiles,
+			Collection<Tile> addedTiles) {
 		this.choice = choice;
 		this.removedTiles = removedTiles;
 		this.addedTiles = addedTiles;
@@ -109,7 +110,7 @@ class BarBotSimChanging {
 		return aliveTiles;
 	}
 
-	public boolean isCovered(Set<Tile> removedTiles, Set<Tile> addedTiles) {
+	public boolean isCovered(Collection<Tile> removedTiles, Collection<Tile> addedTiles) {
 		if (removedTiles.size() < this.removedTiles.size())
 			return false;
 		if (addedTiles.size() < this.addedTiles.size())

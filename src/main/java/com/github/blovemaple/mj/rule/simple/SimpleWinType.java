@@ -14,14 +14,14 @@ import java.util.stream.Stream;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileUnit;
-import com.github.blovemaple.mj.rule.WinType;
+import com.github.blovemaple.mj.rule.AbstractWinType;
 
 /**
  * 普通和牌（相对于七对等特殊和牌类型而言）。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class SimpleWinType implements WinType {
+public class SimpleWinType extends AbstractWinType {
 
 	/**
 	 * 全部解析成完整的TileUnit集合的流，包括将牌和若干个顺子/刻子，失败返回空集合。

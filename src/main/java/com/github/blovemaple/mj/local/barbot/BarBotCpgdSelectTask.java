@@ -34,8 +34,7 @@ import com.github.blovemaple.mj.object.TileType;
  */
 public class BarBotCpgdSelectTask implements Callable<Action> {
 	private static final Set<ActionType> ACTION_TYPES = new HashSet<>(
-			Arrays.asList(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD,
-					DISCARD_WITH_TING));
+			Arrays.asList(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD, DISCARD_WITH_TING));
 	private static final int EXTRA_CHANGE_COUNT = 2;
 
 	private PlayerView contextView;
@@ -45,8 +44,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	@SuppressWarnings("unused")
 	private boolean stopRequest = false;
 
-	public BarBotCpgdSelectTask(PlayerView contextView,
-			Set<ActionType> actionTypes) {
+	public BarBotCpgdSelectTask(PlayerView contextView, Set<ActionType> actionTypes) {
 		this.contextView = contextView;
 		this.actionTypes = actionTypes;
 		this.playerInfo = contextView.getMyInfo();
@@ -70,15 +68,15 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		for (int changeCount = 0; true; changeCount++) {
 			if (changeCount >= aliveTileSize)
 				break;
-			if (minChangeCount.get() >= 0
-					&& changeCount - minChangeCount.get() > EXTRA_CHANGE_COUNT)
+			if (minChangeCount.get() >= 0 && changeCount - minChangeCount.get() > EXTRA_CHANGE_COUNT)
 				break;
+			long startTime = System.currentTimeMillis();
+			System.out.println("start " + changeCount);
 			int crtChangeCount = changeCount;
-			choices.parallelStream()
-					.map(choice -> choice.testWinProb(crtChangeCount))
+			choices.parallelStream().map(choice -> choice.testWinProb(crtChangeCount))
 					.filter(result -> result == Boolean.TRUE)
-					.forEach(win -> minChangeCount.compareAndSet(-1,
-							crtChangeCount));
+					.forEach(win -> minChangeCount.compareAndSet(-1, crtChangeCount));
+			System.out.println("end   " + changeCount + " " + (System.currentTimeMillis() - startTime));
 		}
 
 		// 返回和牌概率最大的一个动作
@@ -122,49 +120,44 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	}
 
 	private List<BarBotCpgdChoice> allChoices() {
-		List<BarBotCpgdChoice> choices = actionTypes.stream()
-				.filter(ACTION_TYPES::contains)
-				.flatMap(actionType -> {
-					Stream<Set<Tile>> legalTileSets = 
-							actionType.getLegalActionTiles(contextView).stream();
-					legalTileSets = distinctBy(legalTileSets, Tile::type);
-					return legalTileSets.map(tiles -> 
-							new BarBotCpgdChoice(contextView, playerInfo,
-									new Action(actionType, tiles), this));
-				})
-				.filter(Objects::nonNull).collect(Collectors.toList());
+		List<BarBotCpgdChoice> choices = actionTypes.stream().filter(ACTION_TYPES::contains).flatMap(actionType -> {
+			Stream<Set<Tile>> legalTileSets = actionType.getLegalActionTiles(contextView).stream();
+			legalTileSets = distinctBy(legalTileSets, Tile::type);
+			return legalTileSets
+					.map(tiles -> new BarBotCpgdChoice(contextView, playerInfo, new Action(actionType, tiles), this));
+		}).filter(Objects::nonNull).collect(Collectors.toList());
 		if (actionTypes.stream().noneMatch(DISCARD::matchBy))
-			choices.add(
-					new BarBotCpgdChoice(contextView, playerInfo, null, this));
+			choices.add(new BarBotCpgdChoice(contextView, playerInfo, null, this));
 		return choices;
 	}
 
-	private Set<Tile> remainTiles;
+	private List<Tile> remainTiles;
 	private Map<TileType, Long> remainTilesByType;
 
 	/**
 	 * 返回所有剩余牌（本家看不到的所有牌）。
 	 */
-	public Set<Tile> remainTiles() {
+	public List<Tile> remainTiles() {
 		if (remainTiles == null) {
 			// 除了本家手牌、所有玩家groups、已经打出的牌
 			Set<Tile> existTiles = new HashSet<>();
 			existTiles.addAll(contextView.getMyInfo().getAliveTiles());
-			contextView.getTableView().getPlayerInfoView().values()
-					.forEach(playerInfo -> {
-						playerInfo.getTileGroups().stream()
-								// XXX - 写死了暗杠不应该看到
-								.filter(group -> group
-										.getType() != ANGANG_GROUP)
-								.map(TileGroup::getTiles)
-								.forEach(existTiles::addAll);
-						existTiles.addAll(playerInfo.getDiscardedTiles());
-					});
-			remainTiles = contextView.getGameStrategy().getAllTiles().stream()
-					.filter(tile -> !existTiles.contains(tile)).collect(Collectors.toSet());
+			contextView.getTableView().getPlayerInfoView().values().forEach(playerInfo -> {
+				playerInfo.getTileGroups().stream()
+						// XXX - 写死了暗杠不应该看到
+						.filter(group -> group.getType() != ANGANG_GROUP).map(TileGroup::getTiles)
+						.forEach(existTiles::addAll);
+				existTiles.addAll(playerInfo.getDiscardedTiles());
+			});
+			List<Tile> remainTiles = contextView.getGameStrategy().getAllTiles().stream()
+					.filter(tile -> !existTiles.contains(tile)).collect(Collectors.toList());
 			remainTilesByType = remainTiles.stream()
-					.collect(Collectors.groupingBy(Tile::type, HashMap::new,
-							Collectors.counting()));
+					.collect(Collectors.groupingBy(Tile::type, HashMap::new, Collectors.counting()));
+			/*
+			 * 因为remainTileCountByType用此方法保证remainTilesByType的存在，
+			 * 所以remainTilesByType在remainTiles之前赋值
+			 */
+			this.remainTiles = remainTiles;
 		}
 		return remainTiles;
 	}

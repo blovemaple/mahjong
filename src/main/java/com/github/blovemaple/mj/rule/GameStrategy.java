@@ -91,7 +91,7 @@ public interface GameStrategy {
 	 */
 	public default boolean canWin(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
 		return getAllWinTypes().stream()
-				.anyMatch(winType -> winType.canWin(playerInfo, aliveTiles));
+				.anyMatch(winType -> winType.match(playerInfo, aliveTiles));
 		//TODO 缓存
 	}
 

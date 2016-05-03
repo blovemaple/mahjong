@@ -95,6 +95,7 @@ class BarBotCpgdChoice {
 			// 没有后续动作，收集结果为和牌的换牌，并计算和牌概率（将其发生概率相加）
 			List<BarBotSimChanging> winChangings = Collections
 					.synchronizedList(new ArrayList<>());
+//			testTime("changings " + changeCount, () -> changings(changeCount).count());
 			double winProb = changings(changeCount).parallel()
 					// 过滤出和牌的，收集
 					.filter(BarBotSimChanging::isWin).peek(winChangings::add)
@@ -116,34 +117,121 @@ class BarBotCpgdChoice {
 	}
 
 	private Stream<BarBotSimChanging> changings(int changeCount) {
-		// 取count个手牌，按type去重，组成流
-		return typeDistinctStream(playerInfo.getAliveTiles(), changeCount)
-				.flatMap(removedTiles ->
-		// 取count+1个剩余牌，按type去重，组成流
-		typeDistinctStream(task.remainTiles(), changeCount + 1)
-				// 过滤掉添加与删除的手牌有重复牌型的（这种的相当于少换了）
-				.filter(addedTiles -> disjointBy(addedTiles, removedTiles,
-						Tile::type))
-				// 过滤掉少次换牌已和牌的情况（这种的概率已计算在内）
-				.filter(addedTiles -> !this.isCoveredByWin(removedTiles,
-						addedTiles))
-				// 生成changing对象
-				.map(addedTiles -> new BarBotSimChanging(this, removedTiles,
-						addedTiles))
+//		testTime("changings "+changeCount+" 1", ()->{
+//			typeDistinctStream(playerInfo.getAliveTiles(), changeCount).count();
+//		});
+//
+//		testTime("changings "+changeCount+" 2", ()->{
+//			typeDistinctStream(task.remainTiles(), changeCount + 1)
+//			.flatMap(removedTiles -> {
+//			return
+//			// 取count+1个剩余牌，按type去重，组成流
+//					combinationStream(playerInfo.getAliveTiles(), changeCount)
+//					.map(addedTiles -> null);
+//			}
+//		//
+//		).count();
+//		});
+//		
+//		testTime("changings "+changeCount+" 3", ()->{
+//			typeDistinctStream(playerInfo.getAliveTiles(), changeCount)
+//			.flatMap(removedTiles -> {
+//		return
+//		// 取count+1个剩余牌，按type去重，组成流
+//		typeDistinctStream(task.remainTiles(), changeCount + 1)
+//				// 过滤掉添加与删除的手牌有重复牌型的（这种的相当于少换了）
+//				.filter(addedTiles -> disjointBy(addedTiles, removedTiles,
+//						Tile::type))
+//				// 生成changing对象
+//				.map(addedTiles -> null);
+//				
+//		}
+//	//
+//	).count();
+//		});
+//		
+//		testTime("changings "+changeCount+" 4", ()->{
+//			typeDistinctStream(playerInfo.getAliveTiles(), changeCount)
+//			.flatMap(removedTiles -> {
+//		return
+//		// 取count+1个剩余牌，按type去重，组成流
+//		typeDistinctStream(task.remainTiles(), changeCount + 1)
+//				// 过滤掉添加与删除的手牌有重复牌型的（这种的相当于少换了）
+//				.filter(addedTiles -> disjointBy(addedTiles, removedTiles,
+//						Tile::type))
+//				// 过滤掉少次换牌已和牌的情况（这种的概率已计算在内）
+//				.filter(addedTiles -> !this.isCoveredByWin(removedTiles,
+//						addedTiles))
+//				// 生成changing对象
+//				.map(addedTiles -> null);
+//				
+//		}
+//	//
+//	).count();
+//		});
+//		
+//		testTime("changings "+changeCount+" 5", ()->{
+//			typeDistinctStream(playerInfo.getAliveTiles(), changeCount)
+//			.flatMap(removedTiles -> {
+//		return
+//		// 取count+1个剩余牌，按type去重，组成流
+//		typeDistinctStream(task.remainTiles(), changeCount + 1)
+//				// 过滤掉添加与删除的手牌有重复牌型的（这种的相当于少换了）
+//				.filter(addedTiles -> disjointBy(addedTiles, removedTiles,
+//						Tile::type))
+//				// 过滤掉少次换牌已和牌的情况（这种的概率已计算在内）
+//				.filter(addedTiles -> !this.isCoveredByWin(removedTiles,
+//						addedTiles))
+//				// 生成changing对象
+//				.map(addedTiles -> new BarBotSimChanging(this, removedTiles,
+//						addedTiles));
+//				
+//		}
+//	//
+//	).count();
+//		});
+		
+//		start 0
+//		end   0 38
+//		start 1
+//		end   1 154
+//		start 2
+//		end   2 1155
+//		start 3
+//		end   3 19217
+
+		List<List<Tile>> playerTiles = typeDistinctStream(playerInfo.getAliveTiles(), changeCount)
+				.collect(Collectors.toList());
+		// 取count个剩余牌，按type去重，组成流
+		return typeDistinctStream(task.remainTiles(), changeCount + 1)
+				.flatMap(removedTiles -> {
+			return
+			// 取count+1个手牌，按type去重，组成流
+			playerTiles.stream()
+					// 过滤掉添加与删除的手牌有重复牌型的（这种的相当于少换了）
+					.filter(addedTiles -> disjointBy(addedTiles, removedTiles,
+							Tile::type))
+					// 过滤掉少次换牌已和牌的情况（这种的概率已计算在内）
+					.filter(addedTiles -> !this.isCoveredByWin(removedTiles,
+							addedTiles))
+					// 生成changing对象
+					.map(addedTiles -> new BarBotSimChanging(this, removedTiles,
+							addedTiles));
+			}
 		//
 		);
 	}
 
-	private static Stream<Set<Tile>> typeDistinctStream(Collection<Tile> tiles,
+	private static Stream<List<Tile>> typeDistinctStream(Collection<Tile> tiles,
 			int size) {
-		return distinctBy(combinationStream(tiles, size), Tile::type);
+		return distinctBy(combinationListStream(tiles, size), Tile::type);
 	}
 
 	/**
 	 * 判断指定的换牌是否被已经判断和牌的换牌所覆盖。
 	 */
-	private boolean isCoveredByWin(Set<Tile> removedTiles,
-			Set<Tile> addedTiles) {
+	private boolean isCoveredByWin(Collection<Tile> removedTiles,
+			Collection<Tile> addedTiles) {
 		return winChangingByChangeCount.values().stream().flatMap(List::stream)
 				.anyMatch(winChanging -> winChanging.isCovered(removedTiles,
 						addedTiles));
@@ -182,7 +270,8 @@ class BarBotCpgdChoice {
 
 	@Override
 	public String toString() {
-		return "BarBotCpgdChoice [\n\taction=" + action + "\n\twinProbByChangeCount=" + winProbByChangeCount
+		return "BarBotCpgdChoice [\n\taction=" + action
+				+ "\n\twinProbByChangeCount=" + winProbByChangeCount
 				+ "\n\tfinalWinProb=" + finalWinProb + "\n]";
 	}
 

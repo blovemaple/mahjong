@@ -23,7 +23,7 @@ public interface WinType {
 	 *            玩家手中的牌
 	 * @return 是否可以和牌
 	 */
-	public default boolean canWin(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
+	public default boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
 		return parseWinTileUnits(playerInfo,
 				aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles())
 						.findAny().isPresent();

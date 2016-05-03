@@ -27,7 +27,6 @@ import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 
-@SuppressWarnings("unused")
 public class FooBotTest {
 
 	//private static FooBot bot = new FooBot("Foo");
@@ -60,6 +59,9 @@ public class FooBotTest {
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SI), 1));
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, LIU), 1));
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, LIU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 1));
 		selfInfo.setLastDrawedTile(Tile.of(TileType.of(WAN, SAN), 0));
 
 		context = new GameContext(table, new SimpleGameStrategy(),
