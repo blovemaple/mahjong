@@ -19,6 +19,7 @@ import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.cli.CliRunner;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.local.barbot.BarBot;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
@@ -29,7 +30,8 @@ import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 @SuppressWarnings("unused")
 public class FooBotTest {
 
-	private static FooBot bot = new FooBot("Foo");
+	//private static FooBot bot = new FooBot("Foo");
+	private static BarBot bot = new BarBot("Bar");
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -66,10 +68,11 @@ public class FooBotTest {
 	public void tearDown() throws Exception {
 	}
 
-	//@Test
+	@Test
 	public void testChooseAction() throws InterruptedException {
 		Set<ActionType> actionTypes = new HashSet<>();
 		actionTypes.add(DISCARD);
+		actionTypes.add(DISCARD_WITH_TING);
 		Action action = bot.chooseAction(context.getPlayerView(EAST),
 				actionTypes);
 		System.out.println(action);

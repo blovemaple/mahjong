@@ -55,8 +55,9 @@ class BarBotCpgdChoice {
 
 	private PlayerInfo doAction(GameContext.PlayerView baseContextView,
 			PlayerInfo baseInfo, Action action) {
-		GameContext simContext = new BarBotSimContext(baseContextView);
 		PlayerInfo playerInfo = baseInfo.clone();
+		GameContext simContext = new BarBotSimContext(baseContextView,
+				playerInfo);
 		try {
 			action.getType().doAction(simContext,
 					baseContextView.getMyLocation(), action);
@@ -178,6 +179,11 @@ class BarBotCpgdChoice {
 			}
 		}
 		return finalWinProb;
+	}
+
+	@Override
+	public String toString() {
+		return "BarBotCpgdChoice [" + action + "]";
 	}
 
 }

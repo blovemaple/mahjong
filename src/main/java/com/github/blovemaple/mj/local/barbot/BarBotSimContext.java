@@ -20,11 +20,14 @@ import com.github.blovemaple.mj.rule.TimeLimitStrategy;
  */
 public class BarBotSimContext extends GameContext {
 	private GameContext.PlayerView contextView;
+	private PlayerInfo myInfo;
 
-	public BarBotSimContext(GameContext.PlayerView contextView) {
+	public BarBotSimContext(GameContext.PlayerView contextView,
+			PlayerInfo myInfo) {
 		super(null, contextView.getGameStrategy(),
 				contextView.getTimeLimitStrategy());
 		this.contextView = contextView;
+		this.myInfo = myInfo;
 	}
 
 	@Override
@@ -45,7 +48,7 @@ public class BarBotSimContext extends GameContext {
 	@Override
 	public PlayerInfo getPlayerInfoByLocation(PlayerLocation location) {
 		if (location == contextView.getMyLocation())
-			return contextView.getMyInfo();
+			return myInfo;
 		else
 			throw new UnsupportedOperationException();
 	}

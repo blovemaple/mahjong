@@ -12,8 +12,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
@@ -70,11 +72,11 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 					&& changeCount - minChangeCount.get() > EXTRA_CHANGE_COUNT)
 				break;
 			int crtChangeCount = changeCount;
-			Set<Boolean> canWins = choices.parallelStream()
+			choices.parallelStream()
 					.map(choice -> choice.testWinProb(crtChangeCount))
-					.collect(Collectors.toSet());
-			if (canWins.contains(Boolean.TRUE))
-				minChangeCount.compareAndSet(-1, changeCount);
+					.filter(result -> result == Boolean.TRUE)
+					.forEach(win -> minChangeCount.compareAndSet(-1,
+							crtChangeCount));
 		}
 
 		// 返回和牌概率最大的一个动作
@@ -85,6 +87,34 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 				.map(BarBotCpgdChoice::getAction)
 				// （不可能选不出来）
 				.orElseThrow(RuntimeException::new);
+	}
+
+	public static void main(String[] args) throws InterruptedException {
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				System.out.println("Thread start");
+				IntStream.of(1, 2).parallel().forEach(i -> {
+					try {
+						System.out.println("start: " + i);
+						IntStream.generate(() -> 1).sum();
+						System.out.println("over: " + i);
+					} catch (Exception e) {
+						System.out.println("interrupted: " + i);
+						e.printStackTrace();
+					}
+				});
+				System.out.println("Thread end");
+			}
+		};
+		thread.start();
+
+		TimeUnit.SECONDS.sleep(1);
+		thread.interrupt();
+		TimeUnit.SECONDS.sleep(1);
+		thread.interrupt();
+		System.out.println("main: interrupted");
+		thread.join();
 	}
 
 	private List<BarBotCpgdChoice> allChoices() {
