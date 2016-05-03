@@ -56,7 +56,10 @@ public class FooBotTest {
 		PlayerInfo selfInfo = table.getPlayerInfos().get(EAST);
 		selfInfo.setPlayer(bot);
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, LIU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
 		selfInfo.setLastDrawedTile(Tile.of(TileType.of(WAN, SAN), 0));
 
 		context = new GameContext(table, new SimpleGameStrategy(),

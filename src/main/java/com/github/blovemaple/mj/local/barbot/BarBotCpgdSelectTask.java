@@ -2,6 +2,7 @@ package com.github.blovemaple.mj.local.barbot;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.object.TileGroupType.*;
+import static com.github.blovemaple.mj.utils.MyUtils.*;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
@@ -80,13 +82,15 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		}
 
 		// 返回和牌概率最大的一个动作
-		return choices.stream()
-				// 选和牌概率最大的一个
-				.max(Comparator.comparing(BarBotCpgdChoice::getFinalWinProb))
+		Action bestAction = choices.stream()
+				// 选和牌概率最大的一个，和牌概率相同者，听牌优先
+				.max(Comparator.comparing(BarBotCpgdChoice::getFinalWinProb)
+						.thenComparing(choice -> choice.getPlayerInfo().isTing()))
 				// 返回其动作
 				.map(BarBotCpgdChoice::getAction)
 				// （不可能选不出来）
 				.orElseThrow(RuntimeException::new);
+		return bestAction;
 	}
 
 	public static void main(String[] args) throws InterruptedException {
@@ -120,11 +124,14 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	private List<BarBotCpgdChoice> allChoices() {
 		List<BarBotCpgdChoice> choices = actionTypes.stream()
 				.filter(ACTION_TYPES::contains)
-				.flatMap(actionType -> actionType
-						.getLegalActionTiles(contextView).stream()
-						.map(tiles -> new BarBotCpgdChoice(contextView,
-								playerInfo, new Action(actionType, tiles),
-								this)))
+				.flatMap(actionType -> {
+					Stream<Set<Tile>> legalTileSets = 
+							actionType.getLegalActionTiles(contextView).stream();
+					legalTileSets = distinctBy(legalTileSets, Tile::type);
+					return legalTileSets.map(tiles -> 
+							new BarBotCpgdChoice(contextView, playerInfo,
+									new Action(actionType, tiles), this));
+				})
 				.filter(Objects::nonNull).collect(Collectors.toList());
 		if (actionTypes.stream().noneMatch(DISCARD::matchBy))
 			choices.add(
@@ -154,7 +161,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 						existTiles.addAll(playerInfo.getDiscardedTiles());
 					});
 			remainTiles = contextView.getGameStrategy().getAllTiles().stream()
-					.filter(existTiles::contains).collect(Collectors.toSet());
+					.filter(tile -> !existTiles.contains(tile)).collect(Collectors.toSet());
 			remainTilesByType = remainTiles.stream()
 					.collect(Collectors.groupingBy(Tile::type, HashMap::new,
 							Collectors.counting()));

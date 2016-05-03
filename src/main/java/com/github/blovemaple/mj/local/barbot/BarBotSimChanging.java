@@ -118,4 +118,9 @@ class BarBotSimChanging {
 				&& addedTiles.containsAll(this.addedTiles);
 	}
 
+	@Override
+	public String toString() {
+		return "BarBotSimChanging [\n\tremovedTiles=" + removedTiles + "\n\taddedTiles=" + addedTiles + "\n]";
+	}
+
 }

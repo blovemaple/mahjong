@@ -125,7 +125,7 @@ class BarBotCpgdChoice {
 				.filter(addedTiles -> disjointBy(addedTiles, removedTiles,
 						Tile::type))
 				// 过滤掉少次换牌已和牌的情况（这种的概率已计算在内）
-				.filter(addedTiles -> this.isCoveredByWin(removedTiles,
+				.filter(addedTiles -> !this.isCoveredByWin(removedTiles,
 						addedTiles))
 				// 生成changing对象
 				.map(addedTiles -> new BarBotSimChanging(this, removedTiles,
@@ -134,10 +134,9 @@ class BarBotCpgdChoice {
 		);
 	}
 
-	private Stream<Set<Tile>> typeDistinctStream(Collection<Tile> tiles,
+	private static Stream<Set<Tile>> typeDistinctStream(Collection<Tile> tiles,
 			int size) {
-		return distinctBy(combinationStream(playerInfo.getAliveTiles(), size),
-				Tile::type);
+		return distinctBy(combinationStream(tiles, size), Tile::type);
 	}
 
 	/**
@@ -183,7 +182,8 @@ class BarBotCpgdChoice {
 
 	@Override
 	public String toString() {
-		return "BarBotCpgdChoice [" + action + "]";
+		return "BarBotCpgdChoice [\n\taction=" + action + "\n\twinProbByChangeCount=" + winProbByChangeCount
+				+ "\n\tfinalWinProb=" + finalWinProb + "\n]";
 	}
 
 }
