@@ -23,6 +23,11 @@ public abstract class AbstractWinType extends CachedPlayerTileType implements Wi
 	public AbstractWinType(boolean useAliveTiles, Function<PlayerInfo, ?>... otherValues) {
 		super(useAliveTiles, otherValues);
 	}
+	
+	@Override
+	public boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
+		return super.match(playerInfo, aliveTiles);
+	}
 
 	@Override
 	public boolean matchWithoutCache(PlayerInfo playerInfo, Set<Tile> aliveTiles) {

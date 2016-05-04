@@ -96,7 +96,7 @@ class BarBotCpgdChoice {
 			List<BarBotSimChanging> winChangings = Collections
 					.synchronizedList(new ArrayList<>());
 //			testTime("changings " + changeCount, () -> changings(changeCount).count());
-			double winProb = changings(changeCount).parallel()
+			double winProb = winChangings(changeCount).parallel()
 					// 过滤出和牌的，收集
 					.filter(BarBotSimChanging::isWin).peek(winChangings::add)
 					// 统计番数期望值（和牌番数×发生概率）
@@ -116,7 +116,16 @@ class BarBotCpgdChoice {
 		}
 	}
 
-	private Stream<BarBotSimChanging> changings(int changeCount) {
+	private Stream<BarBotSimChanging> winChangings(int changeCount) {
+		return baseContextView.getGameStrategy().getAllWinTypes().stream()
+				.flatMap(winType -> winType.changingsForWin(playerInfo,
+						changeCount))
+				.distinct().map(wc -> new BarBotSimChanging(this,
+						wc.removedTiles, wc.addedTiles));
+	}
+
+	@SuppressWarnings("unused")
+	private Stream<BarBotSimChanging> winChangings_old(int changeCount) {
 //		testTime("changings "+changeCount+" 1", ()->{
 //			typeDistinctStream(playerInfo.getAliveTiles(), changeCount).count();
 //		});
@@ -200,26 +209,29 @@ class BarBotCpgdChoice {
 //		start 3
 //		end   3 19217
 
-		List<List<Tile>> playerTiles = typeDistinctStream(playerInfo.getAliveTiles(), changeCount)
-				.collect(Collectors.toList());
+		List<List<Tile>> playerTiles = typeDistinctStream(
+				playerInfo.getAliveTiles(), changeCount)
+						.collect(Collectors.toList());
 		// 取count个剩余牌，按type去重，组成流
 		return typeDistinctStream(task.remainTiles(), changeCount + 1)
 				.flatMap(removedTiles -> {
-			return
-			// 取count+1个手牌，按type去重，组成流
-			playerTiles.stream()
-					// 过滤掉添加与删除的手牌有重复牌型的（这种的相当于少换了）
-					.filter(addedTiles -> disjointBy(addedTiles, removedTiles,
-							Tile::type))
-					// 过滤掉少次换牌已和牌的情况（这种的概率已计算在内）
-					.filter(addedTiles -> !this.isCoveredByWin(removedTiles,
-							addedTiles))
-					// 生成changing对象
-					.map(addedTiles -> new BarBotSimChanging(this, removedTiles,
-							addedTiles));
-			}
-		//
-		);
+					return
+					// 取count+1个手牌，按type去重，组成流
+					playerTiles.stream()
+							// 过滤掉添加与删除的手牌有重复牌型的（这种的相当于少换了）
+							.filter(addedTiles -> disjointBy(addedTiles,
+									removedTiles, Tile::type))
+							// 过滤掉少次换牌已和牌的情况（这种的概率已计算在内）
+							.filter(addedTiles -> !this
+									.isCoveredByWin(removedTiles, addedTiles))
+							// 生成changing对象
+							.map(addedTiles -> new BarBotSimChanging(this,
+									removedTiles, addedTiles));
+				}
+				//
+				)
+				// 过滤出和牌的
+				.filter(BarBotSimChanging::isWin);
 	}
 
 	private static Stream<List<Tile>> typeDistinctStream(Collection<Tile> tiles,

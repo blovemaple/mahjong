@@ -60,7 +60,7 @@ public class BarBot implements Player {
 
 		// 如果可以摸牌，就摸牌
 		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
-			if (!drawType.getLegalActionTiles(contextView).isEmpty())
+			if (actionTypes.contains(drawType))
 				return new Action(drawType);
 
 		// 啥都没选择，放弃了

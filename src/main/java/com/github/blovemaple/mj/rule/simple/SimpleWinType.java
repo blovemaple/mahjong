@@ -4,15 +4,20 @@ import static com.github.blovemaple.mj.object.StandardTileUnitType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
 import com.github.blovemaple.mj.rule.AbstractWinType;
 
@@ -99,6 +104,45 @@ public class SimpleWinType extends AbstractWinType {
 						});
 		// 把上面两个流合在一起返回
 		return Stream.concat(shunFirstStream, keFirstStream);
+	}
+
+	private final Map<Integer, Map<Integer, List<ChangingForWin>>> CHANGINGS_CACHE = Collections
+			.synchronizedMap(new WeakHashMap<>());
+
+	@Override
+	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo,
+			int changeCount) {
+		Set<Tile> aliveTiles = playerInfo.getAliveTiles();
+		int hash = aliveTiles.hashCode();
+		Map<Integer, List<ChangingForWin>> changings = CHANGINGS_CACHE
+				.get(hash);
+		if (changings == null) {
+			changings = new HashMap<>();
+			changingsForWin(new ArrayList<>(aliveTiles), new HashMap<>(),
+					new HashMap<>(), changings);
+			CHANGINGS_CACHE.put(hash, changings);
+		}
+
+		List<ChangingForWin> changingsForCount = changings.get(changeCount);
+		return changingsForCount != null ? changingsForCount.stream()
+				: Stream.empty();
+	}
+
+	/**
+	 * @param aliveTiles
+	 * @param preUnitsAndLacks
+	 *            已经找到的组合 和 所缺的牌型
+	 * @param tileTypeAndCrtUnitSize
+	 *            当前分支已经处理的牌型 和 已经处理的最小单元大小<br>
+	 *            后续处理相同牌型时，单元大小不得超过已经处理的最小大小，以避免重复
+	 * @param changings
+	 *            存放结果
+	 */
+	private void changingsForWin(List<Tile> aliveTiles,
+			Map<List<Tile>, List<TileType>> preUnitsAndLacks,
+			Map<TileType, Integer> tileTypeAndCrtUnitSize,
+			Map<Integer, List<ChangingForWin>> changings) {
+		// TODO
 	}
 
 }
