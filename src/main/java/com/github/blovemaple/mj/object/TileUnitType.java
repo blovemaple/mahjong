@@ -1,6 +1,6 @@
 package com.github.blovemaple.mj.object;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * 牌的单元的类型。
@@ -17,6 +17,6 @@ public interface TileUnitType {
 	/**
 	 * 判断指定牌集合是否是合法的单元。
 	 */
-	boolean isLegalTiles(Set<Tile> tiles);
+	boolean isLegalTiles(Collection<Tile> tiles);
 
 }

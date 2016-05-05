@@ -122,7 +122,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	private List<BarBotCpgdChoice> allChoices() {
 		List<BarBotCpgdChoice> choices = actionTypes.stream().filter(ACTION_TYPES::contains).flatMap(actionType -> {
 			Stream<Set<Tile>> legalTileSets = actionType.getLegalActionTiles(contextView).stream();
-			legalTileSets = distinctBy(legalTileSets, Tile::type);
+			legalTileSets = distinctCollBy(legalTileSets, Tile::type);
 			return legalTileSets
 					.map(tiles -> new BarBotCpgdChoice(contextView, playerInfo, new Action(actionType, tiles), this));
 		}).filter(Objects::nonNull).collect(Collectors.toList());

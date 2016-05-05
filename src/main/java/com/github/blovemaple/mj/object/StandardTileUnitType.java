@@ -2,7 +2,7 @@ package com.github.blovemaple.mj.object;
 
 import static com.github.blovemaple.mj.object.TileSuit.*;
 
-import java.util.Set;
+import java.util.Collection;
 import java.util.logging.Logger;
 
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
@@ -18,7 +18,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	 */
 	JIANG(2) {
 		@Override
-		public boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
+		public boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles) {
 			return tiles.stream().map(Tile::type).distinct().count() == 1;
 		}
 	},
@@ -27,7 +27,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	 */
 	SHUNZI(3) {
 		@Override
-		public boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
+		public boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles) {
 			// rank类型非NumberRank的，非法
 			if (tiles.iterator().next().type().getSuit()
 					.getRankClass() != NumberRank.class)
@@ -58,7 +58,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	 */
 	KEZI(3) {
 		@Override
-		public boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
+		public boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles) {
 			return tiles.stream().map(Tile::type).distinct().count() == 1;
 		}
 	},
@@ -67,7 +67,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	 */
 	GANGZI(4) {
 		@Override
-		protected boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
+		protected boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles) {
 			return tiles.stream().map(Tile::type).distinct().count() == 1;
 		}
 	},
@@ -76,7 +76,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	 */
 	HUA_UNIT(1) {
 		@Override
-		protected boolean isLegalTilesWithCorrectSize(Set<Tile> tiles) {
+		protected boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles) {
 			return tiles.stream()
 					.allMatch(tile -> tile.type().getSuit() == HUA);
 		}
@@ -98,11 +98,12 @@ public enum StandardTileUnitType implements TileUnitType {
 	}
 
 	@Override
-	public boolean isLegalTiles(Set<Tile> tiles) {
+	public boolean isLegalTiles(Collection<Tile> tiles) {
 		if (size() > 0 && tiles.size() != size())
 			return false;
 		return isLegalTilesWithCorrectSize(tiles);
 	}
 
-	protected abstract boolean isLegalTilesWithCorrectSize(Set<Tile> tiles);
+	protected abstract boolean isLegalTilesWithCorrectSize(
+			Collection<Tile> tiles);
 }

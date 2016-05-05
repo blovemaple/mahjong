@@ -119,7 +119,7 @@ class BarBotCpgdChoice {
 	private Stream<BarBotSimChanging> winChangings(int changeCount) {
 		return baseContextView.getGameStrategy().getAllWinTypes().stream()
 				.flatMap(winType -> winType.changingsForWin(playerInfo,
-						changeCount))
+						changeCount, task.remainTiles()))
 				.distinct().map(wc -> new BarBotSimChanging(this,
 						wc.removedTiles, wc.addedTiles));
 	}
@@ -236,7 +236,7 @@ class BarBotCpgdChoice {
 
 	private static Stream<List<Tile>> typeDistinctStream(Collection<Tile> tiles,
 			int size) {
-		return distinctBy(combinationListStream(tiles, size), Tile::type);
+		return distinctCollBy(combinationListStream(tiles, size), Tile::type);
 	}
 
 	/**

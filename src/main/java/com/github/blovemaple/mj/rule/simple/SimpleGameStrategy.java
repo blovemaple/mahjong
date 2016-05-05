@@ -23,7 +23,7 @@ public class SimpleGameStrategy extends AbstractGameStrategy {
 	}
 
 	private static final Set<WinType> WIN_TYPES = Collections
-			.singleton(new SimpleWinType());
+			.singleton(new NormalWinType());
 
 	@Override
 	public Set<WinType> getAllWinTypes() {

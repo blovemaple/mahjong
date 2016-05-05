@@ -51,7 +51,7 @@ public class MyUtils {
 							.peek(comb -> comb.add(first));
 				});
 	}
-	
+
 	/**
 	 * 返回指定集合中指定个数的所有元素组合组成的流。
 	 * 
@@ -85,7 +85,8 @@ public class MyUtils {
 				});
 	}
 
-	public static <E> Stream<List<E>> combinationListStream_new(Collection<E> coll, int size) {
+	public static <E> Stream<List<E>> combinationListStream_new(
+			Collection<E> coll, int size) {
 		if (size == 0)
 			return Stream.of(new ArrayList<>());
 		if (coll == null || coll.isEmpty() || size > coll.size() || size < 0)
@@ -96,7 +97,8 @@ public class MyUtils {
 		if (size == coll.size())
 			return Stream.of(new ArrayList<>(coll));
 
-		List<E> list = (coll instanceof List) ? (List<E>) coll : new ArrayList<>(coll);
+		List<E> list = (coll instanceof List) ? (List<E>) coll
+				: new ArrayList<>(coll);
 		List<List<E>> selectLists = new ArrayList<>();
 
 		int[] array = new int[coll.size()];
@@ -147,11 +149,11 @@ public class MyUtils {
 
 		return selectLists.stream();
 	}
-	
-	public static void main(String[] args) {
-		combinationListStream_new(Arrays.asList(1,2,3,4,5), 2).forEach(System.out::println);
-	}
 
+	public static void main(String[] args) {
+		combinationListStream_new(Arrays.asList(1, 2, 3, 4, 5), 2)
+				.forEach(System.out::println);
+	}
 
 	/**
 	 * 将指定的若干个集合中的元素组成一个新的Set并返回。
@@ -174,6 +176,46 @@ public class MyUtils {
 	}
 
 	/**
+	 * 将指定的一个集合中的元素减去指定元素产生一个新的集合并返回。
+	 */
+	@SafeVarargs
+	public static <E, C extends Collection<E>> C newRemainColl(
+			Function<Collection<E>, C> newCollConstructor,
+			Collection<E> collection, E... removedElement) {
+		C newColl = newCollConstructor.apply(collection);
+		newColl.removeAll(Arrays.asList(removedElement));
+		return newColl;
+	}
+
+	/**
+	 * 将指定的一个集合中的元素减去指定元素产生一个新的集合并返回。
+	 */
+	public static <E, C extends Collection<E>> C newRemainColl(
+			Function<Collection<E>, C> newCollConstructor,
+			Collection<E> collection, Collection<E> removedElement) {
+		C newColl = newCollConstructor.apply(collection);
+		newColl.removeAll(removedElement);
+		return newColl;
+	}
+
+	/**
+	 * 将指定的流按照标识符去重。标识符用指定的函数获取。
+	 * 
+	 * @param stream
+	 *            流
+	 * @param identifierFunction
+	 *            获取标识符的函数
+	 * @return 去重后的流
+	 */
+	public static <E> Stream<E> distinctBy(Stream<E> stream,
+			Function<E, ?> identifierFunction) {
+		Set<Integer> existIdHashCodes = Collections
+				.synchronizedSet(new HashSet<>());
+		return stream.filter(e -> existIdHashCodes
+				.add(identifierFunction.apply(e).hashCode()));
+	}
+
+	/**
 	 * 将指定的集合流按照标识符去重。标识符用指定的函数获取。
 	 * 
 	 * @param stream
@@ -182,8 +224,8 @@ public class MyUtils {
 	 *            获取标识符的函数
 	 * @return 去重后的集合流
 	 */
-	public static <E,C extends Collection<E>> Stream<C> distinctBy(Stream<C> stream,
-			Function<E, ?> identifierFunction) {
+	public static <E, C extends Collection<E>> Stream<C> distinctCollBy(
+			Stream<C> stream, Function<E, ?> identifierFunction) {
 		Set<Integer> existIdHashCodes = Collections
 				.synchronizedSet(new HashSet<>());
 		return stream.filter(eSet -> {
@@ -242,7 +284,8 @@ public class MyUtils {
 	public static void testTime(String name, Runnable runnable) {
 		long startTime = System.currentTimeMillis();
 		runnable.run();
-		System.out.println(name + " " + (System.currentTimeMillis() - startTime));
+		System.out
+				.println(name + " " + (System.currentTimeMillis() - startTime));
 	}
 
 	private MyUtils() {

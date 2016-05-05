@@ -1,5 +1,6 @@
 package com.github.blovemaple.mj.rule;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -44,7 +45,7 @@ public interface WinType {
 	 * 获取ChangingForWin的流，移除changeCount个牌，增加(changeCount+1)个牌。
 	 */
 	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo,
-			int changeCount);
+			int changeCount, Collection<Tile> candidates);
 
 	/**
 	 * 一种结果时和牌的换牌方法，移除removedTiles并增加addedTiles。
