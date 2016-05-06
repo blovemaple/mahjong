@@ -25,9 +25,8 @@ public interface WinType {
 	 * @return 是否可以和牌
 	 */
 	public default boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
-		return parseWinTileUnits(playerInfo,
-				aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles())
-						.findAny().isPresent();
+		return parseWinTileUnits(playerInfo, aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles()).findAny()
+				.isPresent();
 	}
 
 	/**
@@ -38,14 +37,12 @@ public interface WinType {
 	 *            true表示最多只解析一种可能的集合，用于快速判断是否可解析
 	 * @return 完整的TileUnit集合的流
 	 */
-	public Stream<Set<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo,
-			Set<Tile> aliveTiles);
+	public Stream<Set<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Set<Tile> aliveTiles);
 
 	/**
 	 * 获取ChangingForWin的流，移除changeCount个牌，增加(changeCount+1)个牌。
 	 */
-	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo,
-			int changeCount, Collection<Tile> candidates);
+	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo, int changeCount, Collection<Tile> candidates);
 
 	/**
 	 * 一种结果时和牌的换牌方法，移除removedTiles并增加addedTiles。
@@ -53,21 +50,19 @@ public interface WinType {
 	 * @author blovemaple <blovemaple2010(at)gmail.com>
 	 */
 	public static class ChangingForWin {
-		public Set<Tile> addedTiles, removedTiles;
+		public Set<Tile> removedTiles, addedTiles;
 
-		public ChangingForWin(Set<Tile> addedTiles, Set<Tile> removedTiles) {
-			this.addedTiles = addedTiles;
+		public ChangingForWin(Set<Tile> removedTiles, Set<Tile> addedTiles) {
 			this.removedTiles = removedTiles;
+			this.addedTiles = addedTiles;
 		}
 
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result
-					+ ((addedTiles == null) ? 0 : addedTiles.hashCode());
-			result = prime * result
-					+ ((removedTiles == null) ? 0 : removedTiles.hashCode());
+			result = prime * result + ((addedTiles == null) ? 0 : addedTiles.hashCode());
+			result = prime * result + ((removedTiles == null) ? 0 : removedTiles.hashCode());
 			return result;
 		}
 
@@ -91,6 +86,11 @@ public interface WinType {
 			} else if (!removedTiles.equals(other.removedTiles))
 				return false;
 			return true;
+		}
+
+		@Override
+		public String toString() {
+			return "ChangingForWin [removedTiles=" + removedTiles + ", addedTiles=" + addedTiles + "]";
 		}
 
 	}

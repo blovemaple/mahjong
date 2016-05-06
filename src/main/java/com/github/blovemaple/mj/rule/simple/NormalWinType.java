@@ -12,8 +12,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -111,8 +114,11 @@ public class NormalWinType extends AbstractWinType {
 		Map<Integer, List<ChangingForWin>> changings = CHANGINGS_CACHE.get(hash);
 		if (changings == null) {
 			changings = new HashMap<>();
+			Map<TileType, List<Tile>> candidatesByType = candidates.stream().collect(Collectors.groupingBy(Tile::type));
+			Map<TileSuit, List<Tile>> candidatesBySuit = candidates.stream()
+					.collect(Collectors.groupingBy(tile -> tile.type().getSuit()));
 			changingsForWin(new ArrayList<>(aliveTiles), new HashMap<>(), false, new HashMap<>(), changings,
-					candidates);
+					candidatesByType, candidatesBySuit);
 			CHANGINGS_CACHE.put(hash, changings);
 		}
 
@@ -131,14 +137,19 @@ public class NormalWinType extends AbstractWinType {
 	 *            后续处理相同牌型时，单元大小不得超过已经处理的最小大小，以避免重复
 	 * @param changings
 	 *            存放结果
-	 * @param 候选换牌集合
+	 * @param candidatesByType
+	 *            候选换牌集合，按照牌型分组
+	 * @param candidatesBySuit
+	 *            候选换牌集合，按照花色分组
+	 * @return 第一张手牌是否是独牌（不能与其他牌组成牌组或半牌组） TODO
 	 */
 	private void changingsForWin(List<Tile> aliveTiles, Map<List<Tile>, List<TileType>> preUnitsAndLacks,
 			boolean hasJiang, Map<TileType, Integer> tileTypeAndCrtUnitSize,
-			Map<Integer, List<ChangingForWin>> changings, Collection<Tile> candidates) {
+			Map<Integer, List<ChangingForWin>> changings, Map<TileType, List<Tile>> candidatesByType,
+			Map<TileSuit, List<Tile>> candidatesBySuit) {
 		if (aliveTiles.isEmpty()) {
 			// 生成结果
-			genChangings(preUnitsAndLacks, changings);
+			genChangings(aliveTiles, preUnitsAndLacks, changings, candidatesByType);
 			return;
 		}
 
@@ -146,22 +157,22 @@ public class NormalWinType extends AbstractWinType {
 			// 找到每种可能的的将牌/半将牌，在剩下的手牌里继续找（顺子/刻子）
 			Map<TileType, List<Tile>> aliveTilesByType = aliveTiles.stream().collect(Collectors.groupingBy(Tile::type));
 			aliveTilesByType.forEach((type, tiles) -> {
-				// 差一张牌的将牌
-				if (candidates.stream().map(Tile::type).anyMatch(t -> t == type)) {
-					List<Tile> preUnit = Collections.singletonList(tiles.get(0));
-					preUnitsAndLacks.put(preUnit, Collections.singletonList(type));
-					List<Tile> remainAliveTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, tiles.get(0));
-					changingsForWin(remainAliveTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize, changings,
-							candidates); // ->
-					preUnitsAndLacks.remove(preUnit);
-				}
 				// 将牌
 				if (tiles.size() > 1) {
 					List<Tile> preUnit = tiles.subList(0, 2);
 					preUnitsAndLacks.put(preUnit, Collections.emptyList());
 					List<Tile> remainAliveTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, tiles.subList(0, 2));
 					changingsForWin(remainAliveTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize, changings,
-							candidates); // ->
+							candidatesByType, candidatesBySuit); // ->
+					preUnitsAndLacks.remove(preUnit);
+				}
+				// 差一张牌的将牌
+				if (candidatesByType.containsKey(type)) {
+					List<Tile> preUnit = Collections.singletonList(tiles.get(0));
+					preUnitsAndLacks.put(preUnit, Collections.singletonList(type));
+					List<Tile> remainAliveTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, tiles.get(0));
+					changingsForWin(remainAliveTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize, changings,
+							candidatesByType, candidatesBySuit); // ->
 					preUnitsAndLacks.remove(preUnit);
 				}
 			});
@@ -174,6 +185,7 @@ public class NormalWinType extends AbstractWinType {
 					Tile fixedTile = tiles.get(index);
 					List<Tile> otherTiles = tiles.subList(index + 1, tiles.size());
 					int lastUnitSize = tileTypeAndCrtUnitSize.getOrDefault(fixedTile.type(), 3);
+					List<Tile> candidatesForSuit = candidatesBySuit.get(suit);
 					// 顺刻
 					if (lastUnitSize >= 3 && otherTiles.size() >= 2) {
 						distinctCollBy(combinationListStream(otherTiles, 2), Tile::type)
@@ -183,16 +195,16 @@ public class NormalWinType extends AbstractWinType {
 									List<Tile> remainTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, unit);
 									preUnitsAndLacks.put(unit, Collections.emptyList());
 									changingsForWin(remainTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize,
-											changings, candidates);
+											changings, candidatesByType, candidatesBySuit);
 									preUnitsAndLacks.remove(unit);
 								});
 					}
 					// 差一张牌的顺刻
-					if (lastUnitSize >= 2 && otherTiles.size() >= 1 && candidates.size() >= 1) {
+					if (lastUnitSize >= 2 && otherTiles.size() >= 1 && candidatesForSuit.size() >= 1) {
 						distinctBy(otherTiles.stream(), Tile::type) //
 								.map(tile -> Arrays.asList(fixedTile, tile)) //
 								.forEach(preUnit -> {
-									distinctBy(candidates.stream(), Tile::type) //
+									distinctBy(candidatesForSuit.stream(), Tile::type) //
 											.filter(candTile -> {
 												List<Tile> unit = new ArrayList<>(preUnit);
 												unit.add(candTile);
@@ -204,16 +216,17 @@ public class NormalWinType extends AbstractWinType {
 														Collections.singletonList(candTile.type()));
 												tileTypeAndCrtUnitSize.put(fixedTile.type(), 2);
 												changingsForWin(remainTiles, preUnitsAndLacks, true,
-														tileTypeAndCrtUnitSize, changings, candidates);
+														tileTypeAndCrtUnitSize, changings, candidatesByType,
+														candidatesBySuit);
 												preUnitsAndLacks.remove(preUnit);
 												tileTypeAndCrtUnitSize.put(fixedTile.type(), lastUnitSize);
 											});
 								});
 					}
 					// 差两张牌的顺刻
-					if (lastUnitSize >= 1 && candidates.size() >= 2) {
+					if (lastUnitSize >= 1 && candidatesForSuit.size() >= 2) {
 						List<Tile> preUnit = Collections.singletonList(fixedTile);
-						distinctCollBy(combinationListStream(candidates, 2), Tile::type) //
+						distinctCollBy(combinationListStream(candidatesForSuit, 2), Tile::type) //
 								.filter(candTiles -> {
 									List<Tile> unit = new ArrayList<>(candTiles);
 									unit.add(fixedTile);
@@ -224,7 +237,7 @@ public class NormalWinType extends AbstractWinType {
 											candTiles.stream().map(Tile::type).collect(Collectors.toList()));
 									tileTypeAndCrtUnitSize.put(fixedTile.type(), 1);
 									changingsForWin(remainTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize,
-											changings, candidates);
+											changings, candidatesByType, candidatesBySuit);
 									preUnitsAndLacks.remove(preUnit);
 									tileTypeAndCrtUnitSize.put(fixedTile.type(), lastUnitSize);
 								});
@@ -234,9 +247,58 @@ public class NormalWinType extends AbstractWinType {
 		}
 	}
 
-	private void genChangings(Map<List<Tile>, List<TileType>> preUnitsAndLacks,
-			Map<Integer, List<ChangingForWin>> changings) {
-		// TODO
+	private void genChangings(List<Tile> aliveTiles, Map<List<Tile>, List<TileType>> preUnitsAndLacks,
+			Map<Integer, List<ChangingForWin>> changings, Map<TileType, List<Tile>> candidatesByType) {
+		List<Map.Entry<List<Tile>, List<TileType>>> preUnitsList = new ArrayList<>(preUnitsAndLacks.entrySet());
+		IntStream.rangeClosed(1, preUnitsList.size()).forEach(size -> {
+			combinationListStream(preUnitsList, size).map(entryList -> {
+				try {
+					Set<Tile> added = new HashSet<>(), removed = new HashSet<>();
+					preUnitsList.stream().forEach(preUnit -> {
+						if (entryList.contains(preUnit))
+							added.addAll(getTileFromCandidates(preUnit.getValue(), candidatesByType, added));
+						else
+							removed.addAll(preUnit.getKey());
+					});
+					if (!disjointBy(added, removed, Tile::type))
+						// 只留下增加牌和减去牌没有牌型重复的
+						return null;
+					if (added.size() != removed.size() + 1)
+						// 只留下增加牌数比减去牌数多1的
+						return null;
+					return new ChangingForWin(removed, added);
+				} catch (NoSuchElementException e) {
+					// 过滤掉候选牌不够的
+					return null;
+				}
+			}).filter(Objects::nonNull).forEach(changing -> {
+				List<ChangingForWin> list = changings.get(changing.removedTiles.size());
+				if (list == null) {
+					list = new ArrayList<>();
+					changings.put(changing.removedTiles.size(), list);
+				}
+				list.add(changing);
+			});
+		});
+	}
+
+	/**
+	 * @throws NoSuchElementException
+	 *             候选牌不够
+	 */
+	private List<Tile> getTileFromCandidates(Collection<TileType> types, Map<TileType, List<Tile>> candidatesByType,
+			Set<Tile> excludes) throws NoSuchElementException {
+		// 不够的时候会在subList处抛出IndexOutOfBoundsException
+		return types.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting())).entrySet()
+				.stream().flatMap(entry -> {
+					TileType type = entry.getKey();
+					int count = entry.getValue().intValue();
+					List<Tile> typeTiles = candidatesByType.getOrDefault(type, Collections.emptyList()).stream()
+							.filter(tile -> !excludes.contains(tile)).limit(count).collect(Collectors.toList());
+					if (typeTiles.size() < count)
+						throw new NoSuchElementException();
+					return typeTiles.stream();
+				}).collect(Collectors.toList());
 	}
 
 }
