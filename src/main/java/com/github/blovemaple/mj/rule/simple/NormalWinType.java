@@ -26,6 +26,7 @@ import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileSuit;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
+import com.github.blovemaple.mj.object.TileUnitType;
 import com.github.blovemaple.mj.rule.AbstractWinType;
 
 /**
@@ -47,7 +48,7 @@ public class NormalWinType extends AbstractWinType {
 		Set<TileUnit> groupUnits = genGroupUnits(playerInfo);
 
 		// 所有可能的将牌
-		return combinationStream(aliveTiles, JIANG.size()).filter(JIANG::isLegalTiles)
+		return combinationSetStream(aliveTiles, JIANG.size()).filter(JIANG::isLegalTiles)
 				// 针对每一种可能的将牌，寻找剩下的牌全部解析成顺子/刻子的所有可能
 				.flatMap(jiang -> {
 					TileUnit jiangUnit = new TileUnit(JIANG, jiang);
@@ -84,7 +85,7 @@ public class NormalWinType extends AbstractWinType {
 		// （整体逻辑：先找一个顺子或刻子单元，再递归解析剩下的牌）
 		return
 		// 从第二张开始，取任意两张牌，与第一张牌组成一个单元
-		combinationStream(tiles.subList(1, tiles.size()), 2).peek(halfUnit -> halfUnit.add(fixedTile))
+		combinationSetStream(tiles.subList(1, tiles.size()), 2).peek(halfUnit -> halfUnit.add(fixedTile))
 				// 过滤出合法的顺子或刻子单元
 				.filter(unit -> SHUNZI.isLegalTiles(unit) || KEZI.isLegalTiles(unit))
 				// 在剩下的牌中递归解析顺子或刻子单元集合，并添加上面这个单元
@@ -100,8 +101,9 @@ public class NormalWinType extends AbstractWinType {
 	private final Map<Integer, Map<Integer, List<ChangingForWin>>> CHANGINGS_CACHE = Collections
 			.synchronizedMap(new WeakHashMap<>());
 
-	@Override
-	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo, int changeCount, Collection<Tile> candidates) {
+	// @Override
+	public Stream<ChangingForWin> changingsForWin_old(PlayerInfo playerInfo, int changeCount,
+			Collection<Tile> candidates) {
 		// 先保证顺子刻子的定义都是3张牌、将牌是2张牌
 		if (SHUNZI.size() != 3 || KEZI.size() != 3)
 			throw new RuntimeException();
@@ -299,6 +301,109 @@ public class NormalWinType extends AbstractWinType {
 						throw new NoSuchElementException();
 					return typeTiles.stream();
 				}).collect(Collectors.toList());
+	}
+
+	@Override
+	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo, int changeCount, Collection<Tile> candidates) {
+		Set<Tile> aliveTiles = playerInfo.getAliveTiles();
+		int hash = aliveTiles.hashCode();
+		hash = 31 * hash + candidates.hashCode();
+		Map<Integer, List<ChangingForWin>> changings = CHANGINGS_CACHE.get(hash);
+		if (changings == null) {
+			changings = parseChangings(new ArrayList<>(aliveTiles), candidates);
+			CHANGINGS_CACHE.put(hash, changings);
+		}
+
+		List<ChangingForWin> changingsForCount = changings.get(changeCount);
+		return changingsForCount != null ? changingsForCount.stream() : Stream.empty();
+	}
+
+	private Map<Integer, List<ChangingForWin>> parseChangings(List<Tile> aliveTiles, Collection<Tile> candidates) {
+		// 先保证顺子刻子的定义都是3张牌、将牌是2张牌
+		if (SHUNZI.size() != 3 || KEZI.size() != 3)
+			throw new RuntimeException();
+		if (JIANG.size() != 2)
+			throw new RuntimeException();
+
+		Map<TileType, List<Tile>> candidatesByType = candidates.stream().collect(Collectors.groupingBy(Tile::type));
+		Map<TileSuit, List<Tile>> candidatesBySuit = candidates.stream()
+				.collect(Collectors.groupingBy(tile -> tile.type().getSuit()));
+
+		List<PreUnit> preJiangs = parsePreJiangs(aliveTiles, candidatesByType);
+		List<PreUnit> preShunkes = parsePreShunkes(aliveTiles, candidatesBySuit);
+		return genChangings(aliveTiles, preJiangs, preShunkes);
+	}
+
+	private List<PreUnit> parsePreJiangs(List<Tile> aliveTiles, Map<TileType, List<Tile>> candidatesByType) {
+		List<PreUnit> result = new ArrayList<>();
+
+		// 差一张牌的将牌
+		aliveTiles.forEach(tile -> result.add(new PreUnit(JIANG, tile, tile.type())));
+
+		// 将牌
+		Map<TileType, List<Tile>> aliveTilesByType = aliveTiles.stream().collect(Collectors.groupingBy(Tile::type));
+		aliveTilesByType.forEach((type, tiles) -> combinationListStream(tiles, 2)
+				.map(jiang -> new PreUnit(JIANG, jiang)).forEach(result::add));
+
+		return result;
+	}
+
+	private List<PreUnit> parsePreShunkes(List<Tile> aliveTiles, Map<TileSuit, List<Tile>> candidatesBySuit) {
+		List<PreUnit> result = new ArrayList<>();
+
+		// 差两张牌的顺刻
+		aliveTiles.forEach(tile -> {
+			Stream.of(SHUNZI, KEZI).forEach(unitType -> unitType.getLackedTypesForTiles(Collections.singletonList(tile))
+					.forEach(lacks -> result.add(new PreUnit(unitType, tile, lacks))));
+		});
+
+		Map<TileSuit, List<Tile>> aliveTilesBySuit = aliveTiles.stream()
+				.collect(Collectors.groupingBy(tile -> tile.type().getSuit()));
+
+		Stream.of(SHUNZI, KEZI).forEach(unitType -> {
+			aliveTilesBySuit.forEach((suit, tiles) -> {
+				// 差一张牌的顺刻
+				combinationListStream(tiles, 2).forEach(testUnit -> {
+					unitType.getLackedTypesForTiles(testUnit)
+							.forEach(lacks -> result.add(new PreUnit(unitType, testUnit, lacks)));
+				});
+				// 顺刻
+				combinationListStream(tiles, 3).filter(unitType::isLegalTiles)
+						.forEach(unitTiles -> result.add(new PreUnit(unitType, unitTiles)));
+			});
+		});
+
+		return result;
+	}
+
+	private Map<Integer, List<ChangingForWin>> genChangings(List<Tile> aliveTiles, List<PreUnit> preJiangs,
+			List<PreUnit> preShunkes) {
+		// TODO
+		return null;
+	}
+
+	private static class PreUnit {
+		TileUnitType type;
+		List<Tile> tiles;
+		List<TileType> lackedTypes;
+
+		PreUnit(TileUnitType type, List<Tile> tiles, List<TileType> lackedTypes) {
+			this.type = type;
+			this.tiles = tiles;
+			this.lackedTypes = lackedTypes;
+		}
+
+		PreUnit(TileUnitType type, List<Tile> tiles) {
+			this(type, tiles, Collections.emptyList());
+		}
+
+		PreUnit(TileUnitType type, Tile tile, List<TileType> lackedTypes) {
+			this(type, Collections.singletonList(tile), lackedTypes);
+		}
+
+		PreUnit(TileUnitType type, Tile tile, TileType lackedType) {
+			this(type, Collections.singletonList(tile), Collections.singletonList(lackedType));
+		}
 	}
 
 }

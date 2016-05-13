@@ -2,6 +2,7 @@ package com.github.blovemaple.mj.object;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,13 +23,17 @@ public class TileType implements Serializable {
 	public static final int HONOR_RANK = 0;
 
 	private static final Set<TileType> all;
+	private static final Map<TileSuit, Map<TileRank<?>, TileType>> map;
 	static {
 		// 初始化所有牌型
 		all = Collections.unmodifiableSet( //
 				Stream.of(TileSuit.values())
-						.flatMap(suit -> suit.getAllRanks().stream()
-								.map(rank -> new TileType(suit, rank)))
+						.flatMap(suit -> suit.getAllRanks().stream().map(rank -> new TileType(suit, rank)))
 						.collect(Collectors.toSet()));
+		map = all.stream().collect( //
+				Collectors.groupingBy(TileType::getSuit, //
+						Collectors.groupingBy(TileType::getRank, //
+								Collectors.collectingAndThen(Collectors.toList(), list -> list.get(0)))));
 	}
 
 	/**
@@ -42,9 +47,7 @@ public class TileType implements Serializable {
 	 * 返回指定牌型。
 	 */
 	public static TileType of(TileSuit suit, TileRank<?> rank) {
-		return all.stream().filter(
-				type -> type.getSuit() == suit && type.getRank() == rank)
-				.findAny().orElse(null);
+		return map.get(suit).get(rank);
 	}
 
 	private final TileSuit suit;

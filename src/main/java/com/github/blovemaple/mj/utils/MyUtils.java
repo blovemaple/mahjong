@@ -7,7 +7,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -20,7 +22,7 @@ import java.util.stream.Stream;
 public class MyUtils {
 
 	/**
-	 * 返回指定集合中指定个数的所有元素组合组成的流。
+	 * 返回指定集合中指定个数的元素组合（集合）组成的流。
 	 * 
 	 * @param coll
 	 *            指定集合
@@ -28,32 +30,12 @@ public class MyUtils {
 	 *            组合中的元素个数
 	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
 	 */
-	public static <E> Stream<Set<E>> combinationStream(Collection<E> coll,
-			int size) {
-		if (size == 0)
-			return Stream.of(new HashSet<>());
-		if (coll == null || coll.isEmpty() || size > coll.size() || size < 0)
-			return Stream.empty();
-
-		if (size == 1)
-			return coll.stream().map(e -> new HashSet<>(Arrays.asList(e)));
-		if (size == coll.size())
-			return Stream.of(new HashSet<>(coll));
-
-		List<E> list = (coll instanceof List) ? (List<E>) coll
-				: new ArrayList<>(coll);
-
-		return IntStream.rangeClosed(0, coll.size() - size).boxed()
-				.flatMap(index -> {
-					E first = list.get(index);
-					List<E> others = list.subList(index + 1, coll.size());
-					return combinationStream(others, size - 1)
-							.peek(comb -> comb.add(first));
-				});
+	public static <E> Stream<Set<E>> combinationSetStream(Collection<E> coll, int size) {
+		return combinationStream(coll, size, HashSet<E>::new, null, null);
 	}
 
 	/**
-	 * 返回指定集合中指定个数的所有元素组合组成的流。
+	 * 返回指定集合中指定个数的元素组合（列表）组成的流。
 	 * 
 	 * @param coll
 	 *            指定集合
@@ -61,98 +43,65 @@ public class MyUtils {
 	 *            组合中的元素个数
 	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
 	 */
-	public static <E> Stream<List<E>> combinationListStream(Collection<E> coll,
-			int size) {
-		if (size == 0)
-			return Stream.of(new ArrayList<>());
-		if (coll == null || coll.isEmpty() || size > coll.size() || size < 0)
-			return Stream.empty();
-
-		if (size == 1)
-			return coll.stream().map(e -> new ArrayList<>(Arrays.asList(e)));
-		if (size == coll.size())
-			return Stream.of(new ArrayList<>(coll));
-
-		List<E> list = (coll instanceof List) ? (List<E>) coll
-				: new ArrayList<>(coll);
-
-		return IntStream.rangeClosed(0, coll.size() - size).boxed()
-				.flatMap(index -> {
-					E first = list.get(index);
-					List<E> others = list.subList(index + 1, coll.size());
-					return combinationListStream(others, size - 1)
-							.peek(comb -> comb.add(first));
-				});
+	public static <E> Stream<List<E>> combinationListStream(Collection<E> coll, int size) {
+		return combinationStream(coll, size, ArrayList<E>::new, null, null);
 	}
 
-	public static <E> Stream<List<E>> combinationListStream_new(
-			Collection<E> coll, int size) {
+	/**
+	 * 返回指定集合中指定个数的元素组合组成的流。
+	 * 
+	 * @param coll
+	 *            指定集合
+	 * @param size
+	 *            组合中的元素个数
+	 * @param combCollSupplier
+	 *            新建集合对象的函数，用于新建元素组合使用的集合，参数为元素集合
+	 * @param elementFilter
+	 *            组合中所有元素需要符合的条件，null表示不设此条件
+	 * @param elementInCombFilter
+	 *            一个组合中的元素需要相互符合的条件，null表示不设此条件
+	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
+	 */
+	public static <E, C extends Collection<E>> Stream<C> combinationStream(Collection<E> coll, int size,
+			Function<Collection<E>, C> combCollSupplier, Predicate<E> elementFilter,
+			BiPredicate<E, E> elementInCombFilter) {
 		if (size == 0)
-			return Stream.of(new ArrayList<>());
-		if (coll == null || coll.isEmpty() || size > coll.size() || size < 0)
+			return Stream.of(combCollSupplier.apply(Collections.emptyList()));
+		if (coll.isEmpty() || size > coll.size() || size < 0)
 			return Stream.empty();
 
-		if (size == 1)
-			return coll.stream().map(e -> new ArrayList<>(Arrays.asList(e)));
-		if (size == coll.size())
-			return Stream.of(new ArrayList<>(coll));
-
-		List<E> list = (coll instanceof List) ? (List<E>) coll
-				: new ArrayList<>(coll);
-		List<List<E>> selectLists = new ArrayList<>();
-
-		int[] array = new int[coll.size()];
-		for (int i = 0; i < size; i++)
-			array[i] = 1;
-		List<E> selectList = new ArrayList<>(size);
-		for (int i = 0; i < array.length; i++)
-			if (array[i] == 1)
-				selectList.add(list.get(i));
-		selectLists.add(selectList);
-
-		int indexOfLast1 = size - 1;
-		OUTER_LOOP: while (true) {
-			if (indexOfLast1 != array.length - 1) {
-				array[indexOfLast1] = 0;
-				array[++indexOfLast1] = 1;
-			} else {
-				int tail1Count = 0;
-				boolean found0 = false;
-				int indexOf1 = array.length;
-				while (true) {
-					if (indexOf1 == 0)
-						break OUTER_LOOP;
-					if (!found0)
-						if (array[--indexOf1] == 1)
-							tail1Count++;
-						else
-							found0 = true;
-					else if (array[--indexOf1] == 1)
-						break;
-				}
-				array[indexOf1] = 0;
-				array[indexOf1 + 1] = 1;
-				int index = indexOf1 + 2;
-				for (int i = 0; i < tail1Count; i++)
-					array[index++] = 1;
-				indexOfLast1 = index - 1;
-				while (index < array.length)
-					array[index++] = 0;
-			}
-
-			selectList = new ArrayList<>(size);
-			for (int i = 0; i < array.length; i++)
-				if (array[i] == 1)
-					selectList.add(list.get(i));
-			selectLists.add(selectList);
+		if (size == 1) {
+			if (elementFilter == null)
+				return coll.stream().map(e -> combCollSupplier.apply(Arrays.asList(e)));
+			else
+				return coll.stream().filter(elementFilter).map(e -> combCollSupplier.apply(Arrays.asList(e)));
 		}
 
-		return selectLists.stream();
-	}
+		List<E> list;
+		if (elementFilter == null) {
+			if (elementInCombFilter == null && size == coll.size())
+				return Stream.of(combCollSupplier.apply(coll));
+			list = (coll instanceof List) ? (List<E>) coll : new ArrayList<>(coll);
+		} else {
+			list = coll.stream().filter(elementFilter).collect(Collectors.toList());
+			if (list.isEmpty() || size > list.size())
+				return Stream.empty();
+			if (elementInCombFilter == null && size == list.size())
+				return Stream.of(combCollSupplier.apply(list));
+		}
 
-	public static void main(String[] args) {
-		combinationListStream_new(Arrays.asList(1, 2, 3, 4, 5), 2)
-				.forEach(System.out::println);
+		return IntStream.rangeClosed(0, list.size() - size).boxed().flatMap(index -> {
+			E first = list.get(index);
+			List<E> others = list.subList(index + 1, list.size());
+			Predicate<E> othersElementFilter = elementFilter;
+			if (elementInCombFilter != null) {
+				Predicate<E> othersWithFirstFilter = e -> elementInCombFilter.test(first, e);
+				othersElementFilter = othersElementFilter == null ? othersWithFirstFilter
+						: othersElementFilter.and(othersWithFirstFilter);
+			}
+			return combinationStream(others, size - 1, combCollSupplier, othersElementFilter, elementInCombFilter)
+					.peek(comb -> comb.add(first));
+		});
 	}
 
 	/**
@@ -160,16 +109,14 @@ public class MyUtils {
 	 */
 	@SafeVarargs
 	public static <E> Set<E> newMergedSet(Collection<E>... collections) {
-		return Stream.of(collections).flatMap(Collection::stream)
-				.collect(Collectors.toSet());
+		return Stream.of(collections).flatMap(Collection::stream).collect(Collectors.toSet());
 	}
 
 	/**
 	 * 将指定的一个集合中的元素和若干个新元素组成一个新的Set并返回。
 	 */
 	@SafeVarargs
-	public static <E> Set<E> newMergedSet(Collection<E> collection,
-			E... newElement) {
+	public static <E> Set<E> newMergedSet(Collection<E> collection, E... newElement) {
 		Set<E> set = new HashSet<>(collection);
 		set.addAll(Arrays.asList(newElement));
 		return set;
@@ -179,8 +126,7 @@ public class MyUtils {
 	 * 将指定的一个集合中的元素减去指定元素产生一个新的集合并返回。
 	 */
 	@SafeVarargs
-	public static <E, C extends Collection<E>> C newRemainColl(
-			Function<Collection<E>, C> newCollConstructor,
+	public static <E, C extends Collection<E>> C newRemainColl(Function<Collection<E>, C> newCollConstructor,
 			Collection<E> collection, E... removedElement) {
 		C newColl = newCollConstructor.apply(collection);
 		newColl.removeAll(Arrays.asList(removedElement));
@@ -190,8 +136,7 @@ public class MyUtils {
 	/**
 	 * 将指定的一个集合中的元素减去指定元素产生一个新的集合并返回。
 	 */
-	public static <E, C extends Collection<E>> C newRemainColl(
-			Function<Collection<E>, C> newCollConstructor,
+	public static <E, C extends Collection<E>> C newRemainColl(Function<Collection<E>, C> newCollConstructor,
 			Collection<E> collection, Collection<E> removedElement) {
 		C newColl = newCollConstructor.apply(collection);
 		newColl.removeAll(removedElement);
@@ -207,12 +152,9 @@ public class MyUtils {
 	 *            获取标识符的函数
 	 * @return 去重后的流
 	 */
-	public static <E> Stream<E> distinctBy(Stream<E> stream,
-			Function<E, ?> identifierFunction) {
-		Set<Integer> existIdHashCodes = Collections
-				.synchronizedSet(new HashSet<>());
-		return stream.filter(e -> existIdHashCodes
-				.add(identifierFunction.apply(e).hashCode()));
+	public static <E> Stream<E> distinctBy(Stream<E> stream, Function<E, ?> identifierFunction) {
+		Set<Integer> existIdHashCodes = Collections.synchronizedSet(new HashSet<>());
+		return stream.filter(e -> existIdHashCodes.add(identifierFunction.apply(e).hashCode()));
 	}
 
 	/**
@@ -224,13 +166,11 @@ public class MyUtils {
 	 *            获取标识符的函数
 	 * @return 去重后的集合流
 	 */
-	public static <E, C extends Collection<E>> Stream<C> distinctCollBy(
-			Stream<C> stream, Function<E, ?> identifierFunction) {
-		Set<Integer> existIdHashCodes = Collections
-				.synchronizedSet(new HashSet<>());
+	public static <E, C extends Collection<E>> Stream<C> distinctCollBy(Stream<C> stream,
+			Function<E, ?> identifierFunction) {
+		Set<Integer> existIdHashCodes = Collections.synchronizedSet(new HashSet<>());
 		return stream.filter(eSet -> {
-			int idHashCode = eSet.stream().map(identifierFunction)
-					.mapToInt(Object::hashCode).sum();
+			int idHashCode = eSet.stream().map(identifierFunction).mapToInt(Object::hashCode).sum();
 			return existIdHashCodes.add(idHashCode);
 		});
 	}
@@ -246,8 +186,7 @@ public class MyUtils {
 	 *            获取标识符的函数
 	 * @return 没有重复返回true，否则返回false。
 	 */
-	public static <E> boolean disjointBy(Collection<E> c1, Collection<E> c2,
-			Function<E, ?> identifierFunction) {
+	public static <E> boolean disjointBy(Collection<E> c1, Collection<E> c2, Function<E, ?> identifierFunction) {
 		if (c1.isEmpty() || c2.isEmpty())
 			return true;
 		Collection<E> contains = c2;
@@ -256,10 +195,8 @@ public class MyUtils {
 			iterate = c2;
 			contains = c1;
 		}
-		Set<?> ids = contains.stream().map(identifierFunction)
-				.collect(Collectors.toSet());
-		return iterate.stream().map(identifierFunction)
-				.noneMatch(ids::contains);
+		Set<?> ids = contains.stream().map(identifierFunction).collect(Collectors.toSet());
+		return iterate.stream().map(identifierFunction).noneMatch(ids::contains);
 	}
 
 	/**
@@ -284,8 +221,7 @@ public class MyUtils {
 	public static void testTime(String name, Runnable runnable) {
 		long startTime = System.currentTimeMillis();
 		runnable.run();
-		System.out
-				.println(name + " " + (System.currentTimeMillis() - startTime));
+		System.out.println(name + " " + (System.currentTimeMillis() - startTime));
 	}
 
 	private MyUtils() {

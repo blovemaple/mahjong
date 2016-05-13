@@ -16,6 +16,7 @@ public interface TileRank<T extends TileRank<T>> extends Comparable<T> {
 	 * 万、条、饼等花色使用的数字种类。
 	 */
 	public enum NumberRank implements TileRank<NumberRank> {
+		// 顺序勿动！ofNumber依赖顺序
 		YI(1), ER(2), SAN(3), SI(4), WU(5), LIU(6), QI(7), BA(8), JIU(9);
 
 		private final int number;
@@ -24,8 +25,12 @@ public interface TileRank<T extends TileRank<T>> extends Comparable<T> {
 			this.number = number;
 		}
 
-		public int getNumber() {
+		public int number() {
 			return number;
+		}
+
+		public static NumberRank ofNumber(int number) {
+			return values()[number - 1];
 		}
 	}
 
