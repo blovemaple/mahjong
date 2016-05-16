@@ -288,7 +288,7 @@ public class CliGameView {
 		case ZHIGANG:
 			ActionAndLocation discardAction = contextView.getDoneActions()
 					.get(contextView.getDoneActions().size() - 2);
-			Set<Tile> groupTiles = newMergedSet(action.getTiles(),
+			Set<Tile> groupTiles = mergedSet(action.getTiles(),
 					discardAction.getAction().getTiles());
 			showActionStr(location,
 					getDefaultActionStr(action.getType(), groupTiles));
@@ -357,7 +357,7 @@ public class CliGameView {
 		appendGroups(tilesLine,
 				result.getPlayerInfos().get(location).getTileGroups(), null);
 		appendAliveTiles(tilesLine,
-				newMergedSet(
+				mergedSet(
 						result.getPlayerInfos().get(location).getAliveTiles(),
 						result.getWinTile()),
 				result.getWinTile(),

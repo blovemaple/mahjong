@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -54,7 +55,7 @@ public class MyUtils {
 	 *            指定集合
 	 * @param size
 	 *            组合中的元素个数
-	 * @param combCollSupplier
+	 * @param combCollFactory
 	 *            新建集合对象的函数，用于新建元素组合使用的集合，参数为元素集合
 	 * @param elementFilter
 	 *            组合中所有元素需要符合的条件，null表示不设此条件
@@ -63,31 +64,31 @@ public class MyUtils {
 	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
 	 */
 	public static <E, C extends Collection<E>> Stream<C> combinationStream(Collection<E> coll, int size,
-			Function<Collection<E>, C> combCollSupplier, Predicate<E> elementFilter,
+			Function<Collection<E>, C> combCollFactory, Predicate<E> elementFilter,
 			BiPredicate<E, E> elementInCombFilter) {
 		if (size == 0)
-			return Stream.of(combCollSupplier.apply(Collections.emptyList()));
+			return Stream.of(combCollFactory.apply(Collections.emptyList()));
 		if (coll.isEmpty() || size > coll.size() || size < 0)
 			return Stream.empty();
 
 		if (size == 1) {
 			if (elementFilter == null)
-				return coll.stream().map(e -> combCollSupplier.apply(Arrays.asList(e)));
+				return coll.stream().map(e -> combCollFactory.apply(Arrays.asList(e)));
 			else
-				return coll.stream().filter(elementFilter).map(e -> combCollSupplier.apply(Arrays.asList(e)));
+				return coll.stream().filter(elementFilter).map(e -> combCollFactory.apply(Arrays.asList(e)));
 		}
 
 		List<E> list;
 		if (elementFilter == null) {
 			if (elementInCombFilter == null && size == coll.size())
-				return Stream.of(combCollSupplier.apply(coll));
+				return Stream.of(combCollFactory.apply(coll));
 			list = (coll instanceof List) ? (List<E>) coll : new ArrayList<>(coll);
 		} else {
 			list = coll.stream().filter(elementFilter).collect(Collectors.toList());
 			if (list.isEmpty() || size > list.size())
 				return Stream.empty();
 			if (elementInCombFilter == null && size == list.size())
-				return Stream.of(combCollSupplier.apply(list));
+				return Stream.of(combCollFactory.apply(list));
 		}
 
 		return IntStream.rangeClosed(0, list.size() - size).boxed().flatMap(index -> {
@@ -99,27 +100,45 @@ public class MyUtils {
 				othersElementFilter = othersElementFilter == null ? othersWithFirstFilter
 						: othersElementFilter.and(othersWithFirstFilter);
 			}
-			return combinationStream(others, size - 1, combCollSupplier, othersElementFilter, elementInCombFilter)
+			return combinationStream(others, size - 1, combCollFactory, othersElementFilter, elementInCombFilter)
 					.peek(comb -> comb.add(first));
 		});
+	}
+
+	/**
+	 * 将指定的若干个集合中的元素组成一个新的集合并返回。
+	 */
+	@SafeVarargs
+	public static <E, C extends Collection<E>> C merged(Supplier<C> collFactory, Collection<E>... collections) {
+		return Stream.of(collections).flatMap(Collection::stream).collect(Collectors.toCollection(collFactory));
 	}
 
 	/**
 	 * 将指定的若干个集合中的元素组成一个新的Set并返回。
 	 */
 	@SafeVarargs
-	public static <E> Set<E> newMergedSet(Collection<E>... collections) {
-		return Stream.of(collections).flatMap(Collection::stream).collect(Collectors.toSet());
+	public static <E> Set<E> mergedSet(Collection<E>... collections) {
+		return merged(HashSet::new, collections);
+	}
+
+	/**
+	 * 将指定的若干个集合中的元素组成一个新的集合并返回。
+	 */
+	@SafeVarargs
+	public static <E, C extends Collection<E>> C merged(Supplier<C> collFactory, Collection<E> collection,
+			E... newElements) {
+		C coll = collFactory.get();
+		coll.addAll(collection);
+		coll.addAll(Arrays.asList(newElements));
+		return coll;
 	}
 
 	/**
 	 * 将指定的一个集合中的元素和若干个新元素组成一个新的Set并返回。
 	 */
 	@SafeVarargs
-	public static <E> Set<E> newMergedSet(Collection<E> collection, E... newElement) {
-		Set<E> set = new HashSet<>(collection);
-		set.addAll(Arrays.asList(newElement));
-		return set;
+	public static <E> Set<E> mergedSet(Collection<E> collection, E... newElements) {
+		return merged(HashSet::new, collection, newElements);
 	}
 
 	/**

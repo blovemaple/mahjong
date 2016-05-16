@@ -47,7 +47,7 @@ public class WinActionType extends AbstractActionType {
 		PlayerInfo playerInfo = context.getMyInfo();
 		Action lastAction = context.getLastAction();
 		Set<Tile> aliveTiles = DISCARD.matchBy(lastAction.getType())
-				? newMergedSet(playerInfo.getAliveTiles(), lastAction.getTile())
+				? mergedSet(playerInfo.getAliveTiles(), lastAction.getTile())
 				: null;
 		return context.getGameStrategy().canWin(playerInfo, aliveTiles);
 	}

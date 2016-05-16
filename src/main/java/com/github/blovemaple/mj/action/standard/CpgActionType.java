@@ -89,7 +89,7 @@ public class CpgActionType extends AbstractActionType {
 	@Override
 	protected boolean isLegalActionWithPreconition(PlayerView context,
 			Set<Tile> tiles) {
-		Set<Tile> testTiles = newMergedSet(tiles,
+		Set<Tile> testTiles = mergedSet(tiles,
 				context.getLastAction().getTile());
 		boolean legal = groupType.isLegalTiles(testTiles);
 		return legal;
@@ -105,7 +105,7 @@ public class CpgActionType extends AbstractActionType {
 		Tile gotTile = context.getLastAction().getTile();
 		TileGroup group = new TileGroup(groupType, gotTile,
 				location.getRelationOf(context.getLastActionLocation()),
-				newMergedSet(tiles, gotTile));
+				mergedSet(tiles, gotTile));
 		playerInfo.getTileGroups().add(group);
 	}
 

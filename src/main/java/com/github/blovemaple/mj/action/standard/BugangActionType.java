@@ -60,7 +60,7 @@ public class BugangActionType extends AbstractActionType {
 
 		// 把碰组改为补杠组，并加上动作牌
 		TileGroup newGroup = new TileGroup(BUGANG_GROUP, group.getGotTile(),
-				group.getFromRelation(), newMergedSet(group.getTiles(), tiles));
+				group.getFromRelation(), mergedSet(group.getTiles(), tiles));
 		List<TileGroup> groups = playerInfo.getTileGroups();
 		int groupIndex = groups.indexOf(group);
 		groups.remove(groupIndex);
@@ -78,7 +78,7 @@ public class BugangActionType extends AbstractActionType {
 				// 过滤出能与动作相关牌组成合法补杠的
 				.filter(group -> {
 					// 取出碰组的牌，并加上动作中的tiles（应该只有一个tile）
-					Set<Tile> gangTiles = newMergedSet(group.getTiles(),
+					Set<Tile> gangTiles = mergedSet(group.getTiles(),
 							actionTiles);
 					// 只留下合法的（补）杠
 					return BUGANG_GROUP.isLegalTiles(gangTiles);

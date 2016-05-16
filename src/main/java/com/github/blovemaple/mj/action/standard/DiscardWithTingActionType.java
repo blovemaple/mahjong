@@ -38,7 +38,7 @@ public class DiscardWithTingActionType extends DiscardActionType {
 				// 按照牌的id排序，这样能先把所有type分别检查一张，最快找到anyMatch
 				.sorted(Comparator.comparing(Tile::id))
 				// 与打出动作牌后的aliveTiles合并
-				.map(tileToGet -> newMergedSet(remainAliveTiles, tileToGet))
+				.map(tileToGet -> mergedSet(remainAliveTiles, tileToGet))
 				// 看任何一种合并后的aliveTiles能否符合任何一种wintype
 				.anyMatch(testAliveTiles -> strategy.canWin(playerInfo,
 						testAliveTiles));
