@@ -106,6 +106,21 @@ public class MyUtils {
 	}
 
 	/**
+	 * TODO
+	 * 
+	 * @param colls
+	 * @return
+	 */
+	public static <E> Stream<List<E>> selectStream(List<? extends Collection<E>> colls) {
+		if (colls.isEmpty())
+			return Stream.empty();
+		Collection<E> firstColl = colls.get(0);
+		if (colls.size() == 1)
+			return firstColl.stream().map(e -> new ArrayList<E>(Arrays.asList(e)));
+		return firstColl.stream().flatMap(e -> selectStream(colls.subList(1, colls.size())).peek(list -> list.add(e)));
+	}
+
+	/**
 	 * 将指定的若干个集合中的元素组成一个新的集合并返回。
 	 */
 	@SafeVarargs

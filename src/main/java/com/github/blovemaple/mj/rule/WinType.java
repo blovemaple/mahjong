@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
 
 /**
@@ -51,6 +52,7 @@ public interface WinType {
 	 */
 	public static class ChangingForWin {
 		public Set<Tile> removedTiles, addedTiles;
+		private int hashCode;
 
 		public ChangingForWin(Set<Tile> removedTiles, Set<Tile> addedTiles) {
 			this.removedTiles = removedTiles;
@@ -59,11 +61,14 @@ public interface WinType {
 
 		@Override
 		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((addedTiles == null) ? 0 : addedTiles.hashCode());
-			result = prime * result + ((removedTiles == null) ? 0 : removedTiles.hashCode());
-			return result;
+			if (hashCode == 0) {
+				final int prime = 31;
+				int result = 1;
+				result = prime * result + addedTiles.stream().map(Tile::type).mapToInt(TileType::hashCode).sum();
+				result = prime * result + removedTiles.stream().map(Tile::type).mapToInt(TileType::hashCode).sum();
+				hashCode = result;
+			}
+			return hashCode;
 		}
 
 		@Override
@@ -75,17 +80,7 @@ public interface WinType {
 			if (!(obj instanceof ChangingForWin))
 				return false;
 			ChangingForWin other = (ChangingForWin) obj;
-			if (addedTiles == null) {
-				if (other.addedTiles != null)
-					return false;
-			} else if (!addedTiles.equals(other.addedTiles))
-				return false;
-			if (removedTiles == null) {
-				if (other.removedTiles != null)
-					return false;
-			} else if (!removedTiles.equals(other.removedTiles))
-				return false;
-			return true;
+			return hashCode() == other.hashCode();
 		}
 
 		@Override

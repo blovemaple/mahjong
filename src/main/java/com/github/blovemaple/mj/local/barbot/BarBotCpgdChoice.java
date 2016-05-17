@@ -120,7 +120,7 @@ class BarBotCpgdChoice {
 		return baseContextView.getGameStrategy().getAllWinTypes().stream()
 				.flatMap(winType -> winType.changingsForWin(playerInfo,
 						changeCount, task.remainTiles()))
-				.distinct().map(wc -> new BarBotSimChanging(this,
+				.map(wc -> new BarBotSimChanging(this,
 						wc.removedTiles, wc.addedTiles));
 	}
 

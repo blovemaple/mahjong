@@ -35,15 +35,15 @@ public class NormalWinTypeTest {
 
 		selfInfo = new PlayerInfo();
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, BA), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, LIU), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 1));
-		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
-		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
-		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, LIU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 0));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, LIU), 0));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 0));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
 		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 2));
 		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 2));
 		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 2));
@@ -55,7 +55,7 @@ public class NormalWinTypeTest {
 
 	@Test
 	public void test() {
-		System.out.println(winType.changingsForWin(selfInfo, 1, candidates).count());
+		winType.changingsForWin(selfInfo, 0, candidates).close();
 	}
 
 }

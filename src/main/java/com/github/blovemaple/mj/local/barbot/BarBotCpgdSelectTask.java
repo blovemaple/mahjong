@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -33,6 +34,8 @@ import com.github.blovemaple.mj.object.TileType;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class BarBotCpgdSelectTask implements Callable<Action> {
+	private static final Logger logger = Logger.getLogger(BarBotCpgdSelectTask.class.getSimpleName());
+
 	private static final Set<ActionType> ACTION_TYPES = new HashSet<>(
 			Arrays.asList(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD, DISCARD_WITH_TING));
 	private static final int EXTRA_CHANGE_COUNT = 2;
@@ -65,7 +68,8 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		// 从0次换牌开始，计算每个状态换牌后和牌的概率
 		AtomicInteger minChangeCount = new AtomicInteger(-1);
 		int aliveTileSize = playerInfo.getAliveTiles().size();
-		for (int changeCount = 0; true; changeCount++) {
+		int changeCount = 0;
+		for (; true; changeCount++) {
 			if (changeCount >= aliveTileSize)
 				break;
 			if (minChangeCount.get() >= 0 && changeCount - minChangeCount.get() > EXTRA_CHANGE_COUNT)
@@ -79,8 +83,11 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 			System.out.println("end   " + changeCount + " " + (System.currentTimeMillis() - startTime));
 		}
 
+		logger.info("Finished changes: " + (changeCount - 1));
+
 		// 返回和牌概率最大的一个动作
 		Action bestAction = choices.stream()
+				.peek(choice -> logger.info(String.format("%.5f %s", choice.getFinalWinProb(), choice.getAction())))
 				// 选和牌概率最大的一个，和牌概率相同者，听牌优先
 				.max(Comparator.comparing(BarBotCpgdChoice::getFinalWinProb)
 						.thenComparing(choice -> choice.getPlayerInfo().isTing()))
