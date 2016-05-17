@@ -261,6 +261,14 @@ class BarBotCpgdChoice {
 		return playerInfo;
 	}
 
+	protected Map<Integer, List<BarBotSimChanging>> getWinChangingByChangeCount() {
+		return winChangingByChangeCount;
+	}
+
+	protected Map<Integer, Double> getWinProbByChangeCount() {
+		return winProbByChangeCount;
+	}
+
 	public Double getFinalWinProb() {
 		if (finalWinProb == null) {
 			if (subChoices == null) {

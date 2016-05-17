@@ -34,6 +34,14 @@ class BarBotSimChanging {
 		this.addedTiles = addedTiles;
 	}
 
+	protected Collection<Tile> getRemovedTiles() {
+		return removedTiles;
+	}
+
+	protected Collection<Tile> getAddedTiles() {
+		return addedTiles;
+	}
+
 	public boolean isWin() {
 		return getWinPoint() > 0;
 	}
@@ -121,7 +129,7 @@ class BarBotSimChanging {
 
 	@Override
 	public String toString() {
-		return "BarBotSimChanging [\n\tremovedTiles=" + removedTiles + "\n\taddedTiles=" + addedTiles + "\n]";
+		return "[prob=" + prob + ", removedTiles=" + removedTiles + ", addedTiles=" + addedTiles + "]";
 	}
 
 }

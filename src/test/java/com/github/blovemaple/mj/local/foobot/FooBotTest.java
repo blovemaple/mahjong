@@ -3,6 +3,7 @@ package com.github.blovemaple.mj.local.foobot;
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.object.PlayerLocation.*;
 import static com.github.blovemaple.mj.object.TileRank.NumberRank.*;
+import static com.github.blovemaple.mj.object.TileRank.ZiRank.*;
 import static com.github.blovemaple.mj.object.TileSuit.*;
 
 import java.util.HashSet;
@@ -62,9 +63,9 @@ public class FooBotTest {
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 1));
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, LIU), 1));
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
 //		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 2));
 //		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 2));
 //		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 2));

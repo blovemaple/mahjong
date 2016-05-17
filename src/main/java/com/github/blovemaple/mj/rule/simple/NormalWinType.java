@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -336,8 +335,8 @@ public class NormalWinType extends AbstractWinType {
 
 		List<PreUnit> preJiangs = parsePreJiangs(aliveTiles, candidatesByType);
 		List<PreUnit> preShunkes = parsePreShunkes(aliveTiles, candidatesBySuit);
-		// preJiangs.forEach(System.out::println);
-		// preShunkes.forEach(System.out::println);
+		preJiangs.forEach(System.out::println);
+		preShunkes.forEach(System.out::println);
 		cleanPreUnits(preJiangs, preShunkes);
 		System.out.println("Clean:");
 		preJiangs.forEach(System.out::println);
@@ -424,6 +423,10 @@ public class NormalWinType extends AbstractWinType {
 				}
 			}
 		});
+
+		// 将所有孤立的完整顺刻，或合并后是孤立的n个顺刻，它本身和子集都删除
+		// TODO
+
 	}
 
 	private Map<Integer, List<ChangingForWin>> genChangings(List<Tile> aliveTiles, List<PreUnit> preJiangs,
@@ -433,37 +436,39 @@ public class NormalWinType extends AbstractWinType {
 		// 先选任意一个preJiang
 		Map<Integer, List<ChangingForWin>> result = distinctBy(preJiangs.stream(), PreUnit::tilesTypeHash)
 				.flatMap(preJiang -> {
-					// 然后在preShunke里遍历任意组合
+					// 然后在preShunke里遍历(aliveTiles.size()/3)个元素的组合
+					// (aliveTiles.size()/3)是aliveTiles换完牌后应该具有的顺刻数
+					// TODO 选择尽量完整的顺刻
 					List<PreUnit> legalPreShunkes = preShunkes.stream()
 							.filter(preShunke -> disjoint(preJiang.tiles, preShunke.tiles))
 							.collect(Collectors.toList());
-					Stream<ChangingForWin> changings = IntStream.rangeClosed(0, legalPreShunkes.size()).boxed()
-							.flatMap(count -> preShunkesStream(legalPreShunkes, count))
+					int shunKeCount = aliveTiles.size() / 3;
+					Stream<ChangingForWin> changings = preShunkesStream(legalPreShunkes, shunKeCount)
 							// 合并上preJiang
 							.peek(preUnits -> preUnits.add(preJiang))
-							// 组成选定的preUnits，每个preUnits可以生成若干个changing
+							// 组成选定的preUnits，可以生成若干个changing
 							.flatMap(preUnits -> {
-								AtomicInteger removedCount = new AtomicInteger(aliveTiles.size());
-								int addedCount = preUnits.stream()
-										.peek(preUnit -> removedCount.addAndGet(-preUnit.tiles.size()))
-										.mapToInt(PreUnit::lackedCount).sum();
-
-								if (removedCount.get() + 1 != addedCount)
-									// 只留下增加牌数比减去牌数多1的
-									return null;
-
 								Set<Tile> removed = new HashSet<>(aliveTiles);
 								preUnits.stream().map(PreUnit::tiles).forEach(removed::removeAll);
 
-								// 从每个preUnits中选择任意一个lackedTypes，合并成总共的lackedTypes
+								Set<TileType> removedTypeSet = removed.stream().map(Tile::type)
+										.collect(Collectors.toSet());
+
+								// 从每个非完整的preUnits中选择任意一个lackedTypes，合并成总共的lackedTypes
+								// lackedTypes要过滤掉与removedTiles有牌型重复的
 								List<List<List<TileType>>> allLackedTypes = preUnits.stream()
-										.map(PreUnit::lackedTypeList).collect(Collectors.toList());
+										.map(PreUnit::lackedTypeList)
+										// 非完整
+										.filter(lackedTypesList -> !lackedTypesList.isEmpty())
+										// 过滤掉与removedTiles有牌型重复的
+										.map(lackedTypesList -> lackedTypesList.stream()
+												.filter(lackedTypes -> lackedTypes.stream()
+														.noneMatch(removedTypeSet::contains))
+												.collect(Collectors.toList()))
+										.collect(Collectors.toList());
 								return selectStream(allLackedTypes).map(
 										select -> select.stream().flatMap(List::stream).collect(Collectors.toList()))
 										.map(lackedTypes -> {
-											if (removed.stream().anyMatch(tile -> lackedTypes.contains(tile.type())))
-												// 只留下增加牌和减去牌没有牌型重复的
-												return null;
 											List<Tile> added;
 											try {
 												added = getTileFromCandidates(lackedTypes, candidatesByType);

@@ -38,7 +38,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 
 	private static final Set<ActionType> ACTION_TYPES = new HashSet<>(
 			Arrays.asList(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD, DISCARD_WITH_TING));
-	private static final int EXTRA_CHANGE_COUNT = 2;
+	private static final int EXTRA_CHANGE_COUNT = 2; //TODO
 
 	private PlayerView contextView;
 	private Set<ActionType> actionTypes;
@@ -88,6 +88,15 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		// 返回和牌概率最大的一个动作
 		Action bestAction = choices.stream()
 				.peek(choice -> logger.info(String.format("%.5f %s", choice.getFinalWinProb(), choice.getAction())))
+				.peek(choice->{
+					choice.getWinProbByChangeCount().forEach((cc,prob)->{
+						System.out.println("change "+cc+" prob "+prob);
+					});
+				})
+				.peek(choice->{
+					choice.getWinChangingByChangeCount().values().stream().flatMap(List::stream)
+					.forEach(System.out::println);
+				})
 				// 选和牌概率最大的一个，和牌概率相同者，听牌优先
 				.max(Comparator.comparing(BarBotCpgdChoice::getFinalWinProb)
 						.thenComparing(choice -> choice.getPlayerInfo().isTing()))
