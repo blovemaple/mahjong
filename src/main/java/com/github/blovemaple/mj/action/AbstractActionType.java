@@ -157,7 +157,7 @@ public abstract class AbstractActionType implements ActionType {
 		PlayerInfo playerInfo = context.getMyInfo();
 		if (playerInfo == null)
 			return Stream.empty();
-		return combinationSetStream(
+		return combSetStream(
 				getActionTilesRange(context, context.getMyLocation()),
 				getActionTilesSize())
 						.filter(tiles -> isLegalActionTiles(context, tiles));

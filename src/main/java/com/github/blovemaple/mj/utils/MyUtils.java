@@ -31,8 +31,8 @@ public class MyUtils {
 	 *            组合中的元素个数
 	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
 	 */
-	public static <E> Stream<Set<E>> combinationSetStream(Collection<E> coll, int size) {
-		return combinationStream(coll, size, HashSet<E>::new, null, null);
+	public static <E> Stream<Set<E>> combSetStream(Collection<E> coll, int size) {
+		return combStream(coll, size, HashSet<E>::new, null, null);
 	}
 
 	/**
@@ -44,8 +44,8 @@ public class MyUtils {
 	 *            组合中的元素个数
 	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
 	 */
-	public static <E> Stream<List<E>> combinationListStream(Collection<E> coll, int size) {
-		return combinationStream(coll, size, ArrayList<E>::new, null, null);
+	public static <E> Stream<List<E>> combListStream(Collection<E> coll, int size) {
+		return combStream(coll, size, ArrayList<E>::new, null, null);
 	}
 
 	/**
@@ -54,16 +54,16 @@ public class MyUtils {
 	 * @param coll
 	 *            指定集合
 	 * @param size
-	 *            组合中的元素个数
+	 *            组合中的元素个数。仅当greedy为false时有意义。
 	 * @param combCollFactory
 	 *            新建集合对象的函数，用于新建元素组合使用的集合，参数为元素集合
 	 * @param elementFilter
-	 *            组合中所有元素需要符合的条件，null表示不设此条件
+	 *            组合中所有元素需要符合的条件，null表示不设此条件 TODO 删除此参数
 	 * @param elementInCombFilter
 	 *            一个组合中的元素需要相互符合的条件，null表示不设此条件
 	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
 	 */
-	public static <E, C extends Collection<E>> Stream<C> combinationStream(Collection<E> coll, int size,
+	public static <E, C extends Collection<E>> Stream<C> combStream(Collection<E> coll, int size,
 			Function<Collection<E>, C> combCollFactory, Predicate<E> elementFilter,
 			BiPredicate<E, E> elementInCombFilter) {
 		if (size == 0)
@@ -100,9 +100,31 @@ public class MyUtils {
 				othersElementFilter = othersElementFilter == null ? othersWithFirstFilter
 						: othersElementFilter.and(othersWithFirstFilter);
 			}
-			return combinationStream(others, size - 1, combCollFactory, othersElementFilter, elementInCombFilter)
+			return combStream(others, size - 1, combCollFactory, othersElementFilter, elementInCombFilter)
 					.peek(comb -> comb.add(first));
 		});
+	}
+
+	/**
+	 * 返回指定集合中尽量多的元素组合（列表）组成的流。
+	 * 
+	 * @param coll
+	 *            指定集合
+	 * @param greedy
+	 *            是否组合尽量多的元素（贪婪模式）。如果为true，则size参数没有意义。
+	 * @param combCollFactory
+	 *            新建集合对象的函数，用于新建元素组合使用的集合，参数为元素集合
+	 * @param elementFilter
+	 *            组合中所有元素需要符合的条件，null表示不设此条件 TODO 删除此参数
+	 * @param elementInCombFilter
+	 *            一个组合中的元素需要相互符合的条件，null表示不设此条件
+	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
+	 */
+	public static <E, C extends Collection<E>> Stream<C> combStreamGreedy(Collection<E> coll,
+			Function<Collection<E>, C> combCollFactory, Predicate<E> elementFilter,
+			BiPredicate<E, E> elementInCombFilter) {
+		// TODO
+		return null;
 	}
 
 	/**

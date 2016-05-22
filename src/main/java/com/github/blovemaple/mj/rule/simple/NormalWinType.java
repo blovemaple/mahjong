@@ -49,7 +49,7 @@ public class NormalWinType extends AbstractWinType {
 		Set<TileUnit> groupUnits = genGroupUnits(playerInfo);
 
 		// 所有可能的将牌
-		return combinationSetStream(aliveTiles, JIANG.size()).filter(JIANG::isLegalTiles)
+		return combSetStream(aliveTiles, JIANG.size()).filter(JIANG::isLegalTiles)
 				// 针对每一种可能的将牌，寻找剩下的牌全部解析成顺子/刻子的所有可能
 				.flatMap(jiang -> {
 					TileUnit jiangUnit = new TileUnit(JIANG, jiang);
@@ -86,7 +86,7 @@ public class NormalWinType extends AbstractWinType {
 		// （整体逻辑：先找一个顺子或刻子单元，再递归解析剩下的牌）
 		return
 		// 从第二张开始，取任意两张牌，与第一张牌组成一个单元
-		combinationSetStream(tiles.subList(1, tiles.size()), 2).peek(halfUnit -> halfUnit.add(fixedTile))
+		combSetStream(tiles.subList(1, tiles.size()), 2).peek(halfUnit -> halfUnit.add(fixedTile))
 				// 过滤出合法的顺子或刻子单元
 				.filter(unit -> SHUNZI.isLegalTiles(unit) || KEZI.isLegalTiles(unit))
 				// 在剩下的牌中递归解析顺子或刻子单元集合，并添加上面这个单元
@@ -190,7 +190,7 @@ public class NormalWinType extends AbstractWinType {
 					List<Tile> candidatesForSuit = candidatesBySuit.get(suit);
 					// 顺刻
 					if (lastUnitSize >= 3 && otherTiles.size() >= 2) {
-						distinctCollBy(combinationListStream(otherTiles, 2), Tile::type)
+						distinctCollBy(combListStream(otherTiles, 2), Tile::type)
 								.peek(halfUnit -> halfUnit.add(fixedTile))
 								.filter(unit -> SHUNZI.isLegalTiles(unit) || KEZI.isLegalTiles(unit)) //
 								.forEach(unit -> {
@@ -228,7 +228,7 @@ public class NormalWinType extends AbstractWinType {
 					// 差两张牌的顺刻
 					if (lastUnitSize >= 1 && candidatesForSuit.size() >= 2) {
 						List<Tile> preUnit = Collections.singletonList(fixedTile);
-						distinctCollBy(combinationListStream(candidatesForSuit, 2), Tile::type) //
+						distinctCollBy(combListStream(candidatesForSuit, 2), Tile::type) //
 								.filter(candTiles -> {
 									List<Tile> unit = new ArrayList<>(candTiles);
 									unit.add(fixedTile);
@@ -253,7 +253,7 @@ public class NormalWinType extends AbstractWinType {
 			Map<Integer, List<ChangingForWin>> changings, Map<TileType, List<Tile>> candidatesByType) {
 		List<Map.Entry<List<Tile>, List<TileType>>> preUnitsList = new ArrayList<>(preUnitsAndLacks.entrySet());
 		IntStream.rangeClosed(1, preUnitsList.size()).forEach(size -> {
-			combinationListStream(preUnitsList, size).map(entryList -> {
+			combListStream(preUnitsList, size).map(entryList -> {
 				try {
 					Set<Tile> added = new HashSet<>(), removed = new HashSet<>();
 					preUnitsList.stream().forEach(preUnit -> {
@@ -393,8 +393,8 @@ public class NormalWinType extends AbstractWinType {
 
 		// 将牌
 		Map<TileType, List<Tile>> aliveTilesByType = aliveTiles.stream().collect(Collectors.groupingBy(Tile::type));
-		aliveTilesByType.forEach((type, tiles) -> combinationListStream(tiles, 2).map(jiang -> new PreUnit(true, jiang))
-				.forEach(result::add));
+		aliveTilesByType.forEach(
+				(type, tiles) -> combListStream(tiles, 2).map(jiang -> new PreUnit(true, jiang)).forEach(result::add));
 
 		return result;
 	}
@@ -416,7 +416,7 @@ public class NormalWinType extends AbstractWinType {
 
 		aliveTilesBySuit.forEach((suit, tiles) -> {
 			// 差一张牌的顺刻
-			combinationListStream(tiles, 2).forEach(testUnit -> {
+			combListStream(tiles, 2).forEach(testUnit -> {
 				List<List<TileType>> lackedTypesList = new ArrayList<>();
 				lackedTypesList.addAll(SHUNZI.getLackedTypesForTiles(testUnit));
 				lackedTypesList.addAll(KEZI.getLackedTypesForTiles(testUnit));
@@ -424,8 +424,7 @@ public class NormalWinType extends AbstractWinType {
 					result.add(new PreUnit(false, testUnit, lackedTypesList, 1));
 			});
 			// 顺刻
-			combinationListStream(tiles, 3)
-					.filter(testUnit -> SHUNZI.isLegalTiles(testUnit) || KEZI.isLegalTiles(testUnit))
+			combListStream(tiles, 3).filter(testUnit -> SHUNZI.isLegalTiles(testUnit) || KEZI.isLegalTiles(testUnit))
 					.forEach(unitTiles -> result.add(new PreUnit(false, unitTiles)));
 		});
 
@@ -484,7 +483,7 @@ public class NormalWinType extends AbstractWinType {
 					int shunKeCount = aliveTiles.size() / 3;
 					List<PreUnit> legalPreShunkesWithoutSingle = legalPreShunkes.stream()
 							.filter(preUnit -> preUnit.tiles.size() > 1).collect(Collectors.toList());
-					// 如果2个以上牌的legalPreShunkes已经足够，则只用2个以上牌的
+					// 如果2个以上牌的legalPreShunkes已经足够，则只用2个以上牌的 FIXME-里面可能有牌重复的
 					if (legalPreShunkesWithoutSingle.size() >= shunKeCount)
 						legalPreShunkes = legalPreShunkesWithoutSingle;
 					Stream<ChangingForWin> changings = preShunkesStream(legalPreShunkes, shunKeCount)
@@ -533,7 +532,7 @@ public class NormalWinType extends AbstractWinType {
 	}
 
 	private Stream<List<PreUnit>> preShunkesStream(List<PreUnit> preShunkes, int shunkeCount) {
-		return combinationStream(preShunkes, shunkeCount, ArrayList<PreUnit>::new, null,
+		return combStream(preShunkes, shunkeCount, ArrayList<PreUnit>::new, null,
 				(preUnit1, preUnit2) -> disjoint(preUnit1.tiles, preUnit2.tiles));
 	}
 

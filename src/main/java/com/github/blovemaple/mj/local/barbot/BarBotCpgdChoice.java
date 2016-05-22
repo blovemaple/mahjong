@@ -237,7 +237,7 @@ class BarBotCpgdChoice {
 
 	private static Stream<List<Tile>> typeDistinctStream(Collection<Tile> tiles,
 			int size) {
-		return distinctCollBy(combinationListStream(tiles, size), Tile::type);
+		return distinctCollBy(combListStream(tiles, size), Tile::type);
 	}
 
 	/**
