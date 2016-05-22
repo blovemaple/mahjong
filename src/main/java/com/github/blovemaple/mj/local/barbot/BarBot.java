@@ -33,6 +33,10 @@ public class BarBot implements Player {
 		this.name = name;
 	}
 
+	public BarBot() {
+		this("BarBot");
+	}
+
 	@Override
 	public String getName() {
 		return name;

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -303,6 +304,43 @@ public class NormalWinType extends AbstractWinType {
 	}
 
 	@Override
+	public List<Tile> getDiscardCandidates(Set<Tile> aliveTiles, Collection<Tile> candidates) {
+		// 先保证顺子刻子的定义都是3张牌、将牌是2张牌
+		if (SHUNZI.size() != 3 || KEZI.size() != 3)
+			throw new RuntimeException();
+		if (JIANG.size() != 2)
+			throw new RuntimeException();
+
+		List<Tile> aliveTileList = new ArrayList<>(aliveTiles);
+
+		Map<TileSuit, List<Tile>> candidatesBySuit = candidates.stream()
+				.collect(Collectors.groupingBy(tile -> tile.type().getSuit()));
+		List<PreUnit> preShunkes = parsePreShunkes(aliveTileList, candidatesBySuit);
+
+		preShunkes.sort(Comparator.<PreUnit, Integer> comparing(preUnit -> preUnit.tiles.size())
+				.thenComparing(preUnit -> preUnit.lackedTypesList.size()).reversed());
+
+		List<Tile> removedTiles = new ArrayList<>();
+		List<Tile> sortedTiles = new ArrayList<>();
+		int unitSize = 0, lackedKinds = 0;
+		for (PreUnit preUnit : preShunkes) {
+			if (unitSize == 0) {
+				unitSize = preUnit.tiles.size();
+				lackedKinds = preUnit.lackedTypesList.size();
+			}
+			if (preUnit.tiles.size() == unitSize && preUnit.lackedTypesList.size() == lackedKinds) {
+				removedTiles.addAll(preUnit.tiles);
+			}
+			preUnit.tiles.stream().filter(tile -> !sortedTiles.contains(tile)).forEach(sortedTiles::add);
+		}
+
+		if (removedTiles.size() < aliveTiles.size())
+			sortedTiles.removeAll(removedTiles);
+		reverse(sortedTiles);
+		return sortedTiles;
+	}
+
+	@Override
 	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo, int changeCount, Collection<Tile> candidates) {
 		Set<Tile> aliveTiles = playerInfo.getAliveTiles();
 		int hash = aliveTiles.hashCode();
@@ -311,10 +349,10 @@ public class NormalWinType extends AbstractWinType {
 		if (changings == null) {
 			changings = parseChangings(new ArrayList<>(aliveTiles), candidates);
 			System.out.println(changings.values().stream().mapToLong(List::size).sum());
-			// changings.forEach((cc, cs) -> {
-			// System.out.println("Changes: " + cc);
-			// cs.forEach(System.out::println);
-			// });
+			changings.forEach((cc, cs) -> {
+				System.out.println("Changes: " + cc);
+				// cs.forEach(System.out::println);
+			});
 			CHANGINGS_CACHE.put(hash, changings);
 		}
 
@@ -369,7 +407,8 @@ public class NormalWinType extends AbstractWinType {
 			List<List<TileType>> lackedTypesList = new ArrayList<>();
 			lackedTypesList.addAll(SHUNZI.getLackedTypesForTiles(Collections.singletonList(tile)));
 			lackedTypesList.addAll(KEZI.getLackedTypesForTiles(Collections.singletonList(tile)));
-			result.add(new PreUnit(false, tile, lackedTypesList, 2));
+			if (!lackedTypesList.isEmpty())
+				result.add(new PreUnit(false, tile, lackedTypesList, 2));
 		});
 
 		Map<TileSuit, List<Tile>> aliveTilesBySuit = aliveTiles.stream()
@@ -381,7 +420,8 @@ public class NormalWinType extends AbstractWinType {
 				List<List<TileType>> lackedTypesList = new ArrayList<>();
 				lackedTypesList.addAll(SHUNZI.getLackedTypesForTiles(testUnit));
 				lackedTypesList.addAll(KEZI.getLackedTypesForTiles(testUnit));
-				result.add(new PreUnit(false, testUnit, lackedTypesList, 1));
+				if (!lackedTypesList.isEmpty())
+					result.add(new PreUnit(false, testUnit, lackedTypesList, 1));
 			});
 			// 顺刻
 			combinationListStream(tiles, 3)
@@ -438,11 +478,15 @@ public class NormalWinType extends AbstractWinType {
 				.flatMap(preJiang -> {
 					// 然后在preShunke里遍历(aliveTiles.size()/3)个元素的组合
 					// (aliveTiles.size()/3)是aliveTiles换完牌后应该具有的顺刻数
-					// TODO 选择尽量完整的顺刻
 					List<PreUnit> legalPreShunkes = preShunkes.stream()
 							.filter(preShunke -> disjoint(preJiang.tiles, preShunke.tiles))
 							.collect(Collectors.toList());
 					int shunKeCount = aliveTiles.size() / 3;
+					List<PreUnit> legalPreShunkesWithoutSingle = legalPreShunkes.stream()
+							.filter(preUnit -> preUnit.tiles.size() > 1).collect(Collectors.toList());
+					// 如果2个以上牌的legalPreShunkes已经足够，则只用2个以上牌的
+					if (legalPreShunkesWithoutSingle.size() >= shunKeCount)
+						legalPreShunkes = legalPreShunkesWithoutSingle;
 					Stream<ChangingForWin> changings = preShunkesStream(legalPreShunkes, shunKeCount)
 							// 合并上preJiang
 							.peek(preUnits -> preUnits.add(preJiang))

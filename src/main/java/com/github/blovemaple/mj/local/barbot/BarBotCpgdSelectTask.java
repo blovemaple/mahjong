@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -27,6 +28,7 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileType;
+import com.github.blovemaple.mj.rule.WinType;
 
 /**
  * TODO 换牌n个：remove n，add n+1
@@ -38,7 +40,8 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 
 	private static final Set<ActionType> ACTION_TYPES = new HashSet<>(
 			Arrays.asList(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD, DISCARD_WITH_TING));
-	private static final int EXTRA_CHANGE_COUNT = 2; //TODO
+	private static final int EXTRA_CHANGE_COUNT = 2;
+	private static final int MAX_CHANGE_COUNT = 4;
 
 	private PlayerView contextView;
 	private Set<ActionType> actionTypes;
@@ -72,6 +75,8 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		for (; true; changeCount++) {
 			if (changeCount >= aliveTileSize)
 				break;
+			if (changeCount > MAX_CHANGE_COUNT)
+				break;
 			if (minChangeCount.get() >= 0 && changeCount - minChangeCount.get() > EXTRA_CHANGE_COUNT)
 				break;
 			long startTime = System.currentTimeMillis();
@@ -88,15 +93,15 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		// 返回和牌概率最大的一个动作
 		Action bestAction = choices.stream()
 				.peek(choice -> logger.info(String.format("%.5f %s", choice.getFinalWinProb(), choice.getAction())))
-				.peek(choice->{
-					choice.getWinProbByChangeCount().forEach((cc,prob)->{
-						System.out.println("change "+cc+" prob "+prob);
+				.peek(choice -> {
+					choice.getWinProbByChangeCount().forEach((cc, prob) -> {
+						System.out.println("action " + choice.getAction() + " change " + cc + " prob " + prob);
 					});
 				})
-				.peek(choice->{
-					choice.getWinChangingByChangeCount().values().stream().flatMap(List::stream)
-					.forEach(System.out::println);
-				})
+				// .peek(choice->{
+				// choice.getWinChangingByChangeCount().values().stream().flatMap(List::stream)
+				// .forEach(System.out::println);
+				// })
 				// 选和牌概率最大的一个，和牌概率相同者，听牌优先
 				.max(Comparator.comparing(BarBotCpgdChoice::getFinalWinProb)
 						.thenComparing(choice -> choice.getPlayerInfo().isTing()))
@@ -139,11 +144,28 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		List<BarBotCpgdChoice> choices = actionTypes.stream().filter(ACTION_TYPES::contains).flatMap(actionType -> {
 			Stream<Set<Tile>> legalTileSets = actionType.getLegalActionTiles(contextView).stream();
 			legalTileSets = distinctCollBy(legalTileSets, Tile::type);
-			return legalTileSets
-					.map(tiles -> new BarBotCpgdChoice(contextView, playerInfo, new Action(actionType, tiles), this));
+			if (!DISCARD.matchBy(actionType) || playerInfo.isTing()) {
+				return legalTileSets.map(tiles -> new BarBotCpgdChoice(contextView, playerInfo,
+						new Action(actionType, tiles), this, contextView.getGameStrategy().getAllWinTypes()));
+			} else {
+				Map<? extends WinType, List<Tile>> discardsByWinType = contextView.getGameStrategy().getAllWinTypes()
+						.stream().collect(Collectors.toMap(Function.identity(),
+								winType -> winType.getDiscardCandidates(playerInfo.getAliveTiles(), remainTiles())));
+				Set<Tile> legalTiles = legalTileSets.flatMap(Set::stream).collect(Collectors.toSet());
+				return discardsByWinType.values().stream().flatMap(List::stream).distinct().filter(legalTiles::contains)
+						.map(tile -> {
+							Set<WinType> winTypes = discardsByWinType.entrySet().stream()
+									.filter(entry -> entry.getValue().contains(tile)).map(Map.Entry::getKey)
+									.collect(Collectors.toSet());
+							return new BarBotCpgdChoice(contextView, playerInfo, new Action(actionType, tile), this,
+									winTypes);
+						});
+			}
+
 		}).filter(Objects::nonNull).collect(Collectors.toList());
 		if (actionTypes.stream().noneMatch(DISCARD::matchBy))
-			choices.add(new BarBotCpgdChoice(contextView, playerInfo, null, this));
+			choices.add(new BarBotCpgdChoice(contextView, playerInfo, null, this,
+					contextView.getGameStrategy().getAllWinTypes()));
 		return choices;
 	}
 

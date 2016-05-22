@@ -19,9 +19,11 @@ import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.rule.WinType;
 
 class BarBotCpgdChoice {
 	private final BarBotCpgdSelectTask task;
+	private final Set<? extends WinType> forWinTypes;
 
 	private final GameContext.PlayerView baseContextView;
 	private final Action action;
@@ -38,8 +40,8 @@ class BarBotCpgdChoice {
 
 	private Double finalWinProb; // 只计算一次，延迟生成
 
-	public BarBotCpgdChoice(GameContext.PlayerView baseContextView,
-			PlayerInfo baseInfo, Action action, BarBotCpgdSelectTask task) {
+	public BarBotCpgdChoice(GameContext.PlayerView baseContextView, PlayerInfo baseInfo, Action action,
+			BarBotCpgdSelectTask task, Set<? extends WinType> forWinTypes) {
 		this.baseContextView = baseContextView;
 		this.action = action;
 		this.task = task;
@@ -51,6 +53,7 @@ class BarBotCpgdChoice {
 			subChoices = genSubChoices();
 		else
 			subChoices = null;
+		this.forWinTypes = forWinTypes;
 	}
 
 	private PlayerInfo doAction(GameContext.PlayerView baseContextView,
@@ -72,7 +75,7 @@ class BarBotCpgdChoice {
 		return playerInfo.getAliveTiles().stream()
 				.map(tile -> new Action(DISCARD, tile))
 				.map(action -> new BarBotCpgdChoice(baseContextView, playerInfo,
-						action, task))
+						action, task, forWinTypes))
 				.collect(Collectors.toList());
 	}
 
@@ -117,11 +120,9 @@ class BarBotCpgdChoice {
 	}
 
 	private Stream<BarBotSimChanging> winChangings(int changeCount) {
-		return baseContextView.getGameStrategy().getAllWinTypes().stream()
-				.flatMap(winType -> winType.changingsForWin(playerInfo,
-						changeCount, task.remainTiles()))
-				.map(wc -> new BarBotSimChanging(this,
-						wc.removedTiles, wc.addedTiles));
+		return forWinTypes.stream()
+				.flatMap(winType -> winType.changingsForWin(playerInfo, changeCount, task.remainTiles()))
+				.map(wc -> new BarBotSimChanging(this, wc.removedTiles, wc.addedTiles));
 	}
 
 	@SuppressWarnings("unused")

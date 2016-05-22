@@ -1,6 +1,7 @@
 package com.github.blovemaple.mj.rule;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -39,6 +40,11 @@ public interface WinType {
 	 * @return 完整的TileUnit集合的流
 	 */
 	public Stream<Set<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Set<Tile> aliveTiles);
+
+	/**
+	 * 返回建议打出的牌，即从手牌中排除掉明显不应该打出的牌并返回。返回的列表按建议的优先级从高到低排列。
+	 */
+	public List<Tile> getDiscardCandidates(Set<Tile> aliveTiles, Collection<Tile> candidates);
 
 	/**
 	 * 获取ChangingForWin的流，移除changeCount个牌，增加(changeCount+1)个牌。

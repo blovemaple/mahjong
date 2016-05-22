@@ -9,8 +9,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileType;
@@ -57,7 +58,7 @@ class BarBotSimChanging {
 	public void setWinPoint(Integer winPoint) {
 		this.winPoint = winPoint;
 	}
-
+	
 	public double getProb() {
 		if (prob == null) {
 			prob = choice.getBaseContextView().getGameStrategy()
@@ -90,23 +91,22 @@ class BarBotSimChanging {
 		Map<TileType, Long> remainTiles = choice.getTask()
 				.remainTileCountByType();
 
-		AtomicInteger addedComb = new AtomicInteger(1);
+		AtomicLong addedComb = new AtomicLong(1);
 		addedByType.forEach((type, added) -> addedComb.getAndAccumulate(
 				combCount(remainTiles.get(type), added.size()),
 				Math::multiplyExact));
 
-		return (double) addedComb.get()
+		double prob = (double) addedComb.get()
 				/ combCount(choice.getTask().remainTileCount(),
 						addedTiles.size())
 				* getRatio(units);
+		return prob;
 	}
 
-	private int combCount(long total, int select) {
-		int result = 1;
-		int limit = (int) total - select;
-		for (int i = (int) total; i > limit; i--)
-			result *= i;
-		return result;
+	private long combCount(long total, int select) {
+		long totalP = LongStream.rangeClosed(total - select + 1, total).reduce(Math::multiplyExact).getAsLong();
+		long selectP = 1;//LongStream.rangeClosed(1, select).reduce(Math::multiplyExact).getAsLong();
+		return totalP / selectP;
 	}
 
 	private Set<Tile> getAliveTiles() {
