@@ -29,6 +29,7 @@ import com.github.blovemaple.mj.object.TileSuit;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
 import com.github.blovemaple.mj.rule.AbstractWinType;
+import com.github.blovemaple.mj.utils.MyUtils;
 
 /**
  * 普通和牌（相对于七对等特殊和牌类型而言）。
@@ -387,14 +388,14 @@ public class NormalWinType extends AbstractWinType {
 	private List<PreUnit> parsePreJiangs(List<Tile> aliveTiles, Map<TileType, List<Tile>> candidatesByType) {
 		List<PreUnit> result = new ArrayList<>();
 
-		// 差一张牌的将牌
-		aliveTiles.stream().filter(tile -> candidatesByType.containsKey(tile.type()))
-				.forEach(tile -> result.add(new PreUnit(true, tile, tile.type())));
-
 		// 将牌
 		Map<TileType, List<Tile>> aliveTilesByType = aliveTiles.stream().collect(Collectors.groupingBy(Tile::type));
 		aliveTilesByType.forEach(
 				(type, tiles) -> combListStream(tiles, 2).map(jiang -> new PreUnit(true, jiang)).forEach(result::add));
+
+		// 差一张牌的将牌
+		aliveTiles.stream().filter(tile -> candidatesByType.containsKey(tile.type()))
+				.forEach(tile -> result.add(new PreUnit(true, tile, tile.type())));
 
 		return result;
 	}
@@ -433,23 +434,23 @@ public class NormalWinType extends AbstractWinType {
 
 	private void cleanPreUnits(List<PreUnit> preJiangs, List<PreUnit> preShunkes) {
 		List<PreUnit> allPreUnits = merged(ArrayList::new, preJiangs, preShunkes);
-		// 过滤出孤立的preUnit（所有与之有交集的preUnit都是它的子集）
+		// 过滤出孤立的preUnit（孤立：所有与之有交集的preUnit都是它的子集）
 		List<PreUnit> lonelyUnits = allPreUnits.stream()
 				.filter(preUnit -> allPreUnits.stream().filter(otherUnit -> !disjoint(preUnit.tiles, otherUnit.tiles))
 						.allMatch(otherUnit -> preUnit.tiles.containsAll(otherUnit.tiles)))
 				.collect(Collectors.toList());
-		// 检查是否有孤立的完整将牌
-		boolean hasLonelyJiang = lonelyUnits.stream().filter(unit -> unit.isJiang)
-				.anyMatch(unit -> unit.lackedTypesList.isEmpty());
+		// 过滤出孤立的不完整将牌 XXX
+		Set<PreUnit> lonelyHalfJiangs = lonelyUnits.stream().filter(unit -> unit.isJiang)
+				.filter(unit -> unit.tiles.size() < 2).collect(Collectors.toSet());
 		// 在preJiang和preShunkes中进行清理：
-		// 1. 如果存在孤立的完整将牌，则删除所有不完整的将牌
+		// 1. 如果存在孤立的不完整将牌，则删除所有其他不完整的将牌
 		// 2. 对于孤立的完整顺刻，删除它的所有真子集
 		// 3. 对于孤立的不完整顺刻，删除它的真子集中的顺刻
 		Arrays.asList(preJiangs, preShunkes).forEach(preUnits -> {
 			Iterator<PreUnit> preUnitItr = preUnits.iterator();
 			while (preUnitItr.hasNext()) {
 				PreUnit preUnit = preUnitItr.next();
-				if (preUnit.isJiang && hasLonelyJiang && !preUnit.lackedTypesList.isEmpty())
+				if (preUnit.isJiang && !lonelyHalfJiangs.isEmpty() && !lonelyHalfJiangs.contains(preUnit))
 					preUnitItr.remove();
 				else if (lonelyUnits.stream().anyMatch(lonelyUnit ->
 				// 孤立顺刻
@@ -468,7 +469,7 @@ public class NormalWinType extends AbstractWinType {
 
 	}
 
-	private Map<Integer, List<ChangingForWin>> genChangings(List<Tile> aliveTiles, List<PreUnit> preJiangs,
+	private Map<Integer, List<ChangingForWin>> genChangings_old(List<Tile> aliveTiles, List<PreUnit> preJiangs,
 			List<PreUnit> preShunkes, Map<TileType, List<Tile>> candidatesByType) {
 		long startTime = System.currentTimeMillis();
 
@@ -534,6 +535,91 @@ public class NormalWinType extends AbstractWinType {
 	private Stream<List<PreUnit>> preShunkesStream(List<PreUnit> preShunkes, int shunkeCount) {
 		return combStream(preShunkes, shunkeCount, ArrayList<PreUnit>::new, null,
 				(preUnit1, preUnit2) -> disjoint(preUnit1.tiles, preUnit2.tiles));
+	}
+
+	private Map<Integer, List<ChangingForWin>> genChangings(List<Tile> aliveTiles, List<PreUnit> preJiangs,
+			List<PreUnit> preShunkes, Map<TileType, List<Tile>> candidatesByType) {
+		// 先选任意一个preJiang
+		Map<Integer, List<ChangingForWin>> result = distinctBy(preJiangs.stream(), PreUnit::tilesTypeHash)
+				.flatMap(preJiang -> {
+					// 然后再preShunke里按照牌数从大到小，依次取尽量多个，组成preUnit组合
+					int forCount = aliveTiles.size() / 3 + 1;
+					Stream<ChangingForWin> changings = preUnitsStream(preShunkes, forCount, preJiang)
+							// 组成选定的preUnits，可以生成若干个changing
+							.flatMap(preUnits -> {
+								Set<Tile> removed = new HashSet<>(aliveTiles);
+								preUnits.stream().map(PreUnit::tiles).forEach(removed::removeAll);
+								if (removed.size() == 6)
+									System.out.println();
+
+								Set<TileType> removedTypeSet = removed.stream().map(Tile::type)
+										.collect(Collectors.toSet());
+
+								// 从每个非完整的preUnits中选择任意一个lackedTypes，合并成总共的lackedTypes
+								// lackedTypes要过滤掉与removedTiles有牌型重复的
+								List<List<List<TileType>>> allLackedTypes = preUnits.stream()
+										.map(PreUnit::lackedTypeList)
+										// 非完整
+										.filter(lackedTypesList -> !lackedTypesList.isEmpty())
+										// 过滤掉与removedTiles有牌型重复的
+										.map(lackedTypesList -> lackedTypesList.stream()
+												.filter(lackedTypes -> lackedTypes.stream()
+														.noneMatch(removedTypeSet::contains))
+												.collect(Collectors.toList()))
+										.collect(Collectors.toList());
+								return selectStream(allLackedTypes).map(
+										select -> select.stream().flatMap(List::stream).collect(Collectors.toList()))
+										.map(lackedTypes -> {
+											List<Tile> added;
+											try {
+												added = getTileFromCandidates(lackedTypes, candidatesByType);
+											} catch (NoSuchElementException e) {
+												return null;
+											}
+											// 生成ChangingForWin
+											return new ChangingForWin(removed, new HashSet<>(added));
+										}).filter(Objects::nonNull);
+							}).filter(Objects::nonNull);
+					return changings;
+				}).distinct()
+				// 按removedTiles个数归类
+				.collect(Collectors.groupingBy(c -> c.removedTiles.size()));
+		return result;
+	}
+
+	private Stream<List<PreUnit>> preUnitsStream(List<PreUnit> preShunkes, int forCount, PreUnit preJiang) {
+		Stream<List<PreUnit>> result = Stream.of(singletonList(preJiang));
+
+		Map<Integer, List<PreUnit>> preShunkesBySize = preShunkes.stream()
+				.collect(Collectors.groupingBy(preUnit -> preUnit.tiles.size()));
+		for (int unitTilesSize : Arrays.asList(3, 2, 1)) {
+			List<PreUnit> shunkes = preShunkesBySize.get(unitTilesSize);
+			if (unitTilesSize == 1 && shunkes == null)
+				throw new RuntimeException();
+			if (shunkes == null)
+				continue;
+			result = result.flatMap(preUnits -> {
+				if (preUnits.size() == forCount)
+					return Stream.of(preUnits);
+
+				int remainCount = forCount - preUnits.size();
+				Set<Tile> selectedTiles = preUnits.stream().flatMap(preUnit -> preUnit.tiles.stream())
+						.collect(Collectors.toSet());
+				List<PreUnit> legalShunkes = shunkes.stream().filter(preUnit -> disjoint(selectedTiles, preUnit.tiles))
+						.collect(Collectors.toList());
+				if (unitTilesSize == 1 && legalShunkes.isEmpty())
+					return Stream.empty();
+				if (unitTilesSize == 1)
+					return combStream(legalShunkes, remainCount, ArrayList<PreUnit>::new, null,
+							(preUnit1, preUnit2) -> disjoint(preUnit1.tiles, preUnit2.tiles))
+									.peek(list -> list.addAll(preUnits));
+				else
+					return combStreamGreedy(legalShunkes, ArrayList<PreUnit>::new,
+							(preUnit1, preUnit2) -> disjoint(preUnit1.tiles, preUnit2.tiles), remainCount)
+									.peek(list -> list.addAll(preUnits));
+			});
+		}
+		return result;
 	}
 
 	/**

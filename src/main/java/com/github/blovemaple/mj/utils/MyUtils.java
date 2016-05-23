@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -23,26 +25,26 @@ import java.util.stream.Stream;
 public class MyUtils {
 
 	/**
-	 * 返回指定集合中指定个数的元素组合（集合）组成的流。
+	 * 返回指定集合中指定个数的元素组合（HashSet）组成的流。
 	 * 
 	 * @param coll
 	 *            指定集合
 	 * @param size
 	 *            组合中的元素个数
-	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
+	 * @return 组合Set的流
 	 */
 	public static <E> Stream<Set<E>> combSetStream(Collection<E> coll, int size) {
 		return combStream(coll, size, HashSet<E>::new, null, null);
 	}
 
 	/**
-	 * 返回指定集合中指定个数的元素组合（列表）组成的流。
+	 * 返回指定集合中指定个数的元素组合（ArrayList）组成的流。
 	 * 
 	 * @param coll
 	 *            指定集合
 	 * @param size
 	 *            组合中的元素个数
-	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
+	 * @return 组合List的流
 	 */
 	public static <E> Stream<List<E>> combListStream(Collection<E> coll, int size) {
 		return combStream(coll, size, ArrayList<E>::new, null, null);
@@ -61,7 +63,7 @@ public class MyUtils {
 	 *            组合中所有元素需要符合的条件，null表示不设此条件 TODO 删除此参数
 	 * @param elementInCombFilter
 	 *            一个组合中的元素需要相互符合的条件，null表示不设此条件
-	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
+	 * @return 组合的流
 	 */
 	public static <E, C extends Collection<E>> Stream<C> combStream(Collection<E> coll, int size,
 			Function<Collection<E>, C> combCollFactory, Predicate<E> elementFilter,
@@ -106,25 +108,138 @@ public class MyUtils {
 	}
 
 	/**
-	 * 返回指定集合中尽量多的元素组合（列表）组成的流。
+	 * 返回指定集合中符合条件的尽量多的元素组合组成的流。
 	 * 
 	 * @param coll
 	 *            指定集合
-	 * @param greedy
-	 *            是否组合尽量多的元素（贪婪模式）。如果为true，则size参数没有意义。
 	 * @param combCollFactory
-	 *            新建集合对象的函数，用于新建元素组合使用的集合，参数为元素集合
-	 * @param elementFilter
-	 *            组合中所有元素需要符合的条件，null表示不设此条件 TODO 删除此参数
-	 * @param elementInCombFilter
-	 *            一个组合中的元素需要相互符合的条件，null表示不设此条件
-	 * @return 组合Set的流。流中的所有Set都是可以做写操作的。
+	 *            新建集合对象的函数，用于新建元素组合使用的集合
+	 * @param condition
+	 *            一个组合中的任意两个元素需要相互符合的条件
+	 * @param limit
+	 *            组合中的元素个数上限
+	 * @return 组合的流
 	 */
 	public static <E, C extends Collection<E>> Stream<C> combStreamGreedy(Collection<E> coll,
-			Function<Collection<E>, C> combCollFactory, Predicate<E> elementFilter,
-			BiPredicate<E, E> elementInCombFilter) {
-		// TODO
-		return null;
+			Function<Collection<E>, C> combCollFactory, BiPredicate<E, E> condition, int limit) {
+		if (coll.isEmpty())
+			return Stream.empty();
+
+		List<E> list = (coll instanceof List) ? (List<E>) coll : new ArrayList<>(coll);
+
+		// 按顺序遍历全部元素，生成冲突元素map和检查点map
+		Map<E, Set<E>> conflictsMap = new HashMap<>();
+		Map<E, List<E>> checkPoints = new HashMap<>();
+		IntStream.range(0, list.size()).forEach(index -> {
+			E crtElement = list.get(index);
+			// 在右边的元素中找出与之冲突的元素
+			List<E> rightConflicts = list.subList(index + 1, list.size()).stream()
+					.filter(e -> !condition.test(crtElement, e)).collect(Collectors.toList());
+
+			// 在 当前元素的冲突元素 集合中加入找到的元素
+			if (!rightConflicts.isEmpty()) {
+				Set<E> conflicts = conflictsMap.get(crtElement);
+				if (conflicts == null)
+					conflictsMap.put(crtElement, conflicts = new HashSet<>());
+				conflicts.addAll(rightConflicts);
+			}
+			// 在 找到的元素的冲突元素 集合中分别加入当前元素
+			rightConflicts.forEach(conflict -> {
+				Set<E> conflicts1 = conflictsMap.get(conflict);
+				if (conflicts1 == null)
+					conflictsMap.put(conflict, conflicts1 = new HashSet<>());
+				conflicts1.add(crtElement);
+			});
+
+			// 如果找到了冲突元素，则最后一个冲突元素是当前元素的检查点
+			if (!rightConflicts.isEmpty()) {
+				E checkPoint = rightConflicts.get(rightConflicts.size() - 1);
+				List<E> checked = checkPoints.get(checkPoint);
+				if (checked == null)
+					checkPoints.put(checkPoint, checked = new ArrayList<>());
+				checked.add(crtElement);
+			}
+		});
+
+		// 进入递归方法，得出没有组合内元素个数限制的流
+		Stream<C> noLimitStream = combStreamGreedy0(list, combCollFactory, new HashSet<>(), conflictsMap, checkPoints);
+
+		if (limit >= coll.size())
+			return noLimitStream;
+
+		Stream<C> lessStream = noLimitStream.filter(c -> c.size() < limit);
+		Stream<C> limitStream = combStream(coll, limit, combCollFactory, null, condition);
+
+		return Stream.concat(lessStream, limitStream);
+	}
+
+	/**
+	 * @param coll
+	 * @param combCollFactory
+	 * @param selected
+	 *            当前递归分支的已选元素
+	 * @param conflictsMap
+	 *            所有元素 - 与之冲突的元素集合
+	 * @param checkPoints
+	 *            检查点元素 - 被检查元素<br>
+	 *            若B元素是A元素在列表中的最后一个冲突元素，则B是A的检查点<br>
+	 *            递归到B处时，如果A和其冲突元素都未选，则必须选B
+	 * @return
+	 */
+	private static <E, C extends Collection<E>> Stream<C> combStreamGreedy0(List<E> coll,
+			Function<Collection<E>, C> combCollFactory, Set<E> selected, Map<E, Set<E>> conflictsMap,
+			Map<E, List<E>> checkPoints) {
+		if (coll.isEmpty())
+			return Stream.of(combCollFactory.apply(Collections.emptyList()));
+
+		E crtElement = coll.get(0);
+		Set<E> conflicts = conflictsMap.get(crtElement);
+		List<E> remains = coll.subList(1, coll.size());
+
+		// 满足以下条件时，当前元素要选：
+		// 如果没有冲突元素，或者已选元素不存在与当前元素冲突的元素
+		Stream<C> selectCrtStream = null;
+		if (conflicts == null || Collections.disjoint(selected, conflicts)) {
+			Set<E> newSelected = mergedSet(selected, crtElement);
+			selectCrtStream = combStreamGreedy0(remains, combCollFactory, newSelected, conflictsMap, checkPoints)
+					.peek(comb -> comb.add(crtElement));
+		}
+
+		// 同时满足以下条件时，当前元素不选：
+		// 1. 有冲突元素
+		// 2. 冲突元素有已选的，或者剩余元素中有冲突元素
+		// 3. 如果是检查点，要求所有被检查元素或其冲突元素有已选的
+		Stream<C> notSelectCrtStream = null;
+		boolean shouldSelectNot = true;
+		if (conflicts == null)
+			shouldSelectNot = false;
+		if (shouldSelectNot) {
+			if (Collections.disjoint(selected, conflicts) && Collections.disjoint(remains, conflicts))
+				shouldSelectNot = false;
+		}
+		if (shouldSelectNot) {
+			List<E> checkeds = checkPoints.get(crtElement);
+			if (checkeds != null && checkeds.stream().anyMatch(checked -> {
+				if (selected.contains(checked))
+					return false;
+				Set<E> conflistsOfChecked = conflictsMap.get(checked);
+				if (conflistsOfChecked != null && !Collections.disjoint(selected, conflistsOfChecked))
+					return false;
+				// 自身和冲突元素都没选
+				return true;
+			}))
+				shouldSelectNot = false;
+		}
+		if (shouldSelectNot)
+			notSelectCrtStream = combStreamGreedy0(remains, combCollFactory, selected, conflictsMap, checkPoints);
+
+		if (selectCrtStream == null && notSelectCrtStream == null)
+			return Stream.empty();
+		if (selectCrtStream != null && notSelectCrtStream == null)
+			return selectCrtStream;
+		if (selectCrtStream == null && notSelectCrtStream != null)
+			return notSelectCrtStream;
+		return Stream.concat(selectCrtStream, notSelectCrtStream);
 	}
 
 	/**

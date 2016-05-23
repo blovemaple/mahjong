@@ -19,8 +19,6 @@ import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
 /**
- * 借鉴：https://www.zhihu.com/question/40171482/answer/90573732
- * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class BarBot implements Player {
@@ -45,6 +43,10 @@ public class BarBot implements Player {
 	@Override
 	public Action chooseAction(PlayerView contextView,
 			Set<ActionType> actionTypes) throws InterruptedException {
+		// 如果可以和，就和
+		if (actionTypes.contains(WIN))
+			return new Action(WIN);
+
 		// 如果可以补花，就补花
 		if (actionTypes.contains(BUHUA)) {
 			Collection<Set<Tile>> buhuas = BUHUA
@@ -52,10 +54,6 @@ public class BarBot implements Player {
 			if (!buhuas.isEmpty())
 				return new Action(BUHUA, buhuas.iterator().next());
 		}
-
-		// 如果可以和，就和
-		if (actionTypes.contains(WIN))
-			return new Action(WIN);
 
 		// 如果可以吃/碰/杠/出牌，就选择
 		Action action = chooseCpgdAction(contextView, actionTypes);

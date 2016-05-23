@@ -73,18 +73,18 @@ public class FooBotTest {
 
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, YI), 0));
 		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, YI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, YI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, DONG_FENG), 2));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, NAN), 2));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, BEI), 2));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, XI), 1));
-//		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, ZHONG), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, WU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, YI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, WU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, YI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, DONG_FENG), 2));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, NAN), 2));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, BEI), 2));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, XI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, ZHONG), 1));
 		selfInfo.setLastDrawedTile(Tile.of(TileType.of(WAN, YI), 0));
 
 		context = new GameContext(table, new SimpleGameStrategy(),
