@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -29,7 +30,6 @@ import com.github.blovemaple.mj.object.TileSuit;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
 import com.github.blovemaple.mj.rule.AbstractWinType;
-import com.github.blovemaple.mj.utils.MyUtils;
 
 /**
  * 普通和牌（相对于七对等特殊和牌类型而言）。
@@ -164,7 +164,7 @@ public class NormalWinType extends AbstractWinType {
 				if (tiles.size() > 1) {
 					List<Tile> preUnit = tiles.subList(0, 2);
 					preUnitsAndLacks.put(preUnit, Collections.emptyList());
-					List<Tile> remainAliveTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, tiles.subList(0, 2));
+					List<Tile> remainAliveTiles = remainColl(ArrayList<Tile>::new, aliveTiles, tiles.subList(0, 2));
 					changingsForWin(remainAliveTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize, changings,
 							candidatesByType, candidatesBySuit); // ->
 					preUnitsAndLacks.remove(preUnit);
@@ -173,7 +173,7 @@ public class NormalWinType extends AbstractWinType {
 				if (candidatesByType.containsKey(type)) {
 					List<Tile> preUnit = Collections.singletonList(tiles.get(0));
 					preUnitsAndLacks.put(preUnit, Collections.singletonList(type));
-					List<Tile> remainAliveTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, tiles.get(0));
+					List<Tile> remainAliveTiles = remainColl(ArrayList<Tile>::new, aliveTiles, tiles.get(0));
 					changingsForWin(remainAliveTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize, changings,
 							candidatesByType, candidatesBySuit); // ->
 					preUnitsAndLacks.remove(preUnit);
@@ -195,7 +195,7 @@ public class NormalWinType extends AbstractWinType {
 								.peek(halfUnit -> halfUnit.add(fixedTile))
 								.filter(unit -> SHUNZI.isLegalTiles(unit) || KEZI.isLegalTiles(unit)) //
 								.forEach(unit -> {
-									List<Tile> remainTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, unit);
+									List<Tile> remainTiles = remainColl(ArrayList<Tile>::new, aliveTiles, unit);
 									preUnitsAndLacks.put(unit, Collections.emptyList());
 									changingsForWin(remainTiles, preUnitsAndLacks, true, tileTypeAndCrtUnitSize,
 											changings, candidatesByType, candidatesBySuit);
@@ -213,7 +213,7 @@ public class NormalWinType extends AbstractWinType {
 												unit.add(candTile);
 												return SHUNZI.isLegalTiles(unit) || KEZI.isLegalTiles(unit);
 											}).forEach(candTile -> {
-												List<Tile> remainTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles,
+												List<Tile> remainTiles = remainColl(ArrayList<Tile>::new, aliveTiles,
 														preUnit);
 												preUnitsAndLacks.put(preUnit,
 														Collections.singletonList(candTile.type()));
@@ -235,7 +235,7 @@ public class NormalWinType extends AbstractWinType {
 									unit.add(fixedTile);
 									return SHUNZI.isLegalTiles(unit) || KEZI.isLegalTiles(unit);
 								}).forEach(candTiles -> {
-									List<Tile> remainTiles = newRemainColl(ArrayList<Tile>::new, aliveTiles, fixedTile);
+									List<Tile> remainTiles = remainColl(ArrayList<Tile>::new, aliveTiles, fixedTile);
 									preUnitsAndLacks.put(preUnit,
 											candTiles.stream().map(Tile::type).collect(Collectors.toList()));
 									tileTypeAndCrtUnitSize.put(fixedTile.type(), 1);
@@ -539,50 +539,43 @@ public class NormalWinType extends AbstractWinType {
 
 	private Map<Integer, List<ChangingForWin>> genChangings(List<Tile> aliveTiles, List<PreUnit> preJiangs,
 			List<PreUnit> preShunkes, Map<TileType, List<Tile>> candidatesByType) {
-		// 先选任意一个preJiang
-		Map<Integer, List<ChangingForWin>> result = distinctBy(preJiangs.stream(), PreUnit::tilesTypeHash)
-				.flatMap(preJiang -> {
-					// 然后再preShunke里按照牌数从大到小，依次取尽量多个，组成preUnit组合
-					int forCount = aliveTiles.size() / 3 + 1;
-					Stream<ChangingForWin> changings = preUnitsStream(preShunkes, forCount, preJiang)
-							// 组成选定的preUnits，可以生成若干个changing
-							.flatMap(preUnits -> {
-								Set<Tile> removed = new HashSet<>(aliveTiles);
-								preUnits.stream().map(PreUnit::tiles).forEach(removed::removeAll);
-								if (removed.size() == 6)
-									System.out.println();
+		// 过滤出完整将牌和不完整将牌
+		List<PreUnit> fullJiangs = preJiangs.stream().filter(preUnit -> preUnit.lackedTypesList.isEmpty())
+				.collect(Collectors.toList());
+		List<PreUnit> halfJiangs = remainColl(ArrayList<PreUnit>::new, preJiangs, fullJiangs);
 
-								Set<TileType> removedTypeSet = removed.stream().map(Tile::type)
-										.collect(Collectors.toSet());
+		// 没用过的完整将牌记在这里
+		Set<PreUnit> unusedFullJiangs = new HashSet<>(fullJiangs);
 
-								// 从每个非完整的preUnits中选择任意一个lackedTypes，合并成总共的lackedTypes
-								// lackedTypes要过滤掉与removedTiles有牌型重复的
-								List<List<List<TileType>>> allLackedTypes = preUnits.stream()
-										.map(PreUnit::lackedTypeList)
-										// 非完整
-										.filter(lackedTypesList -> !lackedTypesList.isEmpty())
-										// 过滤掉与removedTiles有牌型重复的
-										.map(lackedTypesList -> lackedTypesList.stream()
-												.filter(lackedTypes -> lackedTypes.stream()
-														.noneMatch(removedTypeSet::contains))
-												.collect(Collectors.toList()))
-										.collect(Collectors.toList());
-								return selectStream(allLackedTypes).map(
-										select -> select.stream().flatMap(List::stream).collect(Collectors.toList()))
-										.map(lackedTypes -> {
-											List<Tile> added;
-											try {
-												added = getTileFromCandidates(lackedTypes, candidatesByType);
-											} catch (NoSuchElementException e) {
-												return null;
-											}
-											// 生成ChangingForWin
-											return new ChangingForWin(removed, new HashSet<>(added));
-										}).filter(Objects::nonNull);
-							}).filter(Objects::nonNull);
-					return changings;
-				}).distinct()
-				// 按removedTiles个数归类
+		List<ChangingForWin> changings = new ArrayList<>();
+
+		// 生成第一部分：在preShunkes里按照牌数从大到小，依次取尽量多个，一共最多(aliveTiles.size()/3)个
+		int shunkeCount = aliveTiles.size() / 3;
+		preShunkesStreamGreedy(preShunkes, shunkeCount).flatMap(shunkes -> {
+			// 对于每种顺刻组合，在剩余牌中选择可能的将牌（选择完整将牌，如果没有完整的就选择不完整的）
+			Set<Tile> shunkeTiles = shunkes.stream().map(PreUnit::tiles).flatMap(List::stream)
+					.collect(Collectors.toSet());
+			List<PreUnit> legalJiangs = fullJiangs.stream().filter(jiang -> disjoint(jiang.tiles, shunkeTiles))
+					.peek(unusedFullJiangs::remove) // 在没用过的完整将牌里删除
+					.collect(Collectors.toList());
+			if (legalJiangs.isEmpty())
+				legalJiangs = halfJiangs.stream().filter(jiang -> disjoint(jiang.tiles, shunkeTiles))
+						.collect(Collectors.toList());
+			// 把每种可能的将牌加在组合中，组成一种选择，生成若干个changing
+			return legalJiangs.stream().map(jiang -> merged(ArrayList<PreUnit>::new, shunkes, jiang))
+					.flatMap(preUnits -> genChangingsBySelectedUnits(preUnits, aliveTiles, candidatesByType));
+		}).forEach(changings::add);
+
+		// 生成第二部分：对于每一个没用过的完整将牌，先选择它，再从剩余牌中选择顺刻，组成changings
+		unusedFullJiangs.stream().flatMap(jiang -> {
+			List<PreUnit> legalShunkes = preShunkes.stream().filter(shunke -> disjoint(shunke.tiles, jiang.tiles))
+					.collect(Collectors.toList());
+			return preShunkesStreamGreedy(legalShunkes, shunkeCount).peek(shunkes -> shunkes.add(jiang))
+					.flatMap(preUnits -> genChangingsBySelectedUnits(preUnits, aliveTiles, candidatesByType));
+		}).forEach(changings::add);
+
+		// 把两部分changings合起来，按removedTiles个数归类
+		Map<Integer, List<ChangingForWin>> result = changings.stream()
 				.collect(Collectors.groupingBy(c -> c.removedTiles.size()));
 		return result;
 	}
@@ -620,6 +613,83 @@ public class NormalWinType extends AbstractWinType {
 			});
 		}
 		return result;
+	}
+
+	private Stream<List<PreUnit>> preShunkesStreamGreedy(List<PreUnit> preShunkes, int forCount) {
+		if (forCount == 0)
+			return Stream.of(new ArrayList<>());
+
+		Stream<List<PreUnit>> result;
+
+		Map<Integer, List<PreUnit>> preShunkesBySize = preShunkes.stream()
+				.collect(Collectors.groupingBy(preUnit -> preUnit.tiles.size()));
+		BiPredicate<PreUnit, PreUnit> combCondition = (preUnit1, preUnit2) -> disjoint(preUnit1.tiles, preUnit2.tiles);
+
+		// 在3张牌（完整）的顺刻中尽量选择，最多forCount个
+		List<PreUnit> shunkes3 = preShunkesBySize.getOrDefault(3, emptyList());
+		result = combStreamGreedy(shunkes3, ArrayList<PreUnit>::new, combCondition, 3);
+
+		// 如果不够，在2张牌的顺刻中尽量选择，合起来最多forCount个
+		List<PreUnit> shunkes2 = preShunkesBySize.get(2);
+		if (shunkes2 != null)
+			result = result.flatMap(shunkes -> {
+				if (shunkes.size() == forCount)
+					return Stream.of(shunkes);
+
+				Set<Tile> selectedTiles = shunkes.stream().flatMap(shunke -> shunke.tiles.stream())
+						.collect(Collectors.toSet());
+				List<PreUnit> legalShunkes2 = shunkes2.stream().filter(shunke -> disjoint(selectedTiles, shunke.tiles))
+						.collect(Collectors.toList());
+				return combStreamGreedy(legalShunkes2, ArrayList<PreUnit>::new, combCondition,
+						forCount - shunkes.size()).peek(newShunkes -> newShunkes.addAll(shunkes));
+			});
+
+		// 如果还不够，在1张牌的顺刻中补足剩余数量
+		List<PreUnit> shunkes1 = preShunkesBySize.getOrDefault(1, emptyList());
+		result = result.flatMap(shunkes -> {
+			if (shunkes.size() == forCount)
+				return Stream.of(shunkes);
+
+			Set<Tile> selectedTiles = shunkes.stream().flatMap(shunke -> shunke.tiles.stream())
+					.collect(Collectors.toSet());
+			List<PreUnit> legalShunkes1 = shunkes2.stream().filter(shunke -> disjoint(selectedTiles, shunke.tiles))
+					.collect(Collectors.toList());
+			return combStream(legalShunkes1, forCount - shunkes.size(), ArrayList<PreUnit>::new, null, combCondition)
+					.peek(newShunkes -> newShunkes.addAll(shunkes));
+		});
+
+		return result;
+	}
+
+	private Stream<ChangingForWin> genChangingsBySelectedUnits(List<PreUnit> preUnits, List<Tile> aliveTiles,
+			Map<TileType, List<Tile>> candidatesByType) {
+		Set<Tile> removed = new HashSet<>(aliveTiles);
+		preUnits.stream().map(PreUnit::tiles).forEach(removed::removeAll);
+
+		Set<TileType> removedTypeSet = removed.stream().map(Tile::type).collect(Collectors.toSet());
+
+		// 从每个非完整的preUnits中选择任意一个lackedTypes，合并成总共的lackedTypes
+		// lackedTypes要过滤掉与removedTiles有牌型重复的
+		// []每个preUnit[]一个preUnit的每种lackedTypes[]一种lackedTypes的每个TileType
+		List<List<List<TileType>>> allLackedTypes = preUnits.stream().map(PreUnit::lackedTypeList)
+				// 非完整
+				.filter(lackedTypesList -> !lackedTypesList.isEmpty())
+				// 过滤掉与removedTiles有牌型重复的
+				.map(lackedTypesList -> lackedTypesList.stream()
+						.filter(lackedTypes -> lackedTypes.stream().noneMatch(removedTypeSet::contains))
+						.collect(Collectors.toList()))
+				.collect(Collectors.toList());
+		return selectStream(allLackedTypes)
+				.map(select -> select.stream().flatMap(List::stream).collect(Collectors.toList())).map(lackedTypes -> {
+					List<Tile> added;
+					try {
+						added = getTileFromCandidates(lackedTypes, candidatesByType);
+					} catch (NoSuchElementException e) {
+						return null;
+					}
+					// 生成ChangingForWin
+					return new ChangingForWin(removed, new HashSet<>(added));
+				}).filter(Objects::nonNull);
 	}
 
 	/**

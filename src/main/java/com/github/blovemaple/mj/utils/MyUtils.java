@@ -123,7 +123,7 @@ public class MyUtils {
 	public static <E, C extends Collection<E>> Stream<C> combStreamGreedy(Collection<E> coll,
 			Function<Collection<E>, C> combCollFactory, BiPredicate<E, E> condition, int limit) {
 		if (coll.isEmpty())
-			return Stream.empty();
+			return Stream.of(combCollFactory.apply(Collections.emptyList()));
 
 		List<E> list = (coll instanceof List) ? (List<E>) coll : new ArrayList<>(coll);
 
@@ -167,6 +167,7 @@ public class MyUtils {
 		if (limit >= coll.size())
 			return noLimitStream;
 
+		// XXX - 带limit的逻辑要优化
 		Stream<C> lessStream = noLimitStream.filter(c -> c.size() < limit);
 		Stream<C> limitStream = combStream(coll, limit, combCollFactory, null, condition);
 
@@ -297,7 +298,7 @@ public class MyUtils {
 	 * 将指定的一个集合中的元素减去指定元素产生一个新的集合并返回。
 	 */
 	@SafeVarargs
-	public static <E, C extends Collection<E>> C newRemainColl(Function<Collection<E>, C> newCollConstructor,
+	public static <E, C extends Collection<E>> C remainColl(Function<Collection<E>, C> newCollConstructor,
 			Collection<E> collection, E... removedElement) {
 		C newColl = newCollConstructor.apply(collection);
 		newColl.removeAll(Arrays.asList(removedElement));
@@ -307,7 +308,7 @@ public class MyUtils {
 	/**
 	 * 将指定的一个集合中的元素减去指定元素产生一个新的集合并返回。
 	 */
-	public static <E, C extends Collection<E>> C newRemainColl(Function<Collection<E>, C> newCollConstructor,
+	public static <E, C extends Collection<E>> C remainColl(Function<Collection<E>, C> newCollConstructor,
 			Collection<E> collection, Collection<E> removedElement) {
 		C newColl = newCollConstructor.apply(collection);
 		newColl.removeAll(removedElement);
