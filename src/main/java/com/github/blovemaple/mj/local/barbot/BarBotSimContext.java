@@ -1,5 +1,6 @@
 package com.github.blovemaple.mj.local.barbot;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.github.blovemaple.mj.action.Action;
@@ -11,6 +12,7 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
+import com.github.blovemaple.mj.utils.MyUtils;
 
 /**
  * 模拟选择时执行动作使用的GameContext。因为是机器人任务使用，所以只能从GameContext.PlayerView构建，
@@ -20,13 +22,13 @@ import com.github.blovemaple.mj.rule.TimeLimitStrategy;
  */
 public class BarBotSimContext extends GameContext {
 	private GameContext.PlayerView contextView;
+	private ActionAndLocation lastAction;
 	private PlayerInfo myInfo;
 
-	public BarBotSimContext(GameContext.PlayerView contextView,
-			PlayerInfo myInfo) {
-		super(null, contextView.getGameStrategy(),
-				contextView.getTimeLimitStrategy());
+	public BarBotSimContext(GameContext.PlayerView contextView, ActionAndLocation lastAction, PlayerInfo myInfo) {
+		super(null, contextView.getGameStrategy(), contextView.getTimeLimitStrategy());
 		this.contextView = contextView;
+		this.lastAction = lastAction;
 		this.myInfo = myInfo;
 	}
 
@@ -70,22 +72,40 @@ public class BarBotSimContext extends GameContext {
 
 	@Override
 	public ActionAndLocation getLastActionAndLocation() {
-		return contextView.getLastActionAndLocation();
+		if (lastAction == null)
+			return contextView.getLastActionAndLocation();
+		else
+			return lastAction;
 	}
 
 	@Override
 	public Action getLastAction() {
-		return contextView.getLastAction();
+		if (lastAction == null)
+			return contextView.getLastAction();
+		else
+			return lastAction.getAction();
 	}
 
 	@Override
 	public PlayerLocation getLastActionLocation() {
-		return contextView.getLastActionLocation();
+		if (lastAction == null)
+			return contextView.getLastActionLocation();
+		else
+			return lastAction.getLocation();
 	}
+
+	private List<ActionAndLocation> doneActions;
 
 	@Override
 	public List<ActionAndLocation> getDoneActions() {
-		return contextView.getDoneActions();
+		if (doneActions == null) {
+			if (lastAction == null)
+				doneActions = contextView.getDoneActions();
+			else
+				doneActions = MyUtils.merged(ArrayList<ActionAndLocation>::new, contextView.getDoneActions(),
+						lastAction);
+		}
+		return doneActions;
 	}
 
 	@Override
@@ -106,7 +126,7 @@ public class BarBotSimContext extends GameContext {
 	@Override
 	public PlayerView getPlayerView(PlayerLocation location) {
 		if (location == contextView.getMyLocation())
-			return contextView;
+			return new PlayerView(location);
 		else
 			throw new UnsupportedOperationException();
 	}
@@ -114,6 +134,12 @@ public class BarBotSimContext extends GameContext {
 	@Override
 	protected PlayerView newPlayerView(PlayerLocation location) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String toString() {
+		return "[last action=" + getLastActionAndLocation() + ", alive tiles=" + myInfo.getAliveTiles()
+				+ "]";
 	}
 
 }

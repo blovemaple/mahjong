@@ -136,7 +136,7 @@ public class GameContext {
 
 		private final PlayerLocation myLocation;
 
-		protected PlayerView(PlayerLocation myLocation) {
+		public PlayerView(PlayerLocation myLocation) {
 			this.myLocation = myLocation;
 		}
 

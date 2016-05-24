@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 /**
@@ -161,21 +162,22 @@ public class MyUtils {
 			}
 		});
 
+		// XXX - 带limit的逻辑要优化
+
 		// 进入递归方法，得出没有组合内元素个数限制的流
-		Stream<C> noLimitStream = combStreamGreedy0(list, combCollFactory, new HashSet<>(), conflictsMap, checkPoints);
+		Stream<C> lessGreedyStream = combStreamGreedy0(list, limit - 1, combCollFactory, new HashSet<>(), conflictsMap,
+				checkPoints);
 
 		if (limit >= coll.size())
-			return noLimitStream;
+			return lessGreedyStream;
 
-		// XXX - 带limit的逻辑要优化
-		Stream<C> lessStream = noLimitStream.filter(c -> c.size() < limit);
 		Stream<C> limitStream = combStream(coll, limit, combCollFactory, null, condition);
-
-		return Stream.concat(lessStream, limitStream);
+		return Stream.concat(lessGreedyStream, limitStream);
 	}
 
 	/**
 	 * @param coll
+	 * @param limit
 	 * @param combCollFactory
 	 * @param selected
 	 *            当前递归分支的已选元素
@@ -187,9 +189,11 @@ public class MyUtils {
 	 *            递归到B处时，如果A和其冲突元素都未选，则必须选B
 	 * @return
 	 */
-	private static <E, C extends Collection<E>> Stream<C> combStreamGreedy0(List<E> coll,
+	private static <E, C extends Collection<E>> Stream<C> combStreamGreedy0(List<E> coll, int limit,
 			Function<Collection<E>, C> combCollFactory, Set<E> selected, Map<E, Set<E>> conflictsMap,
 			Map<E, List<E>> checkPoints) {
+		if (limit <= 0)
+			return Stream.empty();
 		if (coll.isEmpty())
 			return Stream.of(combCollFactory.apply(Collections.emptyList()));
 
@@ -197,12 +201,13 @@ public class MyUtils {
 		Set<E> conflicts = conflictsMap.get(crtElement);
 		List<E> remains = coll.subList(1, coll.size());
 
-		// 满足以下条件时，当前元素要选：
-		// 如果没有冲突元素，或者已选元素不存在与当前元素冲突的元素
+		// 同时满足以下条件时，当前元素要选：
+		// 1. 已选元素数不足limit
+		// 2. 没有冲突元素，或者已选元素不存在与当前元素冲突的元素
 		Stream<C> selectCrtStream = null;
-		if (conflicts == null || Collections.disjoint(selected, conflicts)) {
+		if (selected.size() < limit && (conflicts == null || Collections.disjoint(selected, conflicts))) {
 			Set<E> newSelected = mergedSet(selected, crtElement);
-			selectCrtStream = combStreamGreedy0(remains, combCollFactory, newSelected, conflictsMap, checkPoints)
+			selectCrtStream = combStreamGreedy0(remains, limit, combCollFactory, newSelected, conflictsMap, checkPoints)
 					.peek(comb -> comb.add(crtElement));
 		}
 
@@ -232,7 +237,8 @@ public class MyUtils {
 				shouldSelectNot = false;
 		}
 		if (shouldSelectNot)
-			notSelectCrtStream = combStreamGreedy0(remains, combCollFactory, selected, conflictsMap, checkPoints);
+			notSelectCrtStream = combStreamGreedy0(remains, limit, combCollFactory, selected, conflictsMap,
+					checkPoints);
 
 		if (selectCrtStream == null && notSelectCrtStream == null)
 			return Stream.empty();
@@ -388,6 +394,13 @@ public class MyUtils {
 		StringBuilder newStr = new StringBuilder(str);
 		IntStream.range(0, width - strWidth).forEach(i -> newStr.append(' '));
 		return newStr.toString();
+	}
+
+	public static long combCount(long total, int select) {
+		long totalP = LongStream.rangeClosed(total - select + 1, total).reduce(Math::multiplyExact).getAsLong();
+		long selectP = 1;// LongStream.rangeClosed(1,
+							// select).reduce(Math::multiplyExact).getAsLong();
+		return totalP / selectP;
 	}
 
 	public static void testTime(String name, Runnable runnable) {

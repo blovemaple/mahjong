@@ -4,6 +4,7 @@ import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -75,6 +76,9 @@ public class BarBot implements Player {
 			Set<ActionType> actionTypes) throws InterruptedException {
 		if (selectFuture != null && !selectFuture.isDone())
 			throw new IllegalStateException("Another select task is active.");
+
+		if (Collections.disjoint(actionTypes, BarBotCpgdSelectTask.ACTION_TYPES))
+			return null;
 
 		Future<Action> futureResult = ForkJoinPool.commonPool()
 				.submit(new BarBotCpgdSelectTask(contextView, actionTypes));

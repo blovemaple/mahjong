@@ -1,10 +1,13 @@
 package com.github.blovemaple.mj.local.barbot;
 
+import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.object.TileGroupType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
+import static java.util.Comparator.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,16 +16,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.cli.CliGameView;
 import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
@@ -38,10 +41,11 @@ import com.github.blovemaple.mj.rule.WinType;
 public class BarBotCpgdSelectTask implements Callable<Action> {
 	private static final Logger logger = Logger.getLogger(BarBotCpgdSelectTask.class.getSimpleName());
 
-	private static final Set<ActionType> ACTION_TYPES = new HashSet<>(
+	public static final Set<ActionType> ACTION_TYPES = new HashSet<>(
 			Arrays.asList(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD, DISCARD_WITH_TING));
 	private static final int EXTRA_CHANGE_COUNT = 2;
-	private static final int MAX_CHANGE_COUNT = 4;
+	private static final int EXTENDED_MAX_CHANGE_COUNT = 4;
+	private static final int MAX_CHANGE_COUNT = 5;
 
 	private PlayerView contextView;
 	private Set<ActionType> actionTypes;
@@ -54,11 +58,17 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		this.contextView = contextView;
 		this.actionTypes = actionTypes;
 		this.playerInfo = contextView.getMyInfo();
+
+		StringBuilder aliveTilesStr = new StringBuilder();
+		CliGameView.appendAliveTiles(aliveTilesStr, playerInfo.getAliveTiles(), playerInfo.getLastDrawedTile(), null);
+		logger.info("Select task created: " + contextView.getMyLocation() + " " + actionTypes + " " + aliveTilesStr);
 	}
 
 	@Override
 	// TODO interrupt
 	public Action call() throws Exception {
+		long startTime = System.currentTimeMillis();
+
 		// 生成所有可选动作（包括不做动作）后的状态
 		List<BarBotCpgdChoice> choices = allChoices();
 		if (choices.isEmpty())
@@ -77,67 +87,37 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 				break;
 			if (changeCount > MAX_CHANGE_COUNT)
 				break;
+			if (minChangeCount.get() >= 0 && changeCount > EXTENDED_MAX_CHANGE_COUNT)
+				break;
 			if (minChangeCount.get() >= 0 && changeCount - minChangeCount.get() > EXTRA_CHANGE_COUNT)
 				break;
-			long startTime = System.currentTimeMillis();
-			System.out.println("start " + changeCount);
 			int crtChangeCount = changeCount;
-			choices.parallelStream().map(choice -> choice.testWinProb(crtChangeCount))
+			choices.parallelStream().map(rethrowFunction(choice -> choice.testWinProb(crtChangeCount)))
 					.filter(result -> result == Boolean.TRUE)
 					.forEach(win -> minChangeCount.compareAndSet(-1, crtChangeCount));
-			System.out.println("end   " + changeCount + " " + (System.currentTimeMillis() - startTime));
 		}
-
-		logger.info("Finished changes: " + (changeCount - 1));
 
 		// 返回和牌概率最大的一个动作
 		Action bestAction = choices.stream()
 				.peek(choice -> logger.info(String.format("%.5f %s", choice.getFinalWinProb(), choice.getAction())))
-				.peek(choice -> {
-					choice.getWinProbByChangeCount().forEach((cc, prob) -> {
-						System.out.println("action " + choice.getAction() + " change " + cc + " prob " + prob);
-					});
-				})
-				// .peek(choice->{
-				// choice.getWinChangingByChangeCount().values().stream().flatMap(List::stream)
-				// .forEach(System.out::println);
-				// })
-				// 选和牌概率最大的一个，和牌概率相同者，听牌优先
-				.max(Comparator.comparing(BarBotCpgdChoice::getFinalWinProb)
-						.thenComparing(choice -> choice.getPlayerInfo().isTing()))
+				// 第一条件：和牌概率大
+				.max(comparing(BarBotCpgdChoice::getFinalWinProb)
+						// 第二条件：听牌优先
+						.thenComparing(choice -> choice.getPlayerInfo().isTing())
+						// 第三条件：杠优先（因为杠了之后可以多摸一张牌）
+						.thenComparing(choice -> choice.getAction() != null && Arrays.asList(ZHIGANG, BUGANG, ANGANG)
+								.stream().anyMatch(gang -> gang.matchBy(choice.getAction().getType())))
+						// 第四条件：前面的优先（优先级高）
+						.thenComparing(comparing(choices::indexOf).reversed()))
 				// 返回其动作
-				.map(BarBotCpgdChoice::getAction)
-				// （不可能选不出来）
-				.orElseThrow(RuntimeException::new);
+				.map(BarBotCpgdChoice::getAction).orElse(null);
+
+		StringBuilder aliveTilesStr = new StringBuilder();
+		CliGameView.appendAliveTiles(aliveTilesStr, playerInfo.getAliveTiles(), playerInfo.getLastDrawedTile(), null);
+		logger.info("Bot alivetiles " + aliveTilesStr);
+		logger.info("Bot Choose action " + bestAction);
+		logger.info("Bot time " + (System.currentTimeMillis() - startTime));
 		return bestAction;
-	}
-
-	public static void main(String[] args) throws InterruptedException {
-		Thread thread = new Thread() {
-			@Override
-			public void run() {
-				System.out.println("Thread start");
-				IntStream.of(1, 2).parallel().forEach(i -> {
-					try {
-						System.out.println("start: " + i);
-						IntStream.generate(() -> 1).sum();
-						System.out.println("over: " + i);
-					} catch (Exception e) {
-						System.out.println("interrupted: " + i);
-						e.printStackTrace();
-					}
-				});
-				System.out.println("Thread end");
-			}
-		};
-		thread.start();
-
-		TimeUnit.SECONDS.sleep(1);
-		thread.interrupt();
-		TimeUnit.SECONDS.sleep(1);
-		thread.interrupt();
-		System.out.println("main: interrupted");
-		thread.join();
 	}
 
 	private List<BarBotCpgdChoice> allChoices() {
@@ -152,8 +132,15 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 						.stream().collect(Collectors.toMap(Function.identity(),
 								winType -> winType.getDiscardCandidates(playerInfo.getAliveTiles(), remainTiles())));
 				Set<Tile> legalTiles = legalTileSets.flatMap(Set::stream).collect(Collectors.toSet());
+				Map<Tile, Double> tilesAndPriv = discardsByWinType.values().stream().flatMap(List::stream).distinct()
+						.filter(legalTiles::contains).collect(
+								Collectors.toMap(Function.identity(),
+										tile -> discardsByWinType.values().stream().map(list -> list.indexOf(tile))
+												.mapToInt(index -> index >= 0 ? index
+														: playerInfo.getAliveTiles().size() - 1)
+												.average().getAsDouble()));
 				return discardsByWinType.values().stream().flatMap(List::stream).distinct().filter(legalTiles::contains)
-						.map(tile -> {
+						.sorted(Comparator.comparing(tilesAndPriv::get)).map(tile -> {
 							Set<WinType> winTypes = discardsByWinType.entrySet().stream()
 									.filter(entry -> entry.getValue().contains(tile)).map(Map.Entry::getKey)
 									.collect(Collectors.toSet());
@@ -207,6 +194,29 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 
 	public int remainTileCount() {
 		return remainTiles().size();
+	}
+
+	private Map<Integer, Double> probCache = new HashMap<>();
+
+	/**
+	 * 计算addedTiles出现的可能性。<br>
+	 * addedTiles出现的可能性=(在剩余牌中选到addedTiles的组合数)/(在剩余牌中选addedTiles个牌的组合数)
+	 */
+	public double getProb(Collection<Tile> addedTiles) {
+		int hash = addedTiles.stream().mapToInt(Tile::hashCode).sum();
+		Double prob = probCache.get(hash);
+		if (prob == null) {
+			Map<TileType, List<Tile>> addedByType = addedTiles.stream().collect(Collectors.groupingBy(Tile::type));
+			Map<TileType, Long> remainTiles = remainTileCountByType();
+
+			AtomicLong addedComb = new AtomicLong(1);
+			addedByType.forEach((type, added) -> addedComb
+					.getAndAccumulate(combCount(remainTiles.get(type), added.size()), Math::multiplyExact));
+
+			prob = (double) addedComb.get() / combCount(remainTileCount(), addedTiles.size());
+			probCache.put(hash, prob);
+		}
+		return prob;
 	}
 
 	/**

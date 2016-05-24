@@ -196,7 +196,8 @@ public class CliGameView {
 				contextView.getJustDrawedTile(), focusedAliveTiles);
 	}
 
-	private static void appendAliveTiles(StringBuilder str,
+	// public，当工具用
+	public static void appendAliveTiles(StringBuilder str,
 			Set<Tile> aliveTiles, Tile justDrawed,
 			Set<Tile> focusedAliveTiles) {
 		// [空格]1 8 W [4 5]T 3[5]O DO NA

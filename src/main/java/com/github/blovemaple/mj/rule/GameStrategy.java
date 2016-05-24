@@ -1,6 +1,5 @@
 package com.github.blovemaple.mj.rule;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -103,13 +102,10 @@ public interface GameStrategy {
 	/**
 	 * 检查和牌的所有番种和番数。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
 	 * 否则利用playerInfo中的aliveTiles做出判断。<br>
-	 * 默认实现为先判断和牌，然后使用此策略支持的所有番种和番数进行统计。
+	 * 默认实现为使用此策略支持的所有番种和番数进行统计。
 	 */
 	public default Map<FanType, Integer> getFans(PlayerInfo playerInfo,
 			Set<Tile> aliveTiles) {
-		if (!canWin(playerInfo, aliveTiles))
-			return Collections.emptyMap();
-
 		// 在所有番种中过滤出所有符合的番种
 		Set<FanType> fanTypes = getAllFanTypes().keySet().stream()
 				.filter(fanType -> fanType.match(playerInfo, null))

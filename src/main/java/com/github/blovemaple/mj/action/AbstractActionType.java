@@ -140,9 +140,8 @@ public abstract class AbstractActionType implements ActionType {
 	@Override
 	public void doAction(GameContext context, PlayerLocation location,
 			Action action) throws IllegalActionException {
-		if (!isLegalAction(context, location, action)) {
-			throw new IllegalActionException();
-		}
+		if (!isLegalAction(context, location, action))
+			throw new IllegalActionException(context, location, action);
 
 		doLegalAction(context, location, action.getTiles());
 	}
@@ -194,9 +193,9 @@ public abstract class AbstractActionType implements ActionType {
 			return false;
 		}
 
-		Set<Tile> ligalTilesRange = getActionTilesRange(context, location);
-		if (tiles != null && ligalTilesRange != null
-				&& !ligalTilesRange.containsAll(tiles)) {
+		Set<Tile> legalTilesRange = getActionTilesRange(context, location);
+		if (tiles != null && legalTilesRange != null
+				&& !legalTilesRange.containsAll(tiles)) {
 			return false;
 		}
 

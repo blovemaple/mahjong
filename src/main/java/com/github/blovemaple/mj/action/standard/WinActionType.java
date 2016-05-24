@@ -68,8 +68,9 @@ public class WinActionType extends AbstractActionType {
 		}
 
 		// 算番
-		result.setFans(context.getGameStrategy()
-				.getFans(context.getPlayerInfoByLocation(location), null));
+		PlayerInfo playerInfo = context.getPlayerInfoByLocation(location);
+		result.setFans(context.getGameStrategy().getFans(playerInfo,
+				mergedSet(playerInfo.getAliveTiles(), result.getWinTile())));
 
 		context.setGameResult(result);
 	}

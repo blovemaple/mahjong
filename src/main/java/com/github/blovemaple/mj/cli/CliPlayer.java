@@ -77,7 +77,7 @@ public class CliPlayer implements Player {
 		}
 
 		// 如果可以吃/碰/杠/和，则提供选择
-		boolean canWin = !WIN.getLegalActionTiles(contextView).isEmpty();
+		boolean canWin = actionTypes.stream().anyMatch(WIN::matchBy);
 		Action action = chooseAction(contextView, actionTypes, canWin, true,
 				CHI, PENG, ZHIGANG, BUGANG, ANGANG);
 		if (action != null)
@@ -91,7 +91,7 @@ public class CliPlayer implements Player {
 
 		// 如果可以摸牌，则自动摸牌
 		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
-			if (!drawType.getLegalActionTiles(contextView).isEmpty())
+			if (actionTypes.contains(drawType))
 				return new Action(drawType);
 
 		// 啥都没做，放弃了
@@ -112,7 +112,6 @@ public class CliPlayer implements Player {
 			throws InterruptedException {
 		Arrays.asList(chooseActionTypes).stream()
 				.filter(legalActionTypes::contains).forEach(actionType -> {
-
 					actionType.getLegalActionTiles(contextView)
 							.forEach(tiles -> {
 								List<ActionType> types = actionChoices
@@ -162,14 +161,16 @@ public class CliPlayer implements Player {
 		viewFocusAndOptions();
 
 		choseAction = null;
-		view.getCliView().addCharHandler(choosingHandler, true);
-
-		actionChoices.clear();
-		actionTilesChoices.clear();
-		focusedChoice = null;
-		this.canChooseWin = false;
-		this.canPass = false;
-		viewFocusAndOptions();
+		try {
+			view.getCliView().addCharHandler(choosingHandler, true);
+		} finally {
+			actionChoices.clear();
+			actionTilesChoices.clear();
+			focusedChoice = null;
+			this.canChooseWin = false;
+			this.canPass = false;
+			viewFocusAndOptions();
+		}
 
 		return choseAction;
 	}
