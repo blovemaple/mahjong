@@ -250,10 +250,7 @@ public class MyUtils {
 	}
 
 	/**
-	 * TODO
-	 * 
-	 * @param colls
-	 * @return
+	 * 从指定的若干的集合中，每个集合取任意一个元素组成列表，返回包含所有可能的列表的流。
 	 */
 	public static <E> Stream<List<E>> selectStream(List<? extends Collection<E>> colls) {
 		if (colls.isEmpty())

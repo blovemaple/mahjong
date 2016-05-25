@@ -27,19 +27,20 @@ public interface WinType {
 	 * @return 是否可以和牌
 	 */
 	public default boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
-		return parseWinTileUnits(playerInfo, aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles()).findAny()
-				.isPresent();
+		Set<Tile> realAliveTiles = aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles();
+		return parseWinTileUnits(playerInfo, realAliveTiles).findAny().isPresent();
 	}
 
 	/**
-	 * 全部解析成可以和牌的完整的TileUnit集合的流，失败返回空集合。
+	 * 全部解析成可以和牌的完整的TileUnit集合的流，失败返回空流。
 	 * 
-	 * @param aliveTiles
-	 * @param anyOne
-	 *            true表示最多只解析一种可能的集合，用于快速判断是否可解析
+	 * @param playerInfo
+	 *            除手牌之外的信息
+	 * @param realAliveTiles
+	 *            手牌
 	 * @return 完整的TileUnit集合的流
 	 */
-	public Stream<Set<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Set<Tile> aliveTiles);
+	public Stream<Set<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Set<Tile> readAliveTiles);
 
 	/**
 	 * 返回建议打出的牌，即从手牌中排除掉明显不应该打出的牌并返回。返回的列表按建议的优先级从高到低排列。

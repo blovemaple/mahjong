@@ -22,8 +22,7 @@ public class SimpleGameStrategy extends AbstractGameStrategy {
 		return PlayerLocation.EAST;
 	}
 
-	private static final Set<WinType> WIN_TYPES = Collections
-			.singleton(new NormalWinType());
+	private static final Set<WinType> WIN_TYPES = Collections.singleton(NormalWinType.get());
 
 	@Override
 	public Set<WinType> getAllWinTypes() {

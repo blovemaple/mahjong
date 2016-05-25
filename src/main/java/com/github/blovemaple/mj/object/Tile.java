@@ -19,7 +19,7 @@ public class Tile implements Serializable {
 		// 初始化所有牌
 		Set<Tile> allTiles = TileType.all().stream()
 				.flatMap(type -> IntStream
-						.range(0, type.getSuit().getTileCountByType())
+						.range(0, type.suit().getTileCountByType())
 						.mapToObj(id -> new Tile(type, id)))
 				.collect(Collectors.toSet());
 		all = Collections.unmodifiableSet(allTiles);

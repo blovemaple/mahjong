@@ -18,7 +18,7 @@ import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.simple.NormalWinType;
 
 public class NormalWinTypeTest {
-	private NormalWinType winType = new NormalWinType();
+	private NormalWinType winType = NormalWinType.get();
 	private PlayerInfo selfInfo;
 	private Collection<Tile> candidates;
 

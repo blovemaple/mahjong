@@ -42,15 +42,15 @@ public enum StandardTileUnitType implements TileUnitType {
 		@Override
 		protected boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles) {
 			// rank类型非NumberRank的，非法
-			if (tiles.iterator().next().type().getSuit().getRankClass() != NumberRank.class)
+			if (tiles.iterator().next().type().suit().getRankClass() != NumberRank.class)
 				return false;
 
 			// 花色有多种的，非法
-			if (tiles.stream().map(tile -> tile.type().getSuit()).distinct().count() > 1)
+			if (tiles.stream().map(tile -> tile.type().suit()).distinct().count() > 1)
 				return false;
 
 			// rank不连续的，非法
-			int[] numbers = tiles.stream().mapToInt(tile -> ((NumberRank) tile.type().getRank()).number()).sorted()
+			int[] numbers = tiles.stream().mapToInt(tile -> ((NumberRank) tile.type().rank()).number()).sorted()
 					.toArray();
 			int crtNumber = 0;
 			for (int number : numbers) {
@@ -68,12 +68,12 @@ public enum StandardTileUnitType implements TileUnitType {
 			if (tiles.size() == 1) {
 				Tile tile = tiles instanceof List ? ((List<Tile>) tiles).get(0) : tiles.iterator().next();
 				// rank类型非NumberRank的，非法
-				if (tile.type().getSuit().getRankClass() != NumberRank.class)
+				if (tile.type().suit().getRankClass() != NumberRank.class)
 					return emptyList();
 
 				List<List<TileType>> result = new ArrayList<>();
-				TileSuit suit = tile.type().getSuit();
-				int number = ((NumberRank) tile.type().getRank()).number();
+				TileSuit suit = tile.type().suit();
+				int number = ((NumberRank) tile.type().rank()).number();
 				if (number >= 3)
 					result.add(Arrays.asList(of(suit, ofNumber(number - 2)), of(suit, ofNumber(number - 1))));
 				if (number >= 2 && number <= 8)
@@ -84,18 +84,18 @@ public enum StandardTileUnitType implements TileUnitType {
 
 			} else if (tiles.size() == 2) {
 				// rank类型非NumberRank的，非法
-				if (tiles.iterator().next().type().getSuit().getRankClass() != NumberRank.class)
+				if (tiles.iterator().next().type().suit().getRankClass() != NumberRank.class)
 					return emptyList();
 
 				// 花色有多种的，非法
-				if (tiles.stream().map(tile -> tile.type().getSuit()).distinct().count() > 1)
+				if (tiles.stream().map(tile -> tile.type().suit()).distinct().count() > 1)
 					return emptyList();
 
 				List<List<TileType>> result = new ArrayList<>();
-				TileSuit suit = tiles.iterator().next().type().getSuit();
+				TileSuit suit = tiles.iterator().next().type().suit();
 				Iterator<Tile> tileItr = tiles.iterator();
-				int number1 = ((NumberRank) tileItr.next().type().getRank()).number();
-				int number2 = ((NumberRank) tileItr.next().type().getRank()).number();
+				int number1 = ((NumberRank) tileItr.next().type().rank()).number();
+				int number2 = ((NumberRank) tileItr.next().type().rank()).number();
 				int distance = Math.abs(number2 - number1);
 				// number差距不是1或2的，非法
 				if (distance < 1 || distance > 2)
@@ -167,7 +167,7 @@ public enum StandardTileUnitType implements TileUnitType {
 	HUA_UNIT(1) {
 		@Override
 		protected boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles) {
-			return tiles.stream().allMatch(tile -> tile.type().getSuit() == HUA);
+			return tiles.stream().allMatch(tile -> tile.type().suit() == HUA);
 		}
 
 		@Override

@@ -31,8 +31,8 @@ public class TileType implements Serializable {
 						.flatMap(suit -> suit.getAllRanks().stream().map(rank -> new TileType(suit, rank)))
 						.collect(Collectors.toSet()));
 		map = all.stream().collect( //
-				Collectors.groupingBy(TileType::getSuit, //
-						Collectors.groupingBy(TileType::getRank, //
+				Collectors.groupingBy(TileType::suit, //
+						Collectors.groupingBy(TileType::rank, //
 								Collectors.collectingAndThen(Collectors.toList(), list -> list.get(0)))));
 	}
 
@@ -61,14 +61,14 @@ public class TileType implements Serializable {
 	/**
 	 * 返回花色。
 	 */
-	public TileSuit getSuit() {
+	public TileSuit suit() {
 		return suit;
 	}
 
 	/**
 	 * 返回种类。
 	 */
-	public TileRank<?> getRank() {
+	public TileRank<?> rank() {
 		return rank;
 	}
 
