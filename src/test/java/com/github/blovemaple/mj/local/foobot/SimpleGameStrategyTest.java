@@ -12,7 +12,6 @@ import org.junit.Test;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileType;
-import com.github.blovemaple.mj.rule.simple.NormalWinType;
 import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 
 public class SimpleGameStrategyTest {

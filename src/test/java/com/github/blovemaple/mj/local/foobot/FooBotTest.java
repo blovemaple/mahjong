@@ -3,7 +3,6 @@ package com.github.blovemaple.mj.local.foobot;
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.object.PlayerLocation.*;
 import static com.github.blovemaple.mj.object.TileRank.NumberRank.*;
-import static com.github.blovemaple.mj.object.TileRank.ZiRank.*;
 import static com.github.blovemaple.mj.object.TileSuit.*;
 
 import java.util.HashSet;
