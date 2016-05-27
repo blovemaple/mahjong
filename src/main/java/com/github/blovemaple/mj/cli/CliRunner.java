@@ -45,7 +45,7 @@ public class CliRunner {
 
 	public CliRunner() throws IOException, InterruptedException {
 		cliView = new CliView(System.out, System.in);
-		myName = System.getProperty("user.name", "Player");
+		myName = "Player"; // TODO System.getProperty("user.name", "Player");
 	}
 
 	public void run() throws InterruptedException {
@@ -71,6 +71,10 @@ public class CliRunner {
 
 		StringBuilder head = new StringBuilder();
 		head.append("Welcome, ").append(myName).append("!");
+		head.append("\n");
+		head.append(GITHUB_TIP.str());
+		head.append("\n");
+		head.append(MOVE_TIP.str());
 		cliView.printMessage(head.toString());
 
 		cliView.printSplitLine(null, 50);

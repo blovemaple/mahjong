@@ -165,7 +165,16 @@ public class LanguageManager {
 		/**
 		 * 询问是否开始新游戏，Y/N
 		 */
-		NEW_GAME_QUESTION;
+		NEW_GAME_QUESTION,
+		/**
+		 * 左右移动的按键提示
+		 */
+		MOVE_TIP,
+		/**
+		 * github地址提示
+		 */
+		GITHUB_TIP,
+		;
 		@Override
 		public String str() {
 			return LanguageManager.ofName(name());
