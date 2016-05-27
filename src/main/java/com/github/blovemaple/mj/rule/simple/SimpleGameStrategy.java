@@ -1,14 +1,15 @@
 package com.github.blovemaple.mj.rule.simple;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.rule.AbstractGameStrategy;
-import com.github.blovemaple.mj.rule.FanType;
-import com.github.blovemaple.mj.rule.WinType;
+import com.github.blovemaple.mj.rule.win.FanType;
+import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
  * 简单游戏规则。固定坐庄、没有和牌限制、和牌固定为1番。
@@ -22,10 +23,10 @@ public class SimpleGameStrategy extends AbstractGameStrategy {
 		return PlayerLocation.EAST;
 	}
 
-	private static final Set<WinType> WIN_TYPES = Collections.singleton(NormalWinType.get());
+	private static final List<WinType> WIN_TYPES = Collections.singletonList(NormalWinType.get());
 
 	@Override
-	public Set<WinType> getAllWinTypes() {
+	public List<WinType> getAllWinTypes() {
 		return WIN_TYPES;
 	}
 

@@ -1,10 +1,7 @@
 package com.github.blovemaple.mj.rule.simple;
 
-import java.util.Set;
-
-import com.github.blovemaple.mj.object.PlayerInfo;
-import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.rule.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
+import com.github.blovemaple.mj.rule.win.WinInfo;
 
 /**
  * 简单番种，和牌即算。
@@ -20,7 +17,7 @@ public class SimpleFanType implements FanType {
 	}
 
 	@Override
-	public boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
+	public boolean match(WinInfo winInfo) {
 		return true;
 	}
 

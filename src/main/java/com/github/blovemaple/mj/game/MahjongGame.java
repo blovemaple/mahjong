@@ -68,7 +68,7 @@ public class MahjongGame {
 		// 初始化上下文
 		gameStrategy.readyContext(context);
 
-		logger.info("init done.");
+		logger.info("[Main] init done.");
 
 		// 发牌
 		Action dealAction = gameStrategy.getDealAction(context);
@@ -79,7 +79,7 @@ public class MahjongGame {
 			throw new RuntimeException("Illegal deal action: " + dealAction);
 		}
 
-		logger.info("deal done.");
+		logger.info("[Main] deal done.");
 
 		// 循环执行动作，直到结束
 		while (true) {
@@ -90,6 +90,7 @@ public class MahjongGame {
 			boolean end = gameStrategy.tryEndGame(context);
 			if (end) {
 				// 策略判断游戏已结束
+				logger.info("[Main] game over.");
 				return context.getGameResult();
 			}
 
@@ -107,13 +108,13 @@ public class MahjongGame {
 	 * @throws InterruptedException
 	 */
 	private boolean doOneAction(GameContext context) throws InterruptedException {
-		logger.info("Start choose action...");
 		ActionAndLocation action = chooseAction(context);
-		logger.info("End choose action");
+		logger.info("[Action ready] " + action);
 		if (action != null) {
 			// 如果有动作要执行，则执行动作
 			try {
 				doAction(context, action.getLocation(), action.getAction());
+				logger.info("[Action done] " + action);
 				return true;
 			} catch (IllegalActionException e) {
 				// 玩家默认动作或默认动作不合法（玩家选择的动作已经经过了合法性判断）
@@ -139,8 +140,6 @@ public class MahjongGame {
 			if (!choises.isEmpty())
 				choicesByLocation.put(location, choises);
 		});
-
-		logger.info(() -> "Action choices: " + choicesByLocation);
 
 		if (!choicesByLocation.isEmpty()) {
 
@@ -169,14 +168,13 @@ public class MahjongGame {
 						return;
 					fireEvent(context, (player, contextView) -> player.timeLimit(contextView, crtSecondsToGo));
 					if (crtSecondsToGo == 0) {
-						logger.info("Time limit!");
+						logger.info("[Time out]");
 						chooseFutures.forEach((location, chooseFuture) -> {
 							if (!chooseFuture.isDone()) {
-								logger.info(() -> "Start get player def action...: " + location);
 								Action defAction = gameStrategy.getPlayerDefaultAction(context, location,
 										choicesByLocation.get(location));
 								chooseFuture.complete(defAction);
-								logger.info(() -> "End get player def action: " + location + defAction);
+								logger.info("[Def action] " + location + defAction);
 							}
 						});
 					}
@@ -187,17 +185,14 @@ public class MahjongGame {
 			// 如果出现目前等待的玩家中优先级最高的动作，或者所有玩家都做出了动作，则进行做出的优先级最高的动作
 			synchronized (choseActionByLocation) {
 				while (true) {
-					ActionAndLocation action = determineAction(
-							choicesByLocation, choseActionByLocation, context);
+					ActionAndLocation action = determineAction(choicesByLocation, choseActionByLocation, context);
 					if (action != null) {
 						// 动作已决定
 						// 中断未作出选择的玩家的选择逻辑并返回
-						logger.info("Action determined: " + action);
 						executor.shutdownNow();
 						return action;
 					} else if (choseActionByLocation.size() == choicesByLocation.size()) {
 						// 所有玩家都做出选择仍不能决定（即所有玩家都选择不做动作）
-						logger.info("Action not determined at final.");
 						break;
 					}
 					choseActionByLocation.wait();
@@ -238,19 +233,16 @@ public class MahjongGame {
 		try {
 			CompletableFuture<Action> chooseFuture = CompletableFuture.supplyAsync(rethrowSupplier(() -> {
 				// 让玩家选择动作
-				logger.info("Start choose action...: " + location);
 				Action testedAction = player.chooseAction(context.getPlayerView(location), choices);
-				logger.info("End choose action: " + location + testedAction);
 				// 检查选择的动作合法性，如果不合法则循环重新选择
 				checkInterrupted();
 				while (!(testedAction == null ? canPass
 						: testedAction.getType().isLegalAction(context, location, testedAction))) {
+					logger.info("[Action chosed illegal] " + location + testedAction + " FROM " + choices);
 					checkInterrupted();
-					logger.info("Start choose action again...: " + location);
 					testedAction = player.chooseAction(context.getPlayerView(location), choices, testedAction);
-					logger.info("End choose action again: " + location + testedAction);
 				}
-				logger.info("Legal chose action: " + location + testedAction);
+				logger.info("[Action chosed] " + location + testedAction + " FROM " + choices);
 				return testedAction;
 			}), executor);
 
@@ -283,14 +275,8 @@ public class MahjongGame {
 		}
 	}
 
-	private ActionAndLocation determineAction(
-			Map<PlayerLocation, Set<ActionType>> choicesByLocation,
-			Map<PlayerLocation, Action> choseActionByLocation,
-			GameContext context) {
-		logger.info("determining...");
-		logger.info("chosed:" + choseActionByLocation);
-		logger.info("choises:" + choicesByLocation);
-
+	private ActionAndLocation determineAction(Map<PlayerLocation, Set<ActionType>> choicesByLocation,
+			Map<PlayerLocation, Action> choseActionByLocation, GameContext context) {
 		if (choseActionByLocation.isEmpty())
 			return null;
 
@@ -342,13 +328,9 @@ public class MahjongGame {
 	}
 
 	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
-		logger.info(() -> "Start action " + location + action);
-
 		action.getType().doAction(context, location, action);
 		context.actionDone(action, location);
 		fireEvent(context, (player, contextView) -> player.actionDone(contextView, location, action));
-
-		logger.info(() -> "Done action " + location + action);
 	}
 
 	protected void fireEvent(GameContext context, BiConsumer<Player, GameContext.PlayerView> consumer) {

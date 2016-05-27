@@ -2,8 +2,8 @@ package com.github.blovemaple.mj.object;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,7 +14,7 @@ import com.github.blovemaple.mj.object.TileRank.NumberRank;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class TileType implements Serializable {
+public class TileType implements Serializable, Comparable<TileType> {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -22,14 +22,14 @@ public class TileType implements Serializable {
 	 */
 	public static final int HONOR_RANK = 0;
 
-	private static final Set<TileType> all;
+	private static final List<TileType> all;
 	private static final Map<TileSuit, Map<TileRank<?>, TileType>> map;
 	static {
 		// 初始化所有牌型
-		all = Collections.unmodifiableSet( //
+		all = Collections.unmodifiableList( //
 				Stream.of(TileSuit.values())
 						.flatMap(suit -> suit.getAllRanks().stream().map(rank -> new TileType(suit, rank)))
-						.collect(Collectors.toSet()));
+						.collect(Collectors.toList()));
 		map = all.stream().collect( //
 				Collectors.groupingBy(TileType::suit, //
 						Collectors.groupingBy(TileType::rank, //
@@ -37,9 +37,9 @@ public class TileType implements Serializable {
 	}
 
 	/**
-	 * 返回所有牌型的集合。
+	 * 返回所有牌型的列表。
 	 */
-	public static Set<TileType> all() {
+	public static List<TileType> all() {
 		return all;
 	}
 
@@ -70,6 +70,14 @@ public class TileType implements Serializable {
 	 */
 	public TileRank<?> rank() {
 		return rank;
+	}
+
+	@Override
+	public int compareTo(TileType o) {
+		if (this.equals(o))
+			return 0;
+		int ti = all.indexOf(this), oi = all.indexOf(o);
+		return ti == oi ? 0 : ti < oi ? -1 : 1;
 	}
 
 	/**

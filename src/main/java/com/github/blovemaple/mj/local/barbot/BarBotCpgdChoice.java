@@ -2,7 +2,6 @@ package com.github.blovemaple.mj.local.barbot;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
-import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +10,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,11 +19,11 @@ import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.rule.WinType;
+import com.github.blovemaple.mj.rule.win.WinType;
 
 class BarBotCpgdChoice {
 	private final BarBotCpgdSelectTask task;
-	private final Set<? extends WinType> forWinTypes;
+	private final List<? extends WinType> forWinTypes;
 
 	private final GameContext.PlayerView baseContextView;
 	private final Action action;
@@ -44,12 +42,12 @@ class BarBotCpgdChoice {
 	private Double finalWinProb; // 只计算一次，延迟生成
 
 	public BarBotCpgdChoice(GameContext.PlayerView baseContextView, PlayerInfo baseInfo, Action action,
-			BarBotCpgdSelectTask task, Set<? extends WinType> forWinTypes) {
+			BarBotCpgdSelectTask task, List<? extends WinType> forWinTypes) {
 		this(baseContextView, baseInfo, action, task, forWinTypes, null);
 	}
 
 	private BarBotCpgdChoice(GameContext.PlayerView baseContextView, PlayerInfo baseInfo, Action action,
-			BarBotCpgdSelectTask task, Set<? extends WinType> forWinTypes, BarBotCpgdChoice superChoice) {
+			BarBotCpgdSelectTask task, List<? extends WinType> forWinTypes, BarBotCpgdChoice superChoice) {
 		this.baseContextView = baseContextView;
 		this.action = action;
 		this.task = task;
@@ -65,7 +63,7 @@ class BarBotCpgdChoice {
 			subChoices = null;
 	}
 
-	public Set<? extends WinType> getForWinTypes() {
+	public List<? extends WinType> getForWinTypes() {
 		return forWinTypes;
 	}
 
@@ -125,9 +123,12 @@ class BarBotCpgdChoice {
 				return false;
 		} else {
 			// 有后续动作，让后续动作都测试一遍
-			Set<Boolean> canWins = subChoices.parallelStream()
-					.map(rethrowFunction(choice -> choice.testWinProb(changeCount))).collect(Collectors.toSet());
-			return canWins.contains(Boolean.TRUE);
+			boolean canWin = false;
+			for (BarBotCpgdChoice subChoice : subChoices) {
+				if (subChoice.testWinProb(changeCount))
+					canWin = true;
+			}
+			return canWin;
 		}
 	}
 

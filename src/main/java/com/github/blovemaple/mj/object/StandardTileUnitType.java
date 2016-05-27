@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
 
 /**
- * 一些标准的TileUnitType。
+ * 一些标准的TileUnitType。 TODO TileUnitType拆分成单独的类、优化逻辑
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
@@ -33,6 +33,11 @@ public enum StandardTileUnitType implements TileUnitType {
 		protected List<List<TileType>> getLackedTypesForLessTiles(Collection<Tile> tiles) {
 			TileType type = tiles instanceof List ? ((List<Tile>) tiles).get(0).type() : tiles.iterator().next().type();
 			return singletonList(singletonList(type));
+		}
+
+		@Override
+		protected boolean isLegalTileTypesWithCorrectSize(Collection<TileType> types) {
+			return types.stream().distinct().count() == 1;
 		}
 	},
 	/**
@@ -120,6 +125,29 @@ public enum StandardTileUnitType implements TileUnitType {
 			}
 			throw new IllegalArgumentException(tiles.toString());
 		}
+
+		@Override
+		protected boolean isLegalTileTypesWithCorrectSize(Collection<TileType> types) {
+			// rank类型非NumberRank的，非法
+			if (types.iterator().next().suit().getRankClass() != NumberRank.class)
+				return false;
+
+			// 花色有多种的，非法
+			if (types.stream().map(tile -> tile.suit()).distinct().count() > 1)
+				return false;
+
+			// rank不连续的，非法
+			int[] numbers = types.stream().mapToInt(type -> ((NumberRank) type.rank()).number()).sorted().toArray();
+			int crtNumber = 0;
+			for (int number : numbers) {
+				if (crtNumber == 0 || number == crtNumber + 1)
+					crtNumber = number;
+				else
+					return false;
+			}
+
+			return true;
+		}
 	},
 	/**
 	 * 刻子
@@ -139,6 +167,11 @@ public enum StandardTileUnitType implements TileUnitType {
 			if (tiles.size() == size() - 1)
 				return singletonList(singletonList(type));
 			return singletonList(nCopies(size() - tiles.size(), type));
+		}
+
+		@Override
+		protected boolean isLegalTileTypesWithCorrectSize(Collection<TileType> types) {
+			return types.stream().distinct().count() == 1;
 		}
 	},
 	/**
@@ -160,6 +193,11 @@ public enum StandardTileUnitType implements TileUnitType {
 				return singletonList(singletonList(type));
 			return singletonList(nCopies(size() - tiles.size(), type));
 		}
+
+		@Override
+		protected boolean isLegalTileTypesWithCorrectSize(Collection<TileType> types) {
+			return types.stream().distinct().count() == 1;
+		}
 	},
 	/**
 	 * 花牌单元，通常是补花形成的牌组
@@ -173,6 +211,11 @@ public enum StandardTileUnitType implements TileUnitType {
 		@Override
 		protected List<List<TileType>> getLackedTypesForLessTiles(Collection<Tile> tiles) {
 			throw new IllegalArgumentException(tiles.toString());
+		}
+
+		@Override
+		protected boolean isLegalTileTypesWithCorrectSize(Collection<TileType> types) {
+			return types.stream().allMatch(type -> type.suit() == HUA);
 		}
 	};
 
@@ -198,6 +241,15 @@ public enum StandardTileUnitType implements TileUnitType {
 	}
 
 	protected abstract boolean isLegalTilesWithCorrectSize(Collection<Tile> tiles);
+
+	@Override
+	public boolean isLegalTileTypes(Collection<TileType> types) {
+		if (types.size() != size())
+			return false;
+		return isLegalTileTypesWithCorrectSize(types);
+	}
+
+	protected abstract boolean isLegalTileTypesWithCorrectSize(Collection<TileType> types);
 
 	public List<List<TileType>> getLackedTypesForTiles(Collection<Tile> tiles) {
 		if (tiles.size() > size())

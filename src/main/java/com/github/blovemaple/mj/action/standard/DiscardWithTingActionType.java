@@ -2,7 +2,6 @@ package com.github.blovemaple.mj.action.standard;
 
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,8 +22,7 @@ import com.github.blovemaple.mj.rule.GameStrategy;
 public class DiscardWithTingActionType extends DiscardActionType {
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
-			Set<Tile> tiles) {
+	protected boolean isLegalActionWithPreconition(PlayerView context, Set<Tile> tiles) {
 		GameStrategy strategy = context.getGameStrategy();
 		PlayerInfo playerInfo = context.getMyInfo();
 		Set<Tile> remainAliveTiles = new HashSet<>(playerInfo.getAliveTiles());
@@ -33,15 +31,10 @@ public class DiscardWithTingActionType extends DiscardActionType {
 		return
 		// 获取所有牌的流
 		strategy.getAllTiles().stream()
-				// 过滤掉已经有的牌（tile=type+id）
-				.filter(tileToGet -> !remainAliveTiles.contains(tileToGet))
-				// 按照牌的id排序，这样能先把所有type分别检查一张，最快找到anyMatch
-				.sorted(Comparator.comparing(Tile::id))
-				// 与打出动作牌后的aliveTiles合并
-				.map(tileToGet -> mergedSet(remainAliveTiles, tileToGet))
-				// 看任何一种合并后的aliveTiles能否符合任何一种wintype
-				.anyMatch(testAliveTiles -> strategy.canWin(playerInfo,
-						testAliveTiles));
+				// 只留下id==0的牌
+				.filter(tileToGet -> tileToGet.id() == 0)
+				// 与打出动作牌后的aliveTiles合并，看任何一种合并后的aliveTiles能否和牌
+				.anyMatch(tileToGet -> strategy.canWin(playerInfo, mergedSet(remainAliveTiles, tileToGet), tileToGet));
 	}
 
 	@Override

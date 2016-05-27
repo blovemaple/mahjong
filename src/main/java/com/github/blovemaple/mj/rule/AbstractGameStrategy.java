@@ -43,7 +43,7 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 	}
 
 	@Override
-	public Set<Tile> getAllTiles() {
+	public List<Tile> getAllTiles() {
 		return Tile.all();
 	}
 

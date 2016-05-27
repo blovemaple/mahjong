@@ -17,9 +17,9 @@ import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.rule.FanType;
 import com.github.blovemaple.mj.rule.GameStrategy;
-import com.github.blovemaple.mj.rule.WinType;
+import com.github.blovemaple.mj.rule.win.FanType;
+import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
  * 在原策略的基础上添加模拟出牌动作类型、将和牌动作类型替换为模拟和牌动作类型。
@@ -106,7 +106,7 @@ public class FooSimGameStrategy implements GameStrategy {
 		return realStrategy.checkReady(table);
 	}
 
-	public Set<Tile> getAllTiles() {
+	public List<Tile> getAllTiles() {
 		return realStrategy.getAllTiles();
 	}
 
@@ -133,7 +133,7 @@ public class FooSimGameStrategy implements GameStrategy {
 		return defAction;
 	}
 
-	public Set<? extends WinType> getAllWinTypes() {
+	public List<? extends WinType> getAllWinTypes() {
 		return realStrategy.getAllWinTypes();
 	}
 

@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.rule;
+package com.github.blovemaple.mj.rule.win;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,37 +23,41 @@ public interface WinType {
 	 * @param playerInfo
 	 *            玩家信息
 	 * @param aliveTiles
-	 *            玩家手中的牌
+	 *            玩家手中的牌（包含winTile）
+	 * @param winTile
+	 *            最后得到的牌
 	 * @return 是否可以和牌
 	 */
-	public default boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
+	public default boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles, Tile winTile) {
 		Set<Tile> realAliveTiles = aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles();
-		return parseWinTileUnits(playerInfo, realAliveTiles).findAny().isPresent();
+		return !parseWinTileUnits(playerInfo, realAliveTiles, winTile).isEmpty();
 	}
 
 	/**
-	 * 全部解析成可以和牌的完整的TileUnit集合的流，失败返回空流。
+	 * 全部解析成可以和牌的完整的TileUnit集合的列表，失败返回空列表。
 	 * 
 	 * @param playerInfo
 	 *            除手牌之外的信息
 	 * @param realAliveTiles
-	 *            手牌
-	 * @return 完整的TileUnit集合的流
+	 *            手牌（包含winTile）
+	 * @param winTile
+	 *            最后得到的牌
+	 * @return 完整的TileUnit集合的列表
 	 */
-	public Stream<Set<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Set<Tile> readAliveTiles);
+	public List<List<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Collection<Tile> realAliveTiles, Tile winTile);
 
 	/**
-	 * 返回建议打出的牌，即从手牌中排除掉明显不应该打出的牌并返回。返回的列表按建议的优先级从高到低排列。
+	 * 用于机器人，返回建议打出的牌，即从手牌中排除掉明显不应该打出的牌并返回。返回的列表按建议的优先级从高到低排列。
 	 */
 	public List<Tile> getDiscardCandidates(Set<Tile> aliveTiles, Collection<Tile> candidates);
 
 	/**
-	 * 获取ChangingForWin的流，移除changeCount个牌，增加(changeCount+1)个牌。
+	 * 用于机器人，获取ChangingForWin的流，移除changeCount个牌，增加(changeCount+1)个牌。
 	 */
 	public Stream<ChangingForWin> changingsForWin(PlayerInfo playerInfo, int changeCount, Collection<Tile> candidates);
 
 	/**
-	 * 一种结果时和牌的换牌方法，移除removedTiles并增加addedTiles。
+	 * 一种结果是和牌的换牌方法，移除removedTiles并增加addedTiles。
 	 * 
 	 * @author blovemaple <blovemaple2010(at)gmail.com>
 	 */

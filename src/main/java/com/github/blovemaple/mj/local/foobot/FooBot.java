@@ -31,7 +31,8 @@ import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
 
 /**
- * 机器人。注意：chooseAction方法上加了锁，不能同时进行两个选择过程。
+ * 机器人。注意：chooseAction方法上加了锁，不能同时进行两个选择过程。<br>
+ * 这个机器人没用到。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */

@@ -2,6 +2,7 @@ package com.github.blovemaple.mj.object;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -14,21 +15,21 @@ import java.util.stream.IntStream;
 public class Tile implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private static final Set<Tile> all;
+	private static final List<Tile> all;
 	static {
 		// 初始化所有牌
-		Set<Tile> allTiles = TileType.all().stream()
+		List<Tile> allTiles = TileType.all().stream()
 				.flatMap(type -> IntStream
 						.range(0, type.suit().getTileCountByType())
 						.mapToObj(id -> new Tile(type, id)))
-				.collect(Collectors.toSet());
-		all = Collections.unmodifiableSet(allTiles);
+				.collect(Collectors.toList());
+		all = Collections.unmodifiableList(allTiles);
 	}
 
 	/**
-	 * 返回所有144张牌的集合。
+	 * 返回所有144张牌的列表。
 	 */
-	public static Set<Tile> all() {
+	public static List<Tile> all() {
 		return all;
 	}
 

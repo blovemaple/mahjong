@@ -1,9 +1,15 @@
 package com.github.blovemaple.mj.rule;
 
+import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.github.blovemaple.mj.action.Action;
@@ -15,6 +21,10 @@ import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.object.TileUnit;
+import com.github.blovemaple.mj.rule.win.FanType;
+import com.github.blovemaple.mj.rule.win.WinInfo;
+import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
  * 游戏策略。即一种游戏规则的定义。
@@ -33,9 +43,9 @@ public interface GameStrategy {
 	public boolean checkReady(MahjongTable table);
 
 	/**
-	 * 获取全部麻将牌的集合。
+	 * 获取全部麻将牌的列表。
 	 */
-	public Set<Tile> getAllTiles();
+	public List<Tile> getAllTiles();
 
 	/**
 	 * 在一局开始之前对上下文进行必要操作。
@@ -67,31 +77,28 @@ public interface GameStrategy {
 	 * 
 	 * @return 默认动作，null表示不做动作
 	 */
-	public Action getPlayerDefaultAction(GameContext context,
-			PlayerLocation location, Set<ActionType> choises);
+	public Action getPlayerDefaultAction(GameContext context, PlayerLocation location, Set<ActionType> choises);
 
 	/**
 	 * 根据当前状态返回默认动作。默认动作是所有玩家都没有可选动作或均选择不做动作之后自动执行的动作。
 	 * 
 	 * @return 默认动作
 	 */
-	public ActionAndLocation getDefaultAction(GameContext context,
-			Map<PlayerLocation, Set<ActionType>> choises);
+	public ActionAndLocation getDefaultAction(GameContext context, Map<PlayerLocation, Set<ActionType>> choises);
 
 	/**
 	 * 获取此策略支持的所有和牌类型。
 	 */
-	public Set<? extends WinType> getAllWinTypes();
+	public List<? extends WinType> getAllWinTypes();
 
 	/**
 	 * 判断指定条件下是否可和牌。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
 	 * 否则利用playerInfo中的aliveTiles做出判断。<br>
 	 * 默认实现为使用此策略支持的所有和牌类型进行判断，至少有一种和牌类型判断可以和牌则可以和牌。
 	 */
-	public default boolean canWin(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
-		return getAllWinTypes().stream()
-				.anyMatch(winType -> winType.match(playerInfo, aliveTiles));
-		//TODO 缓存
+	public default boolean canWin(PlayerInfo playerInfo, Set<Tile> aliveTiles, Tile winTile) {
+		return getAllWinTypes().stream().anyMatch(winType -> winType.match(playerInfo, aliveTiles, winTile));
+		// TODO 缓存
 	}
 
 	/**
@@ -104,24 +111,40 @@ public interface GameStrategy {
 	 * 否则利用playerInfo中的aliveTiles做出判断。<br>
 	 * 默认实现为使用此策略支持的所有番种和番数进行统计。
 	 */
-	public default Map<FanType, Integer> getFans(PlayerInfo playerInfo,
-			Set<Tile> aliveTiles) {
-		// 在所有番种中过滤出所有符合的番种
-		Set<FanType> fanTypes = getAllFanTypes().keySet().stream()
-				.filter(fanType -> fanType.match(playerInfo, null))
-				.collect(Collectors.toSet());
-		// 去除被覆盖的番种
-		Map<? extends FanType, Set<? extends FanType>> coveredFanTypes = getAllCoveredFanTypes();
-		if (coveredFanTypes != null)
-			coveredFanTypes.forEach((type, covered) -> {
-				if (fanTypes.contains(type))
-					fanTypes.removeAll(covered);
-			});
-		// 查询番数组成map
-		return fanTypes.stream().collect(
-				Collectors.toMap(Function.identity(), getAllFanTypes()::get));
+	public default Map<FanType, Integer> getFans(GameContext.PlayerView contextView, PlayerInfo playerInfo,
+			Collection<Tile> aliveTiles, Tile winTile) {
+		Collection<Tile> realAliveTiles = aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles();
+		Map<WinType, List<List<TileUnit>>> unitsByWinType = new HashMap<>();
+		for (WinType winType : getAllWinTypes()) {
+			List<List<TileUnit>> units = winType.parseWinTileUnits(playerInfo, realAliveTiles, winTile);
+			if (!units.isEmpty())
+				unitsByWinType.put(winType, units);
+		}
 
-		//TODO 缓存
+		if (unitsByWinType.isEmpty())
+			return Collections.emptyMap();
+
+		WinInfo winInfo = new WinInfo();
+		winInfo.setLocation(contextView.getMyLocation());
+		winInfo.setAllActions(contextView.getDoneActions());
+		winInfo.setTileTypes(PlayerInfo.tiles(playerInfo, realAliveTiles).map(Tile::type).collect(Collectors.toList()));
+		winInfo.setUnits(unitsByWinType);
+		winInfo.setWinTile(winTile);
+		winInfo.setZiMo(DRAW.matchBy(contextView.getLastAction().getType()));
+
+		Map<? extends FanType, Set<? extends FanType>> coveredFanTypes = getAllCoveredFanTypes();
+		Set<FanType> removedFanTypes = new HashSet<>();
+		Map<FanType, Integer> fans = new HashMap<>();
+		getAllFanTypes().forEach((fanType, fan) -> {
+			if (!removedFanTypes.contains(fanType) && fanType.match(winInfo)) {
+				fans.put(fanType, fan);
+				Set<? extends FanType> shouldRemoves = coveredFanTypes.get(fanType);
+				if (shouldRemoves != null)
+					removedFanTypes.addAll(shouldRemoves);
+			}
+		});
+
+		return fans;
 	}
 
 	/**

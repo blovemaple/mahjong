@@ -46,7 +46,7 @@ public class SimpleGameStrategyTest {
 
 	@Test
 	public void test() {
-		strategy.getFans(selfInfo, null).forEach((a, b) -> System.out.println(a + " " + b));
+		// strategy.getFans(selfInfo, null).forEach((a, b) -> System.out.println(a + " " + b));
 	}
 
 }

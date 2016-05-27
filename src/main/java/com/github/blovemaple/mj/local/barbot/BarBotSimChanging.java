@@ -42,7 +42,9 @@ class BarBotSimChanging {
 
 	public Integer getWinPoint() {
 		if (winPoint == null)
-			winPoint = choice.getBaseContextView().getGameStrategy().getFans(choice.getPlayerInfo(), getAliveTiles())
+			winPoint = choice.getBaseContextView().getGameStrategy()
+					.getFans( // FIXME 如果是subchoice，则这个contextview是上层的
+							choice.getBaseContextView(), choice.getPlayerInfo(), getAliveTiles(), null)
 					.values().stream().mapToInt(f -> f).sum();
 		return winPoint;
 	}
@@ -56,7 +58,8 @@ class BarBotSimChanging {
 			double addedTilesProb = choice.getTask().getProb(addedTiles);
 			prob = choice.getForWinTypes().stream()
 					// 取choice对应的所有和牌类型解析成的所有unit集合
-					.flatMap(winType -> winType.parseWinTileUnits(choice.getPlayerInfo(), getAliveTiles()))
+					.flatMap(winType -> winType.parseWinTileUnits(choice.getPlayerInfo(), getAliveTiles(), null)
+							.stream())
 					// 取最大的系数
 					.map(this::getRatio).max(Comparator.naturalOrder())
 					// 乘以概率
@@ -66,7 +69,7 @@ class BarBotSimChanging {
 	}
 
 	// 系数= 1 * 4^涉及的刻子数 * 2^涉及的顺子数
-	private int getRatio(Set<TileUnit> units) {
+	private int getRatio(Collection<TileUnit> units) {
 		return units.stream().filter(unit -> !Collections.disjoint(unit.getTiles(), addedTiles)).map(TileUnit::getType)
 				.reduce(1, (r, t) -> r * (t == KEZI ? 4 : t == SHUNZI ? 2 : 1), Math::multiplyExact);
 	}

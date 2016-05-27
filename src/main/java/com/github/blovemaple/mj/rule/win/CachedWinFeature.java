@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.rule;
+package com.github.blovemaple.mj.rule.win;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,11 +12,13 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 
 /**
- * 带缓存的PlayerTileType。默认仅使用手牌作为识别条件。识别条件相同的会优先使用缓存结果。
+ * 带缓存的WinFeature。默认仅使用手牌作为识别条件。识别条件相同的会优先使用缓存结果。
+ * 
+ * @deprecated
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public abstract class CachedPlayerTileType implements PlayerTileType {
+public abstract class CachedWinFeature {
 	private final Map<Integer, Boolean> cache = Collections.synchronizedMap(new WeakHashMap<>());
 
 	private boolean useAliveTiles = true;
@@ -30,7 +32,6 @@ public abstract class CachedPlayerTileType implements PlayerTileType {
 		otherCacheKeys.add(value);
 	}
 
-	@Override
 	public boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles) {
 		Set<Tile> realAliveTiles = aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles();
 

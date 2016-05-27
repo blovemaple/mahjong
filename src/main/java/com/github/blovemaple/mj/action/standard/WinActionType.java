@@ -3,6 +3,8 @@ package com.github.blovemaple.mj.action.standard;
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
 
@@ -31,9 +33,8 @@ public class WinActionType extends AbstractActionType {
 	@Override
 	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
 		// 必须是发牌、自己摸牌，或别人打牌后
-		return (al, location) -> DEAL.matchBy(al.getActionType())
-				|| (al.getLocation() == location && DRAW.matchBy(al.getActionType()))
-				|| (al.getLocation() != location && DISCARD.matchBy(al.getActionType()));
+		return (al, location) -> DEAL.matchBy(al.getActionType()) || //
+				(al.getLocation() == location ? DRAW.matchBy(al.getActionType()) : DISCARD.matchBy(al.getActionType()));
 	}
 
 	@Override
@@ -42,26 +43,22 @@ public class WinActionType extends AbstractActionType {
 	}
 
 	@Override
-	public boolean isLegalActionWithPreconition(PlayerView context,
-			Set<Tile> tiles) {
+	public boolean isLegalActionWithPreconition(PlayerView context, Set<Tile> tiles) {
 		PlayerInfo playerInfo = context.getMyInfo();
 		Action lastAction = context.getLastAction();
 		Set<Tile> aliveTiles = DISCARD.matchBy(lastAction.getType())
-				? mergedSet(playerInfo.getAliveTiles(), lastAction.getTile())
-				: null;
-		return context.getGameStrategy().canWin(playerInfo, aliveTiles);
+				? mergedSet(playerInfo.getAliveTiles(), lastAction.getTile()) : null;
+		return context.getGameStrategy().canWin(playerInfo, aliveTiles, lastAction.getTile());
 	}
 
 	@Override
 	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
 		Action lastAction = context.getLastAction();
 
-		GameResult result = new GameResult(context.getTable().getPlayerInfos(),
-				context.getZhuangLocation());
+		GameResult result = new GameResult(context.getTable().getPlayerInfos(), context.getZhuangLocation());
 		result.setWinnerLocation(location);
 		if (DRAW.matchBy(lastAction.getType())) {
-			result.setWinTile(
-					context.getPlayerView(location).getJustDrawedTile());
+			result.setWinTile(context.getPlayerView(location).getJustDrawedTile());
 		} else {
 			result.setPaoerLocation(context.getLastActionLocation());
 			result.setWinTile(lastAction.getTile());
@@ -69,8 +66,9 @@ public class WinActionType extends AbstractActionType {
 
 		// 算番
 		PlayerInfo playerInfo = context.getPlayerInfoByLocation(location);
-		result.setFans(context.getGameStrategy().getFans(playerInfo,
-				mergedSet(playerInfo.getAliveTiles(), result.getWinTile())));
+		List<Tile> aliveTiles = merged(ArrayList::new, playerInfo.getAliveTiles(), result.getWinTile());
+		result.setFans(context.getGameStrategy().getFans(context.getPlayerView(location), playerInfo, aliveTiles,
+				result.getWinTile()));
 
 		context.setGameResult(result);
 	}

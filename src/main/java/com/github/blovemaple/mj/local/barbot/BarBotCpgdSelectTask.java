@@ -31,7 +31,7 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileType;
-import com.github.blovemaple.mj.rule.WinType;
+import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
  * TODO 换牌n个：remove n，add n+1
@@ -45,7 +45,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 			Arrays.asList(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD, DISCARD_WITH_TING));
 	private static final int EXTRA_CHANGE_COUNT = 2;
 	private static final int EXTENDED_MAX_CHANGE_COUNT = 4;
-	private static final int MAX_CHANGE_COUNT = 5;
+	private static final int MAX_CHANGE_COUNT = 10;
 
 	private PlayerView contextView;
 	private Set<ActionType> actionTypes;
@@ -58,10 +58,12 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		this.contextView = contextView;
 		this.actionTypes = actionTypes;
 		this.playerInfo = contextView.getMyInfo();
+	}
 
+	private String aliveTilesStr() {
 		StringBuilder aliveTilesStr = new StringBuilder();
 		CliGameView.appendAliveTiles(aliveTilesStr, playerInfo.getAliveTiles(), playerInfo.getLastDrawedTile(), null);
-		logger.info("Select task created: " + contextView.getMyLocation() + " " + actionTypes + " " + aliveTilesStr);
+		return aliveTilesStr.toString();
 	}
 
 	@Override
@@ -71,12 +73,19 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 
 		// 生成所有可选动作（包括不做动作）后的状态
 		List<BarBotCpgdChoice> choices = allChoices();
-		if (choices.isEmpty())
+		if (choices.isEmpty()) {
+			logger.info("[No choices]");
+			logger.info("Bot alivetiles " + aliveTilesStr());
 			return null;
+		}
 
 		// 如果只有一个选择，就直接选择
-		if (choices.size() == 1)
-			return choices.get(0).getAction();
+		if (choices.size() == 1) {
+			Action action = choices.get(0).getAction();
+			logger.info("[Single choice] " + action);
+			logger.info("Bot alivetiles " + aliveTilesStr());
+			return action;
+		}
 
 		// 从0次换牌开始，计算每个状态换牌后和牌的概率
 		AtomicInteger minChangeCount = new AtomicInteger(-1);
@@ -97,19 +106,20 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 					.forEach(win -> minChangeCount.compareAndSet(-1, crtChangeCount));
 		}
 
-		// 返回和牌概率最大的一个动作
+		// 算出和牌概率最大的一个动作
 		Action bestAction = choices.stream()
-				.peek(choice -> logger.info(String.format("%.5f %s", choice.getFinalWinProb(), choice.getAction())))
+				.peek(choice -> logger
+						.info("[Win prob] " + String.format("%.7f %s", choice.getFinalWinProb(), choice.getAction())))
 				// 第一条件：和牌概率大
 				.max(comparing(BarBotCpgdChoice::getFinalWinProb)
-						// 第二条件：听牌优先
-						.thenComparing(choice -> choice.getPlayerInfo().isTing())
-						// 第三条件：杠优先（因为杠了之后可以多摸一张牌）
+						// 第二条件：杠优先（因为杠了之后可以多摸一张牌，这个好处在算概率的时候没算进去）
 						.thenComparing(choice -> choice.getAction() != null && Arrays.asList(ZHIGANG, BUGANG, ANGANG)
 								.stream().anyMatch(gang -> gang.matchBy(choice.getAction().getType())))
-						// 第四条件：前面的优先（优先级高）
+						// 第三条件：听牌优先
+						.thenComparing(choice -> choice.getPlayerInfo().isTing())
+						// 第四条件：前面的优先（和牌类型的返回结果中认为最差的）
 						.thenComparing(comparing(choices::indexOf).reversed()))
-				// 返回其动作
+				// 取出其动作
 				.map(BarBotCpgdChoice::getAction).orElse(null);
 
 		StringBuilder aliveTilesStr = new StringBuilder();
@@ -124,7 +134,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		List<BarBotCpgdChoice> choices = actionTypes.stream().filter(ACTION_TYPES::contains).flatMap(actionType -> {
 			Stream<Set<Tile>> legalTileSets = actionType.getLegalActionTiles(contextView).stream();
 			legalTileSets = distinctCollBy(legalTileSets, Tile::type);
-			if (!DISCARD.matchBy(actionType) || playerInfo.isTing()) {
+			if (DISCARD != actionType || playerInfo.isTing()) {
 				return legalTileSets.map(tiles -> new BarBotCpgdChoice(contextView, playerInfo,
 						new Action(actionType, tiles), this, contextView.getGameStrategy().getAllWinTypes()));
 			} else {
@@ -141,9 +151,9 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 												.average().getAsDouble()));
 				return discardsByWinType.values().stream().flatMap(List::stream).distinct().filter(legalTiles::contains)
 						.sorted(Comparator.comparing(tilesAndPriv::get)).map(tile -> {
-							Set<WinType> winTypes = discardsByWinType.entrySet().stream()
+							List<WinType> winTypes = discardsByWinType.entrySet().stream()
 									.filter(entry -> entry.getValue().contains(tile)).map(Map.Entry::getKey)
-									.collect(Collectors.toSet());
+									.collect(Collectors.toList());
 							return new BarBotCpgdChoice(contextView, playerInfo, new Action(actionType, tile), this,
 									winTypes);
 						});

@@ -1,12 +1,12 @@
 package com.github.blovemaple.mj.object;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +43,7 @@ public class MahjongTable {
 	/**
 	 * 初始化，准备开始一局。即清空玩家的牌、洗牌、摆牌墙。
 	 */
-	public void readyForGame(Set<Tile> allTiles) {
+	public void readyForGame(Collection<Tile> allTiles) {
 		playerInfos.values().forEach(PlayerInfo::clear);
 		tileWall.clear();
 		tileWall.addAll(allTiles);

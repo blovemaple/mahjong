@@ -1,9 +1,11 @@
 package com.github.blovemaple.mj.object;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * 麻将桌上一个玩家的信息。
@@ -82,6 +84,14 @@ public class PlayerInfo implements Cloneable {
 
 	public void setTing(boolean isTing) {
 		this.isTing = isTing;
+	}
+
+	public static Stream<Tile> tiles(PlayerInfo playerInfo, Collection<Tile> realAliveTiles) {
+		Stream<Tile> tiles = realAliveTiles.stream();
+		if (playerInfo != null)
+			for (TileGroup group : playerInfo.getTileGroups())
+				tiles = Stream.concat(tiles, group.getTiles().stream());
+		return tiles;
 	}
 
 	/**

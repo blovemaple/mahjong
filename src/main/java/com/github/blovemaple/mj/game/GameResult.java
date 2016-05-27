@@ -6,7 +6,7 @@ import java.util.Map;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.rule.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
 
 /**
  * 一局游戏的结果。winnerLocation为null表示流局。
