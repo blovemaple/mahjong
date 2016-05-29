@@ -15,8 +15,7 @@ public interface FanType {
 	}
 
 	/**
-	 * 检查和牌是否符合此番种。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
-	 * 否则利用playerInfo中的aliveTiles做出判断。
+	 * 检查和牌是否符合此番种。
 	 */
 	public boolean match(WinInfo winInfo);
 	
