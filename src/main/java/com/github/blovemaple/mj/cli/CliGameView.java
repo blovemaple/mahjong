@@ -29,7 +29,7 @@ import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileGroupType;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
-import com.github.blovemaple.mj.rule.win.FanType;
+import com.github.blovemaple.mj.rule.fan.FanType;
 import com.github.blovemaple.mj.object.TileSuit;
 import com.github.blovemaple.mj.utils.LanguageManager.Message;
 import com.github.blovemaple.mj.utils.MyUtils;

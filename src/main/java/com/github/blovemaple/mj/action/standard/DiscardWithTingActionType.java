@@ -11,6 +11,7 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.rule.GameStrategy;
+import com.github.blovemaple.mj.rule.win.WinInfo;
 
 /**
  * 动作类型“打牌的同时听牌”。与打牌动作的区别是：
@@ -34,7 +35,14 @@ public class DiscardWithTingActionType extends DiscardActionType {
 				// 只留下id==0的牌
 				.filter(tileToGet -> tileToGet.id() == 0)
 				// 与打出动作牌后的aliveTiles合并，看任何一种合并后的aliveTiles能否和牌
-				.anyMatch(tileToGet -> strategy.canWin(playerInfo, mergedSet(remainAliveTiles, tileToGet), tileToGet));
+				.anyMatch(tileToGet -> {
+					WinInfo winInfo = new WinInfo();
+					winInfo.setContextView(context);
+					winInfo.setAliveTiles(mergedSet(remainAliveTiles, tileToGet));
+					winInfo.setWinTile(tileToGet);
+					winInfo.setZiMo(false);
+					return strategy.canWin(winInfo);
+				});
 	}
 
 	@Override

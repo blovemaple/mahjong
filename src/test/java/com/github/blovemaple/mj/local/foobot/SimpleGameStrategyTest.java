@@ -15,6 +15,7 @@ import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 
 public class SimpleGameStrategyTest {
+	@SuppressWarnings("unused")
 	private SimpleGameStrategy strategy = new SimpleGameStrategy();
 	private PlayerInfo selfInfo;
 

@@ -1,7 +1,6 @@
 package com.github.blovemaple.mj.local.foobot;
 
 import static com.github.blovemaple.mj.object.TileRank.NumberRank.*;
-import static com.github.blovemaple.mj.object.TileRank.ZiRank.*;
 import static com.github.blovemaple.mj.object.TileSuit.*;
 
 import java.util.Collection;
@@ -16,6 +15,7 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.simple.NormalWinType;
+import com.github.blovemaple.mj.rule.win.WinInfo;
 
 public class NormalWinTypeTest {
 	private NormalWinType winType = NormalWinType.get();
@@ -35,33 +35,33 @@ public class NormalWinTypeTest {
 		candidates = Tile.all();
 
 		selfInfo = new PlayerInfo();
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, LIU), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, LIU), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, LIU), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, LIU), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 2));
 
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, YI), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, YI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, YI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, DONG_FENG), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, NAN), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, BEI), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, XI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, YI), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, QI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, YI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, SI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, YI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, QI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, DONG_FENG), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, NAN), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, BEI), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(ZI, XI), 1));
 
 		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, WU), 0));
 		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, LIU), 1));
@@ -89,29 +89,29 @@ public class NormalWinTypeTest {
 		// selfInfo.setLastDrawedTile(Tile.of(TileType.of(BING, SI), 1));
 
 		// WIN
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, WU), 1));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, WU), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, WU), 2));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
-//		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
-		
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, BA), 1));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, JIU), 0));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, JIU), 1));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, JIU), 2));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, BA), 1));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, JIU), 1));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, YI), 1));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, ER), 1));
-		 selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SAN), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SI), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, LIU), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, WU), 1));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, WU), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, WU), 2));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
+		// selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
+
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 0));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, SAN), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, JIU), 0));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, JIU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(WAN, JIU), 2));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, QI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, BA), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(TIAO, JIU), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, YI), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, ER), 1));
+		selfInfo.getAliveTiles().add(Tile.of(TileType.of(BING, SAN), 1));
 	}
 
 	@After
@@ -130,9 +130,12 @@ public class NormalWinTypeTest {
 		winType.getDiscardCandidates(selfInfo.getAliveTiles(), candidates).forEach(System.out::println);
 	}
 
-	// @Test
+	@Test
 	public void testParse() {
-		winType.parseWinTileUnits(selfInfo, selfInfo.getAliveTiles(), null).forEach(unitList -> {
+		WinInfo winInfo = new WinInfo();
+		winInfo.setPlayerInfo(selfInfo);
+		winInfo.setAliveTiles(selfInfo.getAliveTiles());
+		winType.parseWinTileUnits(winInfo).forEach(unitList -> {
 			unitList.forEach(System.out::println);
 			System.out.println();
 		});

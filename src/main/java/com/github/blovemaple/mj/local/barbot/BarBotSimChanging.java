@@ -10,6 +10,7 @@ import java.util.Set;
 
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileUnit;
+import com.github.blovemaple.mj.rule.win.WinInfo;
 
 class BarBotSimChanging {
 	private BarBotCpgdChoice choice;
@@ -19,6 +20,7 @@ class BarBotSimChanging {
 
 	private Set<Tile> aliveTiles;
 
+	private WinInfo winInfo;
 	private Integer winPoint;
 	private Double prob;
 
@@ -36,16 +38,26 @@ class BarBotSimChanging {
 		return addedTiles;
 	}
 
+	private WinInfo getWinInfo() {
+		if (winInfo == null) {
+			WinInfo winInfo = new WinInfo();
+			winInfo.setPlayerInfo(choice.getPlayerInfo());
+			winInfo.setAliveTiles(getAliveTiles());
+			winInfo.setZiMo(false);
+			this.winInfo = winInfo;
+		}
+		return winInfo;
+	}
+
 	public boolean isWin() {
 		return getWinPoint() > 0;
 	}
 
 	public Integer getWinPoint() {
-		if (winPoint == null)
-			winPoint = choice.getBaseContextView().getGameStrategy()
-					.getFans( // FIXME 如果是subchoice，则这个contextview是上层的
-							choice.getBaseContextView(), choice.getPlayerInfo(), getAliveTiles(), null)
-					.values().stream().mapToInt(f -> f).sum();
+		if (winPoint == null) {
+			winPoint = choice.getBaseContextView().getGameStrategy().getFans(getWinInfo()).values().stream()
+					.mapToInt(f -> f).sum();
+		}
 		return winPoint;
 	}
 
@@ -58,7 +70,7 @@ class BarBotSimChanging {
 			double addedTilesProb = choice.getTask().getProb(addedTiles);
 			prob = choice.getForWinTypes().stream()
 					// 取choice对应的所有和牌类型解析成的所有unit集合
-					.flatMap(winType -> winType.parseWinTileUnits(choice.getPlayerInfo(), getAliveTiles(), null)
+					.flatMap(winType -> winType.parseWinTileUnits(getWinInfo())
 							.stream())
 					// 取最大的系数
 					.map(this::getRatio).max(Comparator.naturalOrder())

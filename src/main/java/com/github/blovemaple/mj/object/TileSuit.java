@@ -10,6 +10,8 @@ import com.github.blovemaple.mj.object.TileRank.ZiRank;
 
 /**
  * 牌的“花色”，即万、条、饼等。
+ * 
+ * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public enum TileSuit {
 	WAN(NumberRank.class, 4), TIAO(NumberRank.class, 4), BING(NumberRank.class,

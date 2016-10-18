@@ -8,6 +8,7 @@ import static java.util.Comparator.*;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -206,7 +207,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		return remainTiles().size();
 	}
 
-	private Map<Integer, Double> probCache = new HashMap<>();
+	private Map<Integer, Double> probCache = Collections.synchronizedMap(new HashMap<>());
 
 	/**
 	 * 计算addedTiles出现的可能性。<br>

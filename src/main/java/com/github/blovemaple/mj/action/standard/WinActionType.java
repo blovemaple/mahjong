@@ -1,22 +1,22 @@
 package com.github.blovemaple.mj.action.standard;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
-import static com.github.blovemaple.mj.utils.MyUtils.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
 
 import com.github.blovemaple.mj.action.AbstractActionType;
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.game.GameResult;
-import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.rule.fan.FanType;
+import com.github.blovemaple.mj.rule.win.WinInfo;
 
 /**
  * 动作类型“和牌”。
@@ -44,15 +44,14 @@ public class WinActionType extends AbstractActionType {
 
 	@Override
 	public boolean isLegalActionWithPreconition(PlayerView context, Set<Tile> tiles) {
-		PlayerInfo playerInfo = context.getMyInfo();
-		Action lastAction = context.getLastAction();
-		Set<Tile> aliveTiles = DISCARD.matchBy(lastAction.getType())
-				? mergedSet(playerInfo.getAliveTiles(), lastAction.getTile()) : null;
-		return context.getGameStrategy().canWin(playerInfo, aliveTiles, lastAction.getTile());
+		WinInfo winInfo = new WinInfo();
+		winInfo.setContextView(context);
+		return context.getGameStrategy().canWin(winInfo);
 	}
 
 	@Override
-	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
+	// XXX - 为了避免验证legal和算番时重复判断和牌，doAction时不进行legal验证，需要此方法的调用方保证legal（目前已保证）。
+	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
 		Action lastAction = context.getLastAction();
 
 		GameResult result = new GameResult(context.getTable().getPlayerInfos(), context.getZhuangLocation());
@@ -64,13 +63,21 @@ public class WinActionType extends AbstractActionType {
 			result.setWinTile(lastAction.getTile());
 		}
 
-		// 算番
-		PlayerInfo playerInfo = context.getPlayerInfoByLocation(location);
-		List<Tile> aliveTiles = merged(ArrayList::new, playerInfo.getAliveTiles(), result.getWinTile());
-		result.setFans(context.getGameStrategy().getFans(context.getPlayerView(location), playerInfo, aliveTiles,
-				result.getWinTile()));
+		// 和牌parse units、算番
+		WinInfo winInfo = new WinInfo();
+		winInfo.setContextView(context.getPlayerView(location));
+
+		Map<FanType, Integer> fans = context.getGameStrategy().getFans(winInfo);
+		if (fans.isEmpty() && (winInfo.getUnits() == null || winInfo.getUnits().isEmpty()))
+			throw new IllegalActionException(context, location, action);
+		result.setFans(fans);
 
 		context.setGameResult(result);
+	}
+
+	@Override
+	protected void doLegalAction(GameContext context, PlayerLocation location, Set<Tile> tiles) {
+		throw new UnsupportedOperationException();
 	}
 
 }

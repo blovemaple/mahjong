@@ -16,35 +16,27 @@ import com.github.blovemaple.mj.object.TileUnit;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public interface WinType {
+	
 	/**
-	 * 判断指定条件下是否可和牌。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
-	 * 否则利用playerInfo中的aliveTiles做出判断。
+	 * 全部解析成可以和牌的完整的TileUnit集合的列表并填入和牌信息并返回，失败填入并返回空列表。
 	 * 
-	 * @param playerInfo
-	 *            玩家信息
-	 * @param aliveTiles
-	 *            玩家手中的牌（包含winTile）
-	 * @param winTile
-	 *            最后得到的牌
-	 * @return 是否可以和牌
+	 * @param winInfo
+	 *            和牌信息
 	 */
-	public default boolean match(PlayerInfo playerInfo, Set<Tile> aliveTiles, Tile winTile) {
-		Set<Tile> realAliveTiles = aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles();
-		return !parseWinTileUnits(playerInfo, realAliveTiles, winTile).isEmpty();
-	}
+	public List<List<TileUnit>> parseWinTileUnits(WinInfo winInfo);
 
 	/**
-	 * 全部解析成可以和牌的完整的TileUnit集合的列表，失败返回空列表。
+	 * 判断根据此和牌类型是否可以和牌。<br>
+	 * 默认实现为调用parseWinTileUnits解析。
 	 * 
-	 * @param playerInfo
-	 *            除手牌之外的信息
-	 * @param realAliveTiles
-	 *            手牌（包含winTile）
-	 * @param winTile
-	 *            最后得到的牌
-	 * @return 完整的TileUnit集合的列表
+	 * @param winInfo
+	 *            和牌信息
+	 * @return 是否可以和牌
 	 */
-	public List<List<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Collection<Tile> realAliveTiles, Tile winTile);
+	public default boolean match(WinInfo winInfo) {
+		List<List<TileUnit>> units = parseWinTileUnits(winInfo);
+		return !units.isEmpty();
+	}
 
 	/**
 	 * 用于机器人，返回建议打出的牌，即从手牌中排除掉明显不应该打出的牌并返回。返回的列表按建议的优先级从高到低排列。

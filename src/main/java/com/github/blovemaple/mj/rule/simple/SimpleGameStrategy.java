@@ -2,13 +2,11 @@ package com.github.blovemaple.mj.rule.simple;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.rule.AbstractGameStrategy;
-import com.github.blovemaple.mj.rule.win.FanType;
+import com.github.blovemaple.mj.rule.fan.FanType;
 import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
@@ -30,17 +28,11 @@ public class SimpleGameStrategy extends AbstractGameStrategy {
 		return WIN_TYPES;
 	}
 
-	private static final Map<FanType, Integer> FAN_TYPES = Collections
-			.singletonMap(new SimpleFanType(), 1);
+	private static final List<FanType> FAN_TYPES = Collections.singletonList(new SimpleFanType());
 
 	@Override
-	public Map<? extends FanType, Integer> getAllFanTypes() {
+	public List<FanType> getAllFanTypes() {
 		return FAN_TYPES;
-	}
-
-	@Override
-	public Map<? extends FanType, Set<? extends FanType>> getAllCoveredFanTypes() {
-		return Collections.emptyMap();
 	}
 
 }

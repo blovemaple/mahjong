@@ -21,15 +21,15 @@ public class TileUnit {
 	private final Tile gotTile;
 
 	public enum TileUnitSource {
-		SELF_OR_WIN, GOT_IN_GAME
+		SELF, GOT
 	}
 
-	public static TileUnit selfOrWin(TileUnitType type, Collection<Tile> tiles) {
-		return new TileUnit(type, tiles, SELF_OR_WIN, null);
+	public static TileUnit self(TileUnitType type, Collection<Tile> tiles) {
+		return new TileUnit(type, tiles, SELF, null);
 	}
 
-	public static TileUnit gotInGame(TileUnitType type, Collection<Tile> tiles, Tile gotTile) {
-		return new TileUnit(type, tiles, GOT_IN_GAME, gotTile);
+	public static TileUnit got(TileUnitType type, Collection<Tile> tiles, Tile gotTile) {
+		return new TileUnit(type, tiles, GOT, gotTile);
 	}
 
 	public TileUnit(TileUnitType type, Collection<Tile> tiles, TileUnitSource source, Tile gotTile) {

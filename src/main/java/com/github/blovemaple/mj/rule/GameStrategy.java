@@ -1,16 +1,12 @@
 package com.github.blovemaple.mj.rule;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
-
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
@@ -18,11 +14,9 @@ import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.ActionTypeAndLocation;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.MahjongTable;
-import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileUnit;
-import com.github.blovemaple.mj.rule.win.FanType;
+import com.github.blovemaple.mj.rule.fan.FanType;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 import com.github.blovemaple.mj.rule.win.WinType;
 
@@ -92,68 +86,54 @@ public interface GameStrategy {
 	public List<? extends WinType> getAllWinTypes();
 
 	/**
-	 * 判断指定条件下是否可和牌。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
-	 * 否则利用playerInfo中的aliveTiles做出判断。<br>
+	 * 判断指定条件下是否可和牌。<br>
 	 * 默认实现为使用此策略支持的所有和牌类型进行判断，至少有一种和牌类型判断可以和牌则可以和牌。
 	 */
-	public default boolean canWin(PlayerInfo playerInfo, Set<Tile> aliveTiles, Tile winTile) {
-		return getAllWinTypes().stream().anyMatch(winType -> winType.match(playerInfo, aliveTiles, winTile));
+	public default boolean canWin(WinInfo winInfo) {
+		return getAllWinTypes().stream().anyMatch(winType -> winType.match(winInfo));
 		// TODO 缓存
 	}
 
 	/**
-	 * 获取此策略支持的所有番种和番数。
+	 * 获取此策略支持的所有番种。返回的列表中，被覆盖的番种必须在覆盖它的番种之后。不允许两个番种相互覆盖。
 	 */
-	public Map<? extends FanType, Integer> getAllFanTypes();
+	public List<FanType> getAllFanTypes();
 
 	/**
-	 * 检查和牌的所有番种和番数。如果aliveTiles非null，则用于替换playerInfo中的信息做出判断，
-	 * 否则利用playerInfo中的aliveTiles做出判断。<br>
+	 * 检查和牌的所有番种和番数。<br>
 	 * 默认实现为使用此策略支持的所有番种和番数进行统计。
 	 */
-	public default Map<FanType, Integer> getFans(GameContext.PlayerView contextView, PlayerInfo playerInfo,
-			Collection<Tile> aliveTiles, Tile winTile) {
-		Collection<Tile> realAliveTiles = aliveTiles != null ? aliveTiles : playerInfo.getAliveTiles();
-		Map<WinType, List<List<TileUnit>>> unitsByWinType = new HashMap<>();
-		for (WinType winType : getAllWinTypes()) {
-			List<List<TileUnit>> units = winType.parseWinTileUnits(playerInfo, realAliveTiles, winTile);
-			if (!units.isEmpty())
-				unitsByWinType.put(winType, units);
-		}
-
-		if (unitsByWinType.isEmpty())
+	public default Map<FanType, Integer> getFans(WinInfo winInfo) {
+		// 先parse和牌units
+		getAllWinTypes().forEach(winType -> winType.parseWinTileUnits(winInfo));
+		// 如果没parse出来，说明不和牌，直接返回空map
+		if (winInfo.getUnits() == null || winInfo.getUnits().isEmpty())
 			return Collections.emptyMap();
 
-		WinInfo winInfo = new WinInfo();
-		winInfo.setLocation(contextView.getMyLocation());
-		winInfo.setAllActions(contextView.getDoneActions());
-		winInfo.setTileTypes(PlayerInfo.tiles(playerInfo, realAliveTiles).map(Tile::type).collect(Collectors.toList()));
-		winInfo.setUnits(unitsByWinType);
-		winInfo.setWinTile(winTile);
-		winInfo.setZiMo(DRAW.matchBy(contextView.getLastAction().getType()));
-
-		Map<? extends FanType, Set<? extends FanType>> coveredFanTypes = getAllCoveredFanTypes();
-		Set<FanType> removedFanTypes = new HashSet<>();
+		// 算番
+		Map<FanType, Integer> attachedFanTypes = new HashMap<>();
+		LinkedList<FanType> uncheckedFanTypes = new LinkedList<>(getAllFanTypes());
 		Map<FanType, Integer> fans = new HashMap<>();
-		getAllFanTypes().forEach((fanType, fan) -> {
-			if (!removedFanTypes.contains(fanType) && fanType.match(winInfo)) {
-				fans.put(fanType, fan);
-				Set<? extends FanType> shouldRemoves = coveredFanTypes.get(fanType);
-				if (shouldRemoves != null)
-					removedFanTypes.addAll(shouldRemoves);
+
+		FanType crtFanType;
+		while ((crtFanType = uncheckedFanTypes.pollFirst()) != null) {
+			Integer matchCount;
+
+			matchCount = attachedFanTypes.get(crtFanType);
+			if (matchCount == null)
+				matchCount = crtFanType.match(winInfo, attachedFanTypes, uncheckedFanTypes);
+
+			if (matchCount > 0) {
+				fans.put(crtFanType, crtFanType.score() * matchCount);
+				attachedFanTypes.put(crtFanType, matchCount);
+				Set<? extends FanType> covered = crtFanType.covered();
+				if (covered != null && !covered.isEmpty())
+					uncheckedFanTypes.removeAll(covered);
 			}
-		});
+		}
 
 		return fans;
 	}
-
-	/**
-	 * 获取所有番种和被覆盖的番种。如果覆盖的番种和被覆盖的番种同时存在，则不计被覆盖的番种。<br>
-	 * 不允许两个番种相互覆盖。
-	 * 
-	 * @return 覆盖的番种-所有被它覆盖的番种
-	 */
-	public Map<? extends FanType, Set<? extends FanType>> getAllCoveredFanTypes();
 
 	/**
 	 * 根据当前状态判断游戏是否结束。

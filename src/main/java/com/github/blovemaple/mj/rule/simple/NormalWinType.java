@@ -33,6 +33,7 @@ import com.github.blovemaple.mj.object.TileSuit;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
 import com.github.blovemaple.mj.object.TileUnitType;
+import com.github.blovemaple.mj.rule.win.WinInfo;
 import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
@@ -68,16 +69,30 @@ public class NormalWinType implements WinType {
 	}
 
 	@Override
-	public List<List<TileUnit>> parseWinTileUnits(PlayerInfo playerInfo, Collection<Tile> realAliveTiles,
-			Tile winTile) {
-		if (realAliveTiles.size() % 3 != 2)
-			return emptyList();
+	public List<List<TileUnit>> parseWinTileUnits(WinInfo winInfo) {
+		if (winInfo.getUnits() != null) {
+			List<List<TileUnit>> units = winInfo.getUnits().get(this.getClass());
+			if (units != null)
+				return units;
+		}
+
+		PlayerInfo playerInfo = winInfo.getPlayerInfo();
+		Tile winTile = winInfo.getWinTile();
+		Boolean ziMo = winInfo.getZiMo();
+
+		if (winInfo.getAliveTiles().size() % 3 != 2) {
+			Map<Class<? extends WinType>, List<List<TileUnit>>> units = winInfo.getUnits();
+			if (units == null)
+				winInfo.setUnits(units = new HashMap<>());
+			units.put(this.getClass(), Collections.emptyList());
+			return Collections.emptyList();
+		}
 
 		// 根据牌组生成units
 		List<TileUnit> groupUnits = genGroupUnits(playerInfo);
 
 		// 将手牌按type排序，开始parse
-		List<Tile> aliveTileList = realAliveTiles.stream().sorted(comparing(Tile::type)).collect(toList());
+		List<Tile> aliveTileList = winInfo.getAliveTiles().stream().sorted(comparing(Tile::type)).collect(toList());
 
 		List<List<TileUnit>> parseResults = new LinkedList<>();
 		Queue<ParseBranch> branchQueue = new LinkedList<>();
@@ -114,7 +129,8 @@ public class NormalWinType implements WinType {
 					if (jiangTiles != null) {
 						if (crtType == firstType) {
 							jiangTiles.add(tile);
-							newBranchOrResult(crtBranch, jiangTiles, JIANG, branchQueue, parseResults, groupUnits);
+							newBranchOrResult(crtBranch, jiangTiles, JIANG, branchQueue, parseResults, groupUnits,
+									winTile, ziMo);
 							jiangTiles = null;
 						} else
 							jiangTiles = null;
@@ -124,7 +140,8 @@ public class NormalWinType implements WinType {
 						if (crtType == firstType) {
 							keTiles.add(tile);
 							if (keTiles.size() == 3) {
-								newBranchOrResult(crtBranch, keTiles, KEZI, branchQueue, parseResults, groupUnits);
+								newBranchOrResult(crtBranch, keTiles, KEZI, branchQueue, parseResults, groupUnits,
+										winTile, ziMo);
 								keTiles = null;
 							}
 						} else
@@ -142,7 +159,7 @@ public class NormalWinType implements WinType {
 								shunTiles.add(tile);
 								if (shunTiles.size() == 3) {
 									newBranchOrResult(crtBranch, shunTiles, SHUNZI, branchQueue, parseResults,
-											groupUnits);
+											groupUnits, winTile, ziMo);
 									shunTiles = null;
 								}
 								break;
@@ -161,6 +178,10 @@ public class NormalWinType implements WinType {
 			}
 		}
 
+		Map<Class<? extends WinType>, List<List<TileUnit>>> units = winInfo.getUnits();
+		if (units == null)
+			winInfo.setUnits(units = new HashMap<>());
+		units.put(this.getClass(), parseResults);
 		return parseResults;
 	}
 
@@ -169,14 +190,16 @@ public class NormalWinType implements WinType {
 	 */
 	protected List<TileUnit> genGroupUnits(PlayerInfo playerInfo) {
 		return playerInfo.getTileGroups().stream()
-				.map(group -> TileUnit.gotInGame(group.getType().getUnitType(), group.getTiles(), group.getGotTile()))
+				.map(group -> TileUnit.got(group.getType().getUnitType(), group.getTiles(), group.getGotTile()))
 				.collect(toList());
 	}
 
 	private void newBranchOrResult(ParseBranch baseBranch, List<Tile> selectedTiles, TileUnitType newUnitType,
-			Queue<ParseBranch> branchQueue, List<List<TileUnit>> parseResults, List<TileUnit> groupUnits) {
+			Queue<ParseBranch> branchQueue, List<List<TileUnit>> parseResults, List<TileUnit> groupUnits, Tile winTile,
+			Boolean ziMo) {
 		boolean hasJiang = baseBranch.hasJiang || newUnitType == JIANG;
-		TileUnit newUnit = TileUnit.selfOrWin(newUnitType, selectedTiles);
+		TileUnit newUnit = winTile != null && selectedTiles.contains(winTile) && (ziMo != null && !ziMo)
+				? TileUnit.got(newUnitType, selectedTiles, winTile) : TileUnit.self(newUnitType, selectedTiles);
 		List<TileUnit> units = merged(ArrayList::new, baseBranch.units, newUnit);
 		if (baseBranch.remainTiles.size() != selectedTiles.size()) {
 			// 牌没选完，生成一个分支
@@ -220,7 +243,10 @@ public class NormalWinType implements WinType {
 			if (remainTiles.isEmpty())
 				break;
 			if (crtUnitSize > shunke.tiles.size()
-					/*|| (crtUnitSize == shunke.tiles.size() && crtLackedKinds > shunke.lackedTypesList.size())*/) {
+			/*
+			 * || (crtUnitSize == shunke.tiles.size() && crtLackedKinds >
+			 * shunke.lackedTypesList.size())
+			 */) {
 				tilesFromWorstUnits.clear();
 				crtUnitSize = shunke.tiles.size();
 				crtLackedKinds = shunke.lackedTypesList.size();
@@ -247,10 +273,10 @@ public class NormalWinType implements WinType {
 		Map<Integer, List<ChangingForWin>> changings = CHANGINGS_CACHE.get(hash);
 		if (changings == null) {
 			changings = parseChangings(new ArrayList<>(aliveTiles), candidates);
-//			 changings.forEach((count, cs) -> {
-//			 System.out.println("count " + count);
-//			 cs.forEach(System.out::println);
-//			 });
+			// changings.forEach((count, cs) -> {
+			// System.out.println("count " + count);
+			// cs.forEach(System.out::println);
+			// });
 			CHANGINGS_CACHE.put(hash, changings);
 		}
 

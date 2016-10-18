@@ -1,6 +1,10 @@
 package com.github.blovemaple.mj.rule.simple;
 
-import com.github.blovemaple.mj.rule.win.FanType;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+import com.github.blovemaple.mj.rule.fan.FanType;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
 /**
@@ -17,8 +21,18 @@ public class SimpleFanType implements FanType {
 	}
 
 	@Override
-	public boolean match(WinInfo winInfo) {
-		return true;
+	public int match(WinInfo winInfo, Map<FanType, Integer> matchedFanTypes, Collection<FanType> uncheckedFanTypes) {
+		return 1;
+	}
+
+	@Override
+	public int score() {
+		return 1;
+	}
+
+	@Override
+	public Set<FanType> covered() {
+		return null;
 	}
 
 }
