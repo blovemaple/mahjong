@@ -29,8 +29,9 @@ public class BarBot implements Player {
 			.getLogger(BarBot.class.getSimpleName());
 
 	// 一次思考的最短（含）和最长（不含）时间，单位秒，随机使用
-	private static final int THINKING_TIME_MIN = 1, THINKING_TIME_MAX = 5;
+	private static final int THINKING_TIME_MIN = 2, THINKING_TIME_MAX = 8;
 	private final Random random = new Random();
+	private static final int DRAW_TIME = 1;
 
 	private String name;
 
@@ -59,7 +60,7 @@ public class BarBot implements Player {
 			Collection<Set<Tile>> buhuas = BUHUA.getLegalActionTiles(contextView);
 			if (!buhuas.isEmpty()) {
 				// 补花前延迟1秒
-				TimeUnit.SECONDS.sleep(1);
+				TimeUnit.SECONDS.sleep(DRAW_TIME);
 				return new Action(BUHUA, buhuas.iterator().next());
 			}
 		}
@@ -73,7 +74,7 @@ public class BarBot implements Player {
 		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
 			if (actionTypes.contains(drawType)) {
 				// 摸牌前延迟1秒
-				TimeUnit.SECONDS.sleep(1);
+				TimeUnit.SECONDS.sleep(DRAW_TIME);
 				return new Action(drawType);
 			}
 
