@@ -1,6 +1,7 @@
 package com.github.blovemaple.mj.action.standard;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.utils.MyUtils.*;
 
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,8 @@ public class WinActionType extends AbstractActionType {
 	public boolean isLegalActionWithPreconition(PlayerView context, Set<Tile> tiles) {
 		WinInfo winInfo = new WinInfo();
 		winInfo.setContextView(context);
+		if (DISCARD.matchBy(context.getLastAction().getType()))
+			winInfo.setAliveTiles(mergedSet(context.getMyInfo().getAliveTiles(), context.getLastAction().getTile()));
 		return context.getGameStrategy().canWin(winInfo);
 	}
 
