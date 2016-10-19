@@ -40,10 +40,8 @@ class BarBotSimChanging {
 
 	private WinInfo getWinInfo() {
 		if (winInfo == null) {
-			WinInfo winInfo = new WinInfo();
-			winInfo.setPlayerInfo(choice.getPlayerInfo());
+			WinInfo winInfo = WinInfo.fromPlayerTiles(choice.getPlayerInfo(), null, false);
 			winInfo.setAliveTiles(getAliveTiles());
-			winInfo.setZiMo(false);
 			this.winInfo = winInfo;
 		}
 		return winInfo;

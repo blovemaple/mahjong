@@ -45,10 +45,12 @@ public class WinActionType extends AbstractActionType {
 
 	@Override
 	public boolean isLegalActionWithPreconition(PlayerView context, Set<Tile> tiles) {
-		WinInfo winInfo = new WinInfo();
+		Tile winTile = context.getLastAction().getTile();
+		boolean ziMo = !DISCARD.matchBy(context.getLastAction().getType());
+		WinInfo winInfo = WinInfo.fromPlayerTiles(context.getMyInfo(), winTile, ziMo);
 		winInfo.setContextView(context);
-		if (DISCARD.matchBy(context.getLastAction().getType()))
-			winInfo.setAliveTiles(mergedSet(context.getMyInfo().getAliveTiles(), context.getLastAction().getTile()));
+		if (!ziMo)
+			winInfo.setAliveTiles(mergedSet(context.getMyInfo().getAliveTiles(), winTile));
 		return context.getGameStrategy().canWin(winInfo);
 	}
 
@@ -56,20 +58,23 @@ public class WinActionType extends AbstractActionType {
 	// XXX - 为了避免验证legal和算番时重复判断和牌，doAction时不进行legal验证，需要此方法的调用方保证legal（目前已保证）。
 	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
 		Action lastAction = context.getLastAction();
+		Tile winTile = lastAction.getTile();
+		boolean ziMo = !DISCARD.matchBy(context.getLastAction().getType());
 
 		GameResult result = new GameResult(context.getTable().getPlayerInfos(), context.getZhuangLocation());
 		result.setWinnerLocation(location);
-		if (DRAW.matchBy(lastAction.getType())) {
+		if (ziMo) {
 			result.setWinTile(context.getPlayerView(location).getJustDrawedTile());
 		} else {
+			result.setWinTile(winTile);
 			result.setPaoerLocation(context.getLastActionLocation());
-			result.setWinTile(lastAction.getTile());
 		}
 
 		// 和牌parse units、算番
-		WinInfo winInfo = new WinInfo();
+		WinInfo winInfo = WinInfo.fromPlayerTiles(context.getPlayerInfoByLocation(location), winTile, ziMo);
 		winInfo.setContextView(context.getPlayerView(location));
-
+		if (!ziMo)
+			winInfo.setAliveTiles(mergedSet(context.getPlayerInfoByLocation(location).getAliveTiles(), winTile));
 		Map<FanType, Integer> fans = context.getGameStrategy().getFans(winInfo);
 		if (fans.isEmpty() && (winInfo.getUnits() == null || winInfo.getUnits().isEmpty()))
 			throw new IllegalActionException(context, location, action);

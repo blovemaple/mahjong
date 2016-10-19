@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
 import com.github.blovemaple.mj.object.TileSuit;
@@ -71,25 +72,21 @@ public class NormalWinType implements WinType {
 	@Override
 	public List<List<TileUnit>> parseWinTileUnits(WinInfo winInfo) {
 		if (winInfo.getUnits() != null) {
-			List<List<TileUnit>> units = winInfo.getUnits().get(this.getClass());
+			List<List<TileUnit>> units = winInfo.getUnits().get(this);
 			if (units != null)
 				return units;
 		}
 
-		PlayerInfo playerInfo = winInfo.getPlayerInfo();
 		Tile winTile = winInfo.getWinTile();
 		Boolean ziMo = winInfo.getZiMo();
 
 		if (winInfo.getAliveTiles().size() % 3 != 2) {
-			Map<Class<? extends WinType>, List<List<TileUnit>>> units = winInfo.getUnits();
-			if (units == null)
-				winInfo.setUnits(units = new HashMap<>());
-			units.put(this.getClass(), Collections.emptyList());
+			winInfo.setUnits(this, Collections.emptyList());
 			return Collections.emptyList();
 		}
 
 		// 根据牌组生成units
-		List<TileUnit> groupUnits = genGroupUnits(playerInfo);
+		List<TileUnit> groupUnits = genGroupUnits(winInfo.getTileGroups());
 
 		// 将手牌按type排序，开始parse
 		List<Tile> aliveTileList = winInfo.getAliveTiles().stream().sorted(comparing(Tile::type)).collect(toList());
@@ -178,18 +175,15 @@ public class NormalWinType implements WinType {
 			}
 		}
 
-		Map<Class<? extends WinType>, List<List<TileUnit>>> units = winInfo.getUnits();
-		if (units == null)
-			winInfo.setUnits(units = new HashMap<>());
-		units.put(this.getClass(), parseResults);
+		winInfo.setUnits(this, parseResults);
 		return parseResults;
 	}
 
 	/**
 	 * 从玩家的所有牌组生成单元集合。
 	 */
-	protected List<TileUnit> genGroupUnits(PlayerInfo playerInfo) {
-		return playerInfo.getTileGroups().stream()
+	protected List<TileUnit> genGroupUnits(List<TileGroup> tileGroups) {
+		return tileGroups.stream()
 				.map(group -> TileUnit.got(group.getType().getUnitType(), group.getTiles(), group.getGotTile()))
 				.collect(toList());
 	}

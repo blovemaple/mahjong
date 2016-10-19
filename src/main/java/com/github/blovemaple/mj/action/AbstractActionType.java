@@ -69,7 +69,7 @@ public abstract class AbstractActionType implements ActionType {
 
 	/**
 	 * 返回进行此类型动作时对上一个动作和本家位置的限制条件。<br>
-	 * 不允许返回null，不限制应该返回恒null的函数。默认返回恒null。<br>
+	 * 不允许返回null，不限制应该返回恒null的函数。默认返回恒true。<br>
 	 * 此方法用于{@link #meetPrecondition}的默认实现。
 	 */
 	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {

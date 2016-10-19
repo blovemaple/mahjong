@@ -8,7 +8,7 @@ import java.util.Set;
 import com.github.blovemaple.mj.object.PlayerLocation.Relation;
 
 /**
- * 牌组，即玩家的牌中非活牌之外的若干个组，通常是吃、碰、杠等动作形成。
+ * 牌组，即玩家的牌中除活牌外的若干个组，通常是吃、碰、杠等动作形成。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */

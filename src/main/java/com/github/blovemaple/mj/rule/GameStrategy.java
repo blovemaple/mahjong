@@ -121,7 +121,7 @@ public interface GameStrategy {
 
 			matchCount = attachedFanTypes.get(crtFanType);
 			if (matchCount == null)
-				matchCount = crtFanType.match(winInfo, attachedFanTypes, uncheckedFanTypes);
+				matchCount = crtFanType.match(winInfo);
 
 			if (matchCount > 0) {
 				fans.put(crtFanType, crtFanType.score() * matchCount);

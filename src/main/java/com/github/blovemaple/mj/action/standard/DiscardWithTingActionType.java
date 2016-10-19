@@ -36,11 +36,9 @@ public class DiscardWithTingActionType extends DiscardActionType {
 				.filter(tileToGet -> tileToGet.id() == 0)
 				// 与打出动作牌后的aliveTiles合并，看任何一种合并后的aliveTiles能否和牌
 				.anyMatch(tileToGet -> {
-					WinInfo winInfo = new WinInfo();
-					winInfo.setContextView(context);
+					WinInfo winInfo = WinInfo.fromPlayerTiles(playerInfo, tileToGet, false);
 					winInfo.setAliveTiles(mergedSet(remainAliveTiles, tileToGet));
-					winInfo.setWinTile(tileToGet);
-					winInfo.setZiMo(false);
+					winInfo.setContextView(context);
 					return strategy.canWin(winInfo);
 				});
 	}

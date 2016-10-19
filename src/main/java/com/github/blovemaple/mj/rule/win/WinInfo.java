@@ -1,82 +1,44 @@
 package com.github.blovemaple.mj.rule.win;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.object.PlayerInfo;
+import com.github.blovemaple.mj.object.PlayerTiles;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
+import com.github.blovemaple.mj.rule.fan.FanType;
 
 /**
  * TODO comment
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class WinInfo {
-	private GameContext.PlayerView contextView;
-
-	private PlayerInfo playerInfo;
-	private Set<Tile> aliveTiles;
-	private List<TileType> tileTypes; // 玩家手中所有牌，排序
+public class WinInfo extends PlayerTiles {
 	private Tile winTile;
 	private Boolean ziMo;
+	private GameContext.PlayerView contextView;
 
-	private Map<Class<? extends WinType>, List<List<TileUnit>>> units;
+	private List<TileType> tileTypes; // 玩家手中所有牌，排序
 
-	public void setContextView(GameContext.PlayerView contextView) {
-		this.contextView = contextView;
-	}
+	// 检查WinType和FanType的时候填入的结果，用于：
+	// (1)检查FanType时利用WinType的parse结果
+	// (2)检查前先看是否已经有结果，避免重复检查
+	private Map<WinType, List<List<TileUnit>>> units = new HashMap<>();
+	private Map<FanType, Integer> fans = new HashMap<>();
 
-	public PlayerInfo getPlayerInfo() {
-		if (playerInfo == null)
-			playerInfo = fromContext(GameContext.PlayerView::getMyInfo);
-		return playerInfo;
-	}
-
-	public void setPlayerInfo(PlayerInfo playerInfo) {
-		this.playerInfo = playerInfo;
-	}
-
-	public Set<Tile> getAliveTiles() {
-		if (aliveTiles == null)
-			aliveTiles = from(playerInfo, PlayerInfo::getAliveTiles);
-		return aliveTiles;
-	}
-
-	public void setAliveTiles(Set<Tile> aliveTiles) {
-		this.aliveTiles = aliveTiles;
-	}
-
-	public List<TileType> getTileTypes() {
-		if (tileTypes == null)
-			tileTypes = fromContext(contextView -> {
-				PlayerInfo playerInfo = contextView.getMyInfo();
-				Stream<Tile> tiles = playerInfo.getAliveTiles().stream();
-				if (playerInfo != null)
-					for (TileGroup group : playerInfo.getTileGroups())
-						tiles = Stream.concat(tiles, group.getTiles().stream());
-				return tiles.map(Tile::type).sorted().collect(Collectors.toList());
-			});
-		return tileTypes;
-	}
-
-	public void setTileTypes(List<TileType> tileTypes) {
-		this.tileTypes = tileTypes;
-	}
-
-	public Map<Class<? extends WinType>, List<List<TileUnit>>> getUnits() {
-		return units;
-	}
-
-	public void setUnits(Map<Class<? extends WinType>, List<List<TileUnit>>> units) {
-		this.units = units;
+	public static WinInfo fromPlayerTiles(PlayerTiles playerTiles, Tile winTile, Boolean ziMo) {
+		WinInfo winInfo = new WinInfo();
+		winInfo.setAliveTiles(playerTiles.getAliveTiles());
+		winInfo.setTileGroups(playerTiles.getTileGroups());
+		winInfo.setWinTile(winTile);
+		winInfo.setZiMo(ziMo);
+		return winInfo;
 	}
 
 	public Tile getWinTile() {
@@ -95,13 +57,50 @@ public class WinInfo {
 		this.ziMo = ziMo;
 	}
 
-	private <R> R fromContext(Function<GameContext.PlayerView, R> function) {
-		return from(contextView, function);
+	public void setContextView(GameContext.PlayerView contextView) {
+		this.contextView = contextView;
 	}
 
-	private <S, R> R from(S source, Function<S, R> function) {
-		if (source == null)
-			return null;
-		return function.apply(source);
+	public GameContext.PlayerView getContextView() {
+		return contextView;
 	}
+
+	public List<TileType> getTileTypes() {
+		if (tileTypes == null) {
+			Stream<Tile> tiles = getAliveTiles().stream();
+			for (TileGroup group : getTileGroups())
+				tiles = Stream.concat(tiles, group.getTiles().stream());
+			tileTypes = tiles.map(Tile::type).sorted().collect(Collectors.toList());
+		}
+		return tileTypes;
+	}
+
+	public void setTileTypes(List<TileType> tileTypes) {
+		this.tileTypes = tileTypes;
+	}
+
+	public Map<WinType, List<List<TileUnit>>> getUnits() {
+		return units;
+	}
+
+	public void setUnits(Map<WinType, List<List<TileUnit>>> units) {
+		this.units = units;
+	}
+
+	public void setUnits(WinType winType, List<List<TileUnit>> units) {
+		this.units.put(winType, units);
+	}
+
+	public Map<FanType, Integer> getFans() {
+		return fans;
+	}
+
+	public void setFans(Map<FanType, Integer> fans) {
+		this.fans = fans;
+	}
+
+	public void setFans(FanType fanType, Integer fans) {
+		this.fans.put(fanType, fans);
+	}
+
 }

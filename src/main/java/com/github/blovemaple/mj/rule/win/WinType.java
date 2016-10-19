@@ -26,7 +26,7 @@ public interface WinType {
 	public List<List<TileUnit>> parseWinTileUnits(WinInfo winInfo);
 
 	/**
-	 * 判断根据此和牌类型是否可以和牌。<br>
+	 * 判断根据此和牌类型是否可以和牌。如果可以和牌，则向winInfo填入和牌信息。<br>
 	 * 默认实现为调用parseWinTileUnits解析。
 	 * 
 	 * @param winInfo
@@ -35,7 +35,7 @@ public interface WinType {
 	 */
 	public default boolean match(WinInfo winInfo) {
 		List<List<TileUnit>> units = parseWinTileUnits(winInfo);
-		return !units.isEmpty();
+		return units != null && !units.isEmpty();
 	}
 
 	/**
