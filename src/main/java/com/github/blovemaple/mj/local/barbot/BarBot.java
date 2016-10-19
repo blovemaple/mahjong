@@ -5,11 +5,13 @@ import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import com.github.blovemaple.mj.action.Action;
@@ -25,6 +27,10 @@ import com.github.blovemaple.mj.object.Tile;
 public class BarBot implements Player {
 	private static final Logger logger = Logger
 			.getLogger(BarBot.class.getSimpleName());
+
+	// 一次思考的最短（含）和最长（不含）时间，单位秒，随机使用
+	private static final int THINKING_TIME_MIN = 1, THINKING_TIME_MAX = 5;
+	private final Random random = new Random();
 
 	private String name;
 
@@ -50,10 +56,12 @@ public class BarBot implements Player {
 
 		// 如果可以补花，就补花
 		if (actionTypes.contains(BUHUA)) {
-			Collection<Set<Tile>> buhuas = BUHUA
-					.getLegalActionTiles(contextView);
-			if (!buhuas.isEmpty())
+			Collection<Set<Tile>> buhuas = BUHUA.getLegalActionTiles(contextView);
+			if (!buhuas.isEmpty()) {
+				// 补花前延迟1秒
+				TimeUnit.SECONDS.sleep(1);
 				return new Action(BUHUA, buhuas.iterator().next());
+			}
 		}
 
 		// 如果可以吃/碰/杠/出牌，就选择
@@ -63,8 +71,11 @@ public class BarBot implements Player {
 
 		// 如果可以摸牌，就摸牌
 		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
-			if (actionTypes.contains(drawType))
+			if (actionTypes.contains(drawType)) {
+				// 摸牌前延迟1秒
+				TimeUnit.SECONDS.sleep(1);
 				return new Action(drawType);
+			}
 
 		// 啥都没选择，放弃了
 		return null;
@@ -72,18 +83,27 @@ public class BarBot implements Player {
 
 	private Future<Action> selectFuture;
 
-	private Action chooseCpgdAction(PlayerView contextView,
-			Set<ActionType> actionTypes) throws InterruptedException {
+	private Action chooseCpgdAction(PlayerView contextView, Set<ActionType> actionTypes) throws InterruptedException {
 		if (selectFuture != null && !selectFuture.isDone())
 			throw new IllegalStateException("Another select task is active.");
 
 		if (Collections.disjoint(actionTypes, BarBotCpgdSelectTask.ACTION_TYPES))
 			return null;
 
+		// 随机选择思考时间
+		long startTime = System.currentTimeMillis();
+		int thinkingTime = THINKING_TIME_MIN + random.nextInt(THINKING_TIME_MAX - THINKING_TIME_MIN);
+
 		Future<Action> futureResult = ForkJoinPool.commonPool()
 				.submit(new BarBotCpgdSelectTask(contextView, actionTypes));
 		try {
-			return futureResult.get();
+			Action action = futureResult.get();
+			long endTime = System.currentTimeMillis();
+			long remainTimeMs = thinkingTime * 1000 - (endTime - startTime);
+			if (remainTimeMs > 0)
+				// 时间太短了，假装再想一会儿
+				TimeUnit.MILLISECONDS.sleep(remainTimeMs);
+			return action;
 		} catch (InterruptedException e) {
 			// 选择被game中断，不再继续选择了
 			selectFuture.cancel(true);
