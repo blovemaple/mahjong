@@ -1,9 +1,6 @@
 package com.github.blovemaple.mj.rule;
 
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +13,7 @@ import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.rule.fan.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 import com.github.blovemaple.mj.rule.win.WinType;
 
@@ -83,7 +80,7 @@ public interface GameStrategy {
 	/**
 	 * 获取此策略支持的所有和牌类型。
 	 */
-	public List<? extends WinType> getAllWinTypes();
+	public List<WinType> getAllWinTypes();
 
 	/**
 	 * 判断指定条件下是否可和牌。<br>
@@ -104,35 +101,7 @@ public interface GameStrategy {
 	 * 默认实现为使用此策略支持的所有番种和番数进行统计。
 	 */
 	public default Map<FanType, Integer> getFans(WinInfo winInfo) {
-		// 先parse和牌units
-		getAllWinTypes().forEach(winType -> winType.parseWinTileUnits(winInfo));
-		// 如果没parse出来，说明不和牌，直接返回空map
-		if (winInfo.getUnits() == null || winInfo.getUnits().isEmpty())
-			return Collections.emptyMap();
-
-		// 算番
-		Map<FanType, Integer> attachedFanTypes = new HashMap<>();
-		LinkedList<FanType> uncheckedFanTypes = new LinkedList<>(getAllFanTypes());
-		Map<FanType, Integer> fans = new HashMap<>();
-
-		FanType crtFanType;
-		while ((crtFanType = uncheckedFanTypes.pollFirst()) != null) {
-			Integer matchCount;
-
-			matchCount = attachedFanTypes.get(crtFanType);
-			if (matchCount == null)
-				matchCount = crtFanType.match(winInfo);
-
-			if (matchCount > 0) {
-				fans.put(crtFanType, crtFanType.score() * matchCount);
-				attachedFanTypes.put(crtFanType, matchCount);
-				Set<? extends FanType> covered = crtFanType.covered();
-				if (covered != null && !covered.isEmpty())
-					uncheckedFanTypes.removeAll(covered);
-			}
-		}
-
-		return fans;
+		return FanType.getFans(winInfo, getAllFanTypes(), getAllWinTypes());
 	}
 
 	/**

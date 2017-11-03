@@ -320,7 +320,7 @@ public class MyUtils {
 	}
 
 	/**
-	 * 将指定的一个集合中的元素减去指定元素产生一个新的集合并返回。
+	 * 将指定的一个集合中的元素减去指定集合的全部元素产生一个新的集合并返回。
 	 */
 	public static <E, C extends Collection<E>> C remainColl(Function<Collection<E>, C> newCollConstructor,
 			Collection<E> collection, Collection<E> removedElement) {

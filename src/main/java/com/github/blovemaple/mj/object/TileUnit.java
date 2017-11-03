@@ -3,10 +3,9 @@ package com.github.blovemaple.mj.object;
 import static com.github.blovemaple.mj.object.TileUnit.TileUnitSource.*;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 牌的单元，即判断和牌时对牌的分组，如顺子、刻子、杠子、将牌等。
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
 public class TileUnit {
 	private final TileUnitType type;
 	private final Set<Tile> tiles;
-	private List<TileType> tileTypes; // 排序过的
+	private TileType firstTileType; // 最小的一个牌型
 	private final TileUnitSource source;
 	private final Tile gotTile;
 
@@ -47,10 +46,10 @@ public class TileUnit {
 		return tiles;
 	}
 
-	public List<TileType> getTileTypes() {
-		if (tileTypes == null)
-			tileTypes = tiles.stream().map(Tile::type).sorted().collect(Collectors.toList());
-		return tileTypes;
+	public TileType getFirstTileType() {
+		if (firstTileType == null)
+			firstTileType = tiles.stream().map(Tile::type).min(Comparator.naturalOrder()).orElse(null);
+		return firstTileType;
 	}
 
 	public TileUnitSource getSource() {

@@ -9,7 +9,7 @@ import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileSuit;
-import com.github.blovemaple.mj.rule.fan.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
 
 /**
  * 语言管理器，屏蔽对语言的设置。

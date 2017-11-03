@@ -6,7 +6,7 @@ import java.util.List;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.rule.AbstractGameStrategy;
-import com.github.blovemaple.mj.rule.fan.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.rule.win.WinType;
 
 /**

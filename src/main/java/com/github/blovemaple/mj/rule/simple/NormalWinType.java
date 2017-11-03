@@ -30,12 +30,12 @@ import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
+import com.github.blovemaple.mj.rule.win.WinInfo;
+import com.github.blovemaple.mj.rule.win.WinType;
 import com.github.blovemaple.mj.object.TileSuit;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.object.TileUnit;
 import com.github.blovemaple.mj.object.TileUnitType;
-import com.github.blovemaple.mj.rule.win.WinInfo;
-import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
  * 普通和牌（相对于七对等特殊和牌类型而言）。

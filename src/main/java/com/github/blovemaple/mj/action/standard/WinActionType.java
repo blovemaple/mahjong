@@ -16,7 +16,7 @@ import com.github.blovemaple.mj.game.GameContext.PlayerView;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.rule.fan.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
 /**

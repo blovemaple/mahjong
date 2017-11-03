@@ -2,7 +2,7 @@ package com.github.blovemaple.mj.rule.simple;
 
 import java.util.Set;
 
-import com.github.blovemaple.mj.rule.fan.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
 /**
@@ -19,7 +19,7 @@ public class SimpleFanType implements FanType {
 	}
 
 	@Override
-	public int match(WinInfo winInfo) {
+	public int matchCount(WinInfo winInfo) {
 		return 1;
 	}
 

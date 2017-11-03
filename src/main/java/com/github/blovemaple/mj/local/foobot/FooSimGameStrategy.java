@@ -18,7 +18,7 @@ import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.rule.GameStrategy;
-import com.github.blovemaple.mj.rule.fan.FanType;
+import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
@@ -133,7 +133,7 @@ public class FooSimGameStrategy implements GameStrategy {
 		return defAction;
 	}
 
-	public List<? extends WinType> getAllWinTypes() {
+	public List<WinType> getAllWinTypes() {
 		return realStrategy.getAllWinTypes();
 	}
 
