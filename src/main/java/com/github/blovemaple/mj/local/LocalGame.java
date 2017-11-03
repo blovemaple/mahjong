@@ -2,6 +2,7 @@ package com.github.blovemaple.mj.local;
 
 import static com.github.blovemaple.mj.object.PlayerLocation.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
 
 import com.github.blovemaple.mj.game.MahjongGame;
@@ -43,15 +44,16 @@ public class LocalGame {
 			MahjongTable table = new MahjongTable();
 			table.init();
 			table.setPlayer(EAST, localPlayer);
-			table.setPlayer(SOUTH, botPlayerClass.newInstance());
-			table.setPlayer(WEST, botPlayerClass.newInstance());
-			table.setPlayer(NORTH, botPlayerClass.newInstance());
+			table.setPlayer(SOUTH, botPlayerClass.getConstructor().newInstance());
+			table.setPlayer(WEST, botPlayerClass.getConstructor().newInstance());
+			table.setPlayer(NORTH, botPlayerClass.getConstructor().newInstance());
 
 			MahjongGame game = new MahjongGame(gameStrategy, timeStrategy);
 			while (newGameChecker.get()) {
 				game.play(table);
 			}
-		} catch (InstantiationException | IllegalAccessException e) {
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
 			throw new RuntimeException(e);
 		}
 	}
