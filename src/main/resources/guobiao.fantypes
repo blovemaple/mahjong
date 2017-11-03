@@ -1,0 +1,142 @@
+[PACKAGE:xxx]
+
+[88]
+DA_SAN_YUAN				[KG]!Z!{ZFB}
+DA_SI_XI				[KG]!Z!{ESWN}
+JIU_LIAN_BAO_DENG		( <NO_GROUP> & @A!{1112345678999},@A#a )
+LIAN_QI_DUI				( <QI_DUI> & @A#{0123456}a )
+SI_GANG					4G
+LV_YI_SE				~!T!{23468}/!Z!F
+SHI_SAN_YAO				!{WBT}!{19},!Z!{ESWNZFB}, !{WBT}!{19}/!Z!{ESWNZFB}
+
+[64]
+QING_YAO_JIU			~@?![19]
+XIAO_SAN_YUAN			2[KG]!Z![ZFB],J!Z![ZFB]
+XIAO_SI_XI				2[KG]!Z![ESWN],J!Z![ESWN]
+ZI_YI_SE				~!Z#?
+SI_AN_KE				4[KG]0
+YI_SE_SHUANG_LONG_HUI	@a!{12312355789789}
+YI_SE_SI_TONG_SHUN		4S@a#b
+YI_SE_SI_JIE_GAO		[KG]@a#{0123}b
+
+[32]
+YI_SE_SI_BU_GAO			( S@a#{0123}b | S@a#{0246}b )
+SAN_GANG				3G
+HUN_YAO_JIU				~@?!{19}/!Z#?
+
+[24]
+QI_DUI					( <MEN_QIAN_QING> & 2@a#z,2@s#x,2@d#c,2@f#v,2@g#b,2@h#n,2@j#m )
+QI_XING_BU_KAO			( <QUAN_BU_KAO> & !Z!{ESWNZFB} )
+QUAN_SHUANG_KE			4[KGJ]@?![2468]
+QING_YI_SE				~@a#[123456789]
+YI_SE_SAN_TONG_SHUN		3S@a#b
+YI_SE_SAN_JIE_GAO		[KG]@a#{012}b
+QUAN_DA					~@?![789]
+QUAN_ZHONG				~@?![456]
+QUAN_XIAO				~@?![123]
+
+[16]
+QING_LONG				@A!{123456789}
+SAN_SE_SHUANG_LONG_HUI	@{AB}!{123789},@C!{55}
+YI_SE_SAN_BU_GAO		( S@a#{012}b | S@a#{024}b )
+QUAN_DAI_WU				~[JKG]@?!5/S@?![345]
+SAN_TONG_KE				3[KG]@?#a
+SAN_AN_KE				3[KG]0
+
+[12]
+QUAN_BU_KAO				( -2@a#b & ~@A!{147}/@B!{258}/@C!{369}/!Z#? )
+ZU_HE_LONG				@A!{147},@B!{258},@C!{369}
+DA_YU_WU				~@?![6789]
+XIAO_YU_WU				~@?![1234]
+SAN_FENG_KE				3[KG]!Z![ESWN]
+
+[8]
+HUA_LONG				@A!{123},@B!{456},@C!{789}
+TUI_BU_DAO				~!B!{1234589}/!T!{245689}/!Z!B
+SAN_SE_SAN_TONG_SHUN	S@{ABC}#z
+SAN_SE_SAN_JIE_GAO		[KG]@A#z,[KG]@B#1z,[KG]@C#2z
+MIAO_SHOU_HUI_CHUN		<MiaoShouHuiChun>
+HAI_DI_LAO_YUE			<HaiDiLaoYue>
+GANG_SHANG_KAI_HUA		<GangShangKaiHua>
+QIANG_GANG_HU			<QiangGangHu>
+
+[6]
+PENG_PENG_HU			4[KG]
+HUN_YI_SE				~@a#?/!Z#?
+SAN_SE_SAN_BU_GAO		S@A#z,S@B#1z,S@C#2z
+WU_MEN_QI				!{WTB}#?,!Z![ESWN],!Z![ZFB]
+QUAN_QIU_REN			5[KSGJ]1
+SHUANG_AN_GANG			2G0
+SHUANG_JIAN_KE			2[KG]!Z![ZFB]
+
+[4]
+QUAN_DAI_YAO			J@?!{19}/!Z#?,4[KG]@?!{19}/!Z#?/S@?!{17}
+BU_QIU_REN				( <MEN_QIAN_QING> & <ZI_MO> )
+SHUANG_MING_GANG		2G1
+HU_JUE_ZHANG			<HuJueZhang>
+
+[2]
+JIAN_KE					[KG]!Z![ZFB]
+QUAN_FENG_KE			[KG]!Z!Q
+MEN_FENG_KE				[KG]!Z!M
+MEN_QIAN_QING			<MenQianQing>
+PING_HU					4S,J![WTB]#?
+SI_GUI_YI				<SiGuiYi>
+SHUANG_TONG_KE			2[KG]@?#a
+SHUANG_AN_KE			2[KG]0
+AN_GANG					G0
+DUAN_YAO				^@?!{19}/!Z#?
+
+[1]
+YI_BAN_GAO				2S@a#b
+XI_XIANG_FENG			S@{AB}#z
+LIAN_LIU				@a#{012345}b
+LAO_SHAO_FU				@a!{123789}
+YAO_JIU_KE				[KG]@?!{19}/!Z!{ESWN}
+MING_GANG				G1
+QUE_YI_MEN				-!{WBT}#?
+WU_ZI					^!Z#?
+BIAN_ZHANG				<BianZhang>
+KAN_ZHANG				<KanZhang>
+DAN_DIAO_JIANG			<DanDiaoJiang>
+ZI_MO					<ZiMo>
+
+[8]
+WU_FAN_HU				<WuFanHu>
+
+[1]
+HUA_PAI					<HuaPai>
+
+[0]
+NO_GROUP				<NoGroup>
+
+
+
+判断条件：
+type a. 包含类：列出若干个同种对象，以,逗号分隔，表示必须包含这些对象。
+type b. 限制类：~ + 牌种，表示每张牌都必须是指定牌种；^ + 牌种，表示每张牌都不是指定牌种。
+type c. <类名>：调用指定类的逻辑；<其他番种名>：调用指定番种的判断条件。
+type d. (A|B)表示满足A条件或B条件；(A&B)表示同时满足A和B条件；-A表示不满足A条件。
+
+对象：
+type a. 单元：
+	part 1. 单元种类：K刻 S顺 G杠 J将。
+	part 2. （可选）0暗 1明，暗表示手牌中的暗杠或自摸单元，明表示吃、碰、明杠或点炮单元。
+	part 3. （可选）一个牌种对象，限定单元内的牌种。顺子用最小的牌种表示。
+type b. 牌种：
+	part 1. 花色：!后跟指定花色，或@后跟花色变量。指定花色：WTBZ
+	part 2. 种类：!后跟指定种类，或#后跟种类变量。指定种类：数字、ESWNZFB、Q圈风M门风
+type c. “或”关系：
+	用/斜杠分隔若干个同种对象，表示这些对象的其中之一。
+
+花色变量、种类变量：
+part 1. （可选，仅用于种类变量）数字n，表示比变量名表示的变量大n的数字，比如3a表示比a大3的数字
+part 2. 字母变量名，或?问号（表示任意）。
+		相同的变量名代表相同的花色或种类；不同的变量名，大写代表不同的花色或种类，小写不限制是否相同。
+
+简写：
+1. 对象前加数字n：在包含类条件中重复n次这个对象
+	2@A!1 == @A!1,@A!1
+2. 并列的若干个对象有若干部分不同时，只写一次，大括号{}或中括号[]内写不同的部分，每个不同的部分对每个对象只能有一个字符
+	@A!{123} == @A!1,@A!2,@A!3
+	@A![123] == [@A!1/@A!2/@A!3]
