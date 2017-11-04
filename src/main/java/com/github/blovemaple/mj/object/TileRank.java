@@ -47,4 +47,16 @@ public interface TileRank<T extends TileRank<T>> extends Comparable<T> {
 	public enum HuaRank implements TileRank<HuaRank> {
 		CHUN, XIA, QIU, DONG_HUA, MEI, LAN, ZHU, JU
 	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static int compare(TileRank<?> r1, TileRank<?> r2) {
+		if (r1.getClass() != r2.getClass()) {
+			Integer.compare(r1.getClass().hashCode(), r2.getClass().hashCode());
+		}
+		return compare0((TileRank) r1, (TileRank) r2);
+	}
+
+	private static <T extends TileRank<T>> int compare0(T r1, T r2) {
+		return r1.compareTo(r2);
+	}
 }

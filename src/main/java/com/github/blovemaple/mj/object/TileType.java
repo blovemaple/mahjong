@@ -74,10 +74,12 @@ public class TileType implements Serializable, Comparable<TileType> {
 
 	@Override
 	public int compareTo(TileType o) {
-		if (this.equals(o))
+		if (this == o)
 			return 0;
-		int ti = all.indexOf(this), oi = all.indexOf(o);
-		return ti == oi ? 0 : ti < oi ? -1 : 1;
+		int suitRes = this.suit().compareTo(o.suit());
+		if (suitRes != 0)
+			return suitRes;
+		return TileRank.compare(this.rank(), o.rank());
 	}
 
 	/**
