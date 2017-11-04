@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -46,7 +46,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * 判断当前状态下指定玩家是否符合做出此类型动作的前提条件（比如“碰”的前提条件是别人刚出牌）。<br>
 	 * 默认实现调用相应方法对上一个动作和活牌数量进行限制，进行判断。
 	 */
-	protected boolean meetPrecondition(GameContext.PlayerView context) {
+	protected boolean meetPrecondition(GameContextPlayerView context) {
 		// 验证aliveTiles数量条件
 		Predicate<Integer> aliveTileSizeCondition = getAliveTileSizePrecondition();
 		if (aliveTileSizeCondition != null)
@@ -102,8 +102,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * @see com.github.blovemaple.mj.action.ActionType#getLegalActionTiles(com.github.blovemaple.mj.game.GameContext)
 	 */
 	@Override
-	public Collection<Set<Tile>> getLegalActionTiles(
-			GameContext.PlayerView context) {
+	public Collection<Set<Tile>> getLegalActionTiles(GameContextPlayerView context) {
 		if (!meetPrecondition(context))
 			return Collections.emptySet();
 		return legalActionTilesStream(context).collect(Collectors.toSet());
@@ -151,8 +150,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现为：在玩家手中的牌中选取所有合法数量个牌的组合，并使用{@link #isLegalActionTiles}过滤出合法的组合。<br>
 	 * 如果合法的相关牌不限于手中的牌，则需要子类重写此方法。
 	 */
-	protected Stream<Set<Tile>> legalActionTilesStream(
-			GameContext.PlayerView context) {
+	protected Stream<Set<Tile>> legalActionTilesStream(GameContextPlayerView context) {
 		PlayerInfo playerInfo = context.getMyInfo();
 		if (playerInfo == null)
 			return Stream.empty();
@@ -166,8 +164,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * 返回合法动作中相关牌的可选范围。<br>
 	 * 默认实现为指定玩家的aliveTiles。
 	 */
-	protected Set<Tile> getActionTilesRange(GameContext.PlayerView context,
-			PlayerLocation location) {
+	protected Set<Tile> getActionTilesRange(GameContextPlayerView context, PlayerLocation location) {
 		return context.getMyInfo().getAliveTiles();
 	}
 
@@ -180,8 +177,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * 判断动作是否合法。<br>
 	 * 默认实现为：先检查前提条件、相关牌数量、相关牌范围，如果满足再调用{@link #isLegalActionWithPreconition}。
 	 */
-	protected boolean isLegalActionTiles(GameContext.PlayerView context,
-			Set<Tile> tiles) {
+	protected boolean isLegalActionTiles(GameContextPlayerView context, Set<Tile> tiles) {
 		PlayerLocation location = context.getMyLocation();
 		if (!meetPrecondition(context)) {
 			return false;
@@ -206,7 +202,7 @@ public abstract class AbstractActionType implements ActionType {
 	/**
 	 * 判断动作是否合法。调用此方法之前已经判断确保符合前提条件、相关牌数量、相关牌范围。
 	 */
-	protected abstract boolean isLegalActionWithPreconition(PlayerView context,
+	protected abstract boolean isLegalActionWithPreconition(GameContextPlayerView context,
 			Set<Tile> tiles);
 
 	/**

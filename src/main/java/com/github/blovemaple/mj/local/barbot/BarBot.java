@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -49,8 +49,8 @@ public class BarBot implements Player {
 	}
 
 	@Override
-	public Action chooseAction(PlayerView contextView,
-			Set<ActionType> actionTypes) throws InterruptedException {
+	public Action chooseAction(GameContextPlayerView contextView, Set<ActionType> actionTypes)
+			throws InterruptedException {
 		// 如果可以和，就和
 		if (actionTypes.contains(WIN))
 			return new Action(WIN);
@@ -84,7 +84,8 @@ public class BarBot implements Player {
 
 	private Future<Action> selectFuture;
 
-	private Action chooseCpgdAction(PlayerView contextView, Set<ActionType> actionTypes) throws InterruptedException {
+	private Action chooseCpgdAction(GameContextPlayerView contextView, Set<ActionType> actionTypes)
+			throws InterruptedException {
 		if (selectFuture != null && !selectFuture.isDone())
 			throw new IllegalStateException("Another select task is active.");
 
@@ -119,20 +120,18 @@ public class BarBot implements Player {
 	}
 
 	@Override
-	public Action chooseAction(PlayerView contextView,
-			Set<ActionType> actionTypes, Action illegalAction)
+	public Action chooseAction(GameContextPlayerView contextView, Set<ActionType> actionTypes, Action illegalAction)
 			throws InterruptedException {
 		logger.severe("Selected illegal action: " + illegalAction);
 		return null;
 	}
 
 	@Override
-	public void actionDone(PlayerView contextView,
-			PlayerLocation actionLocation, Action action) {
+	public void actionDone(GameContextPlayerView contextView, PlayerLocation actionLocation, Action action) {
 	}
 
 	@Override
-	public void timeLimit(PlayerView contextView, Integer secondsToGo) {
+	public void timeLimit(GameContextPlayerView contextView, Integer secondsToGo) {
 		// TODO 机器人对限时的处理
 	}
 

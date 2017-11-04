@@ -128,7 +128,7 @@ public class MahjongTable {
 	/**
 	 * 获取指定位置的玩家视图。
 	 */
-	public PlayerView getPlayerView(PlayerLocation location) {
+	public MahjongTablePlayerView getPlayerView(PlayerLocation location) {
 		PlayerView view = playerViews.get(location);
 		if (view == null) { // 不需要加锁，因为多创建了也没事
 			view = new PlayerView(location);
@@ -137,12 +137,7 @@ public class MahjongTable {
 		return view;
 	}
 
-	/**
-	 * 一个位置的玩家的视图。需要限制一些权限。
-	 * 
-	 * @author blovemaple <blovemaple2010(at)gmail.com>
-	 */
-	public class PlayerView {
+	public class PlayerView implements MahjongTablePlayerView {
 
 		private final PlayerLocation myLocation;
 
@@ -150,46 +145,34 @@ public class MahjongTable {
 			this.myLocation = myLocation;
 		}
 
-		/**
-		 * 返回此视图的玩家位置。
-		 */
+		@Override
 		public PlayerLocation getMyLocation() {
 			return myLocation;
 		}
 
-		/**
-		 * 返回指定位置的玩家名称。
-		 */
+		@Override
 		public String getPlayerName(PlayerLocation location) {
 			Player player = getPlayerByLocation(location);
 			return player != null ? player.getName() : null;
 		}
 
-		/**
-		 * 返回牌墙中的剩余牌数。
-		 */
+		@Override
 		public int getTileWallSize() {
 			return MahjongTable.this.getTileWallSize();
 		}
 
-		/**
-		 * 返回此局开始时的底牌数量。
-		 */
+		@Override
 		public int getInitBottomSize() {
 			return MahjongTable.this.getInitBottomSize();
 		}
 
-		/**
-		 * 返回已经从底部摸牌的数量。
-		 */
+		@Override
 		public int getDrawedBottomSize() {
 			return MahjongTable.this.getDrawedBottomSize();
 		}
 
-		/**
-		 * 返回所有玩家已经打出的牌。
-		 */
-		public Map<PlayerLocation, PlayerInfo.PlayerView> getPlayerInfoView() {
+		@Override
+		public Map<PlayerLocation, PlayerInfoPlayerView> getPlayerInfoView() {
 			return playerInfos.entrySet().stream()
 					.collect(Collectors.toMap(entry -> entry.getKey()
 							, entry -> entry.getValue().getOtherPlayerView()));

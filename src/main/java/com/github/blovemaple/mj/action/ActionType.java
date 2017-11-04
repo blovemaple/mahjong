@@ -6,6 +6,7 @@ import java.util.Set;
 import com.github.blovemaple.mj.action.standard.CpgActionType;
 import com.github.blovemaple.mj.action.standard.StandardActionType;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
@@ -44,8 +45,7 @@ public interface ActionType {
 	/**
 	 * 返回一个集合，包含指定状态下指定玩家可作出的此类型的所有合法动作的相关牌集合。
 	 */
-	public Collection<Set<Tile>> getLegalActionTiles(
-			GameContext.PlayerView context);
+	public Collection<Set<Tile>> getLegalActionTiles(GameContextPlayerView context);
 
 	/**
 	 * 判断指定动作是否合法。

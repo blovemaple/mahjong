@@ -1,8 +1,7 @@
 package com.github.blovemaple.mj.local.barbot;
 
-import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
-import static com.github.blovemaple.mj.object.TileGroupType.*;
+import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 import static java.util.Comparator.*;
 
@@ -27,10 +26,10 @@ import java.util.stream.Stream;
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.cli.CliGameView;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileGroup;
+import com.github.blovemaple.mj.object.TileGroupPlayerView;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.win.WinType;
 
@@ -48,14 +47,14 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	private static final int EXTENDED_MAX_CHANGE_COUNT = 4;
 	private static final int MAX_CHANGE_COUNT = 10;
 
-	private PlayerView contextView;
+	private GameContextPlayerView contextView;
 	private Set<ActionType> actionTypes;
 	private PlayerInfo playerInfo;
 
 	@SuppressWarnings("unused")
 	private boolean stopRequest = false;
 
-	public BarBotCpgdSelectTask(PlayerView contextView, Set<ActionType> actionTypes) {
+	public BarBotCpgdSelectTask(GameContextPlayerView contextView, Set<ActionType> actionTypes) {
 		this.contextView = contextView;
 		this.actionTypes = actionTypes;
 		this.playerInfo = contextView.getMyInfo();
@@ -180,8 +179,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 			existTiles.addAll(contextView.getMyInfo().getAliveTiles());
 			contextView.getTableView().getPlayerInfoView().values().forEach(playerInfo -> {
 				playerInfo.getTileGroups().stream()
-						// XXX - 写死了暗杠不应该看到
-						.filter(group -> group.getType() != ANGANG_GROUP).map(TileGroup::getTiles)
+						.map(TileGroupPlayerView::getTiles).filter(Objects::nonNull)
 						.forEach(existTiles::addAll);
 				existTiles.addAll(playerInfo.getDiscardedTiles());
 			});

@@ -17,6 +17,7 @@ import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.rule.win.WinType;
@@ -25,7 +26,7 @@ class BarBotCpgdChoice {
 	private final BarBotCpgdSelectTask task;
 	private final List<? extends WinType> forWinTypes;
 
-	private final GameContext.PlayerView baseContextView;
+	private final GameContextPlayerView baseContextView;
 	private final Action action;
 	private final PlayerInfo playerInfo; // 执行动作之后的
 	// 后续动作（如吃后出牌）。有后续动作时，和牌概率为后续动作的和牌概率最大者。
@@ -41,12 +42,12 @@ class BarBotCpgdChoice {
 
 	private Double finalWinProb; // 只计算一次，延迟生成
 
-	public BarBotCpgdChoice(GameContext.PlayerView baseContextView, PlayerInfo baseInfo, Action action,
+	public BarBotCpgdChoice(GameContextPlayerView baseContextView, PlayerInfo baseInfo, Action action,
 			BarBotCpgdSelectTask task, List<? extends WinType> forWinTypes) {
 		this(baseContextView, baseInfo, action, task, forWinTypes, null);
 	}
 
-	private BarBotCpgdChoice(GameContext.PlayerView baseContextView, PlayerInfo baseInfo, Action action,
+	private BarBotCpgdChoice(GameContextPlayerView baseContextView, PlayerInfo baseInfo, Action action,
 			BarBotCpgdSelectTask task, List<? extends WinType> forWinTypes, BarBotCpgdChoice superChoice) {
 		this.baseContextView = baseContextView;
 		this.action = action;
@@ -67,7 +68,7 @@ class BarBotCpgdChoice {
 		return forWinTypes;
 	}
 
-	private PlayerInfo doAction(GameContext.PlayerView baseContextView, PlayerInfo baseInfo, Action action) {
+	private PlayerInfo doAction(GameContextPlayerView baseContextView, PlayerInfo baseInfo, Action action) {
 		PlayerInfo playerInfo = baseInfo.clone();
 		GameContext simContext = new BarBotSimContext(baseContextView, superChoice == null ? null
 				: new ActionAndLocation(superChoice.getAction(), baseContextView.getMyLocation()), playerInfo);
@@ -259,7 +260,7 @@ class BarBotCpgdChoice {
 		return task;
 	}
 
-	public GameContext.PlayerView getBaseContextView() {
+	public GameContextPlayerView getBaseContextView() {
 		return baseContextView;
 	}
 

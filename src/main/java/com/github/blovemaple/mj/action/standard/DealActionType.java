@@ -8,6 +8,7 @@ import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -34,8 +35,7 @@ public class DealActionType implements ActionType {
 	}
 
 	@Override
-	public Collection<Set<Tile>> getLegalActionTiles(
-			GameContext.PlayerView context) {
+	public Collection<Set<Tile>> getLegalActionTiles(GameContextPlayerView context) {
 		throw new UnsupportedOperationException();
 	}
 

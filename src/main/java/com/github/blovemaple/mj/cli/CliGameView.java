@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,7 +21,7 @@ import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.standard.StandardActionType;
-import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -29,8 +30,8 @@ import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileGroupType;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
-import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.object.TileSuit;
+import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.utils.LanguageManager.Message;
 import com.github.blovemaple.mj.utils.MyUtils;
 
@@ -42,7 +43,7 @@ import com.github.blovemaple.mj.utils.MyUtils;
 public class CliGameView {
 	private final CliView cliView;
 
-	private GameContext.PlayerView contextView;
+	private GameContextPlayerView contextView;
 	private PlayerInfo playerInfo;
 	private Set<Tile> focusedAliveTiles;
 	private Set<TileGroup> focusedGroups;
@@ -59,7 +60,8 @@ public class CliGameView {
 			// 再按种类
 			.<TileRank> thenComparing(tile -> tile.type().rank())
 			// 再按ID
-			.<Integer> thenComparing(tile -> tile.id());
+			// XXX - 如果不显式指定Function的类型，maven就会报错，有可能是编译器的bug
+			.<Integer> thenComparing((Function<Tile, Integer>) tile -> tile.id());
 
 	private static final char GROUP_START_STR = '<', GROUP_END_STR = '>';
 	private static final char FOCUS_START_STR = '[', FOCUS_END_STR = ']';
@@ -86,7 +88,7 @@ public class CliGameView {
 		return cliView;
 	}
 
-	public void setContext(GameContext.PlayerView contextView)
+	public void setContext(GameContextPlayerView contextView)
 			throws IOException {
 		cliView.init();
 		focusedAliveTiles = Collections.emptySet();

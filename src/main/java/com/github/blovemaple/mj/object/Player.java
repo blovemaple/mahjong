@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 
 /**
  * 玩家。
@@ -32,7 +32,7 @@ public interface Player {
 	 * @throws InterruptedException
 	 *             线程被中断时抛出此异常。选择过程中随时可能被中断，实现时应该经常检查。
 	 */
-	public default Action chooseAction(GameContext.PlayerView contextView,
+	public default Action chooseAction(GameContextPlayerView contextView,
 			Set<ActionType> actionTypes) throws InterruptedException {
 		return chooseAction(contextView, actionTypes, null);
 	}
@@ -51,14 +51,14 @@ public interface Player {
 	 * @throws InterruptedException
 	 *             线程被中断时抛出此异常。选择过程中随时可能被中断，实现时应该经常检查。
 	 */
-	public Action chooseAction(GameContext.PlayerView contextView,
+	public Action chooseAction(GameContextPlayerView contextView,
 			Set<ActionType> actionTypes, Action illegalAction)
 			throws InterruptedException;
 
 	/**
 	 * 完成一个动作时通知。
 	 */
-	void actionDone(GameContext.PlayerView contextView,
+	void actionDone(GameContextPlayerView contextView,
 			PlayerLocation actionLocation, Action action);
 
 	/**
@@ -67,6 +67,6 @@ public interface Player {
 	 * @param secondsToGo
 	 *            剩余秒数。null表示倒计时结束或取消。
 	 */
-	void timeLimit(GameContext.PlayerView contextView, Integer secondsToGo);
+	void timeLimit(GameContextPlayerView contextView, Integer secondsToGo);
 
 }

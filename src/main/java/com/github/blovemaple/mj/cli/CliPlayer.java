@@ -24,8 +24,7 @@ import java.util.stream.Collectors;
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.cli.CliView.CharHandler;
-import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -67,7 +66,7 @@ public class CliPlayer implements Player {
 	}
 
 	@Override
-	public synchronized Action chooseAction(GameContext.PlayerView contextView,
+	public synchronized Action chooseAction(GameContextPlayerView contextView,
 			Set<ActionType> actionTypes, Action illegalAction)
 			throws InterruptedException {
 		// 如果可以补花，则自动补花
@@ -106,7 +105,7 @@ public class CliPlayer implements Player {
 	// 选择了动作就放在这里
 	private Action choseAction;
 
-	private Action chooseAction(GameContext.PlayerView contextView,
+	private Action chooseAction(GameContextPlayerView contextView,
 			Set<ActionType> legalActionTypes, boolean canChooseWin,
 			boolean canPass, ActionType... chooseActionTypes)
 			throws InterruptedException {
@@ -275,12 +274,12 @@ public class CliPlayer implements Player {
 	}
 
 	@Override
-	public void timeLimit(PlayerView contextView, Integer secondsToGo) {
+	public void timeLimit(GameContextPlayerView contextView, Integer secondsToGo) {
 		view.setTimeLimit(secondsToGo);
 	}
 
 	@Override
-	public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
+	public void actionDone(GameContextPlayerView contextView, PlayerLocation actionLocation, Action action) {
 		try {
 			if (DEAL.matchBy(action.getType()))
 				view.setContext(contextView);

@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 
 import com.github.blovemaple.mj.action.AbstractActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -33,8 +33,7 @@ public class DiscardActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
-			Set<Tile> tiles) {
+	protected boolean isLegalActionWithPreconition(GameContextPlayerView context, Set<Tile> tiles) {
 		if (!context.getMyInfo().isTing()) {
 			// 没听牌时，所有aliveTiles都可以打出
 			return true;

@@ -60,7 +60,7 @@ public class MahjongGame {
 		}
 
 		// 生成上下文
-		GameContext context = new GameContext(table, gameStrategy, timeStrategy);
+		GameContext context = new GameContextImpl(table, gameStrategy, timeStrategy);
 
 		// 初始化麻将桌
 		table.readyForGame(gameStrategy.getAllTiles());
@@ -333,7 +333,7 @@ public class MahjongGame {
 		fireEvent(context, (player, contextView) -> player.actionDone(contextView, location, action));
 	}
 
-	protected void fireEvent(GameContext context, BiConsumer<Player, GameContext.PlayerView> consumer) {
+	protected void fireEvent(GameContext context, BiConsumer<Player, GameContextPlayerView> consumer) {
 		context.getTable().getPlayerInfos().forEach((location, playerInfo) -> {
 			if (playerInfo == null)
 				return;

@@ -96,6 +96,47 @@ public class TileGroup implements Serializable {
 		return gotTile;
 	}
 
+	private PlayerView view;
+
+	/**
+	 * 返回其他玩家的视图。
+	 * 
+	 * @return 视图
+	 */
+	public TileGroupPlayerView getOtherPlayerView() {
+		if (view == null)
+			view = new PlayerView();
+		return view;
+	}
+
+	public class PlayerView implements TileGroupPlayerView {
+
+		@Override
+		public TileGroupType getType() {
+			return TileGroup.this.getType();
+		}
+
+		@Override
+		public Set<Tile> getTiles() {
+			if (getType() == TileGroupType.ANGANG_GROUP)
+				return null;
+			return TileGroup.this.getTiles();
+		}
+
+		@Override
+		public Relation getFromRelation() {
+			return TileGroup.this.getFromRelation();
+		}
+
+		@Override
+		public Tile getGotTile() {
+			if (getType() == TileGroupType.ANGANG_GROUP)
+				return null;
+			return TileGroup.this.getGotTile();
+		}
+
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

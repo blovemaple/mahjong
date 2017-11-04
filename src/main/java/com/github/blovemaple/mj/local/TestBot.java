@@ -7,8 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
 
@@ -25,7 +24,7 @@ public class TestBot implements Player {
 	}
 
 	@Override
-	public Action chooseAction(GameContext.PlayerView contextView,
+	public Action chooseAction(GameContextPlayerView contextView,
 			Set<ActionType> actionTypes, Action illegalAction)
 			throws InterruptedException {
 		if (actionTypes.contains(DISCARD)) {
@@ -39,11 +38,11 @@ public class TestBot implements Player {
 	}
 
 	@Override
-	public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
+	public void actionDone(GameContextPlayerView contextView, PlayerLocation actionLocation, Action action) {
 	}
 
 	@Override
-	public void timeLimit(PlayerView contextView, Integer secondsToGo) {
+	public void timeLimit(GameContextPlayerView contextView, Integer secondsToGo) {
 	}
 
 }

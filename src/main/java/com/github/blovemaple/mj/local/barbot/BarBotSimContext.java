@@ -6,6 +6,8 @@ import java.util.List;
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerViewImpl;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
@@ -20,13 +22,17 @@ import com.github.blovemaple.mj.utils.MyUtils;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BarBotSimContext extends GameContext {
-	private GameContext.PlayerView contextView;
+public class BarBotSimContext implements GameContext {
+	private GameStrategy gameStrategy;
+	private TimeLimitStrategy timeLimitStrategy;
+	
+	private GameContextPlayerView contextView;
 	private ActionAndLocation lastAction;
 	private PlayerInfo myInfo;
 
-	public BarBotSimContext(GameContext.PlayerView contextView, ActionAndLocation lastAction, PlayerInfo myInfo) {
-		super(null, contextView.getGameStrategy(), contextView.getTimeLimitStrategy());
+	public BarBotSimContext(GameContextPlayerView contextView, ActionAndLocation lastAction, PlayerInfo myInfo) {
+		this.gameStrategy = contextView.getGameStrategy();
+		this.timeLimitStrategy = contextView.getTimeLimitStrategy();
 		this.contextView = contextView;
 		this.lastAction = lastAction;
 		this.myInfo = myInfo;
@@ -39,12 +45,12 @@ public class BarBotSimContext extends GameContext {
 
 	@Override
 	public GameStrategy getGameStrategy() {
-		return super.getGameStrategy();
+		return gameStrategy;
 	}
 
 	@Override
 	public TimeLimitStrategy getTimeLimitStrategy() {
-		return super.getTimeLimitStrategy();
+		return timeLimitStrategy;
 	}
 
 	@Override
@@ -109,11 +115,6 @@ public class BarBotSimContext extends GameContext {
 	}
 
 	@Override
-	protected void setDoneActions(List<ActionAndLocation> doneActions) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public GameResult getGameResult() {
 		return contextView.getGameResult();
 	}
@@ -124,16 +125,11 @@ public class BarBotSimContext extends GameContext {
 	}
 
 	@Override
-	public PlayerView getPlayerView(PlayerLocation location) {
+	public GameContextPlayerView getPlayerView(PlayerLocation location) {
 		if (location == contextView.getMyLocation())
-			return new PlayerView(location);
+			return new GameContextPlayerViewImpl(this, location);
 		else
 			throw new UnsupportedOperationException();
-	}
-
-	@Override
-	protected PlayerView newPlayerView(PlayerLocation location) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -23,7 +23,7 @@ import com.github.blovemaple.mj.rule.win.WinInfo;
 public class DiscardWithTingActionType extends DiscardActionType {
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context, Set<Tile> tiles) {
+	protected boolean isLegalActionWithPreconition(GameContextPlayerView context, Set<Tile> tiles) {
 		GameStrategy strategy = context.getGameStrategy();
 		PlayerInfo playerInfo = context.getMyInfo();
 		Set<Tile> remainAliveTiles = new HashSet<>(playerInfo.getAliveTiles());

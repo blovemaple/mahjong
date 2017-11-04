@@ -7,6 +7,7 @@ import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -30,8 +31,7 @@ public class LiujuActionType implements ActionType {
 	}
 
 	@Override
-	public Collection<Set<Tile>> getLegalActionTiles(
-			GameContext.PlayerView context) {
+	public Collection<Set<Tile>> getLegalActionTiles(GameContextPlayerView context) {
 		throw new UnsupportedOperationException();
 	}
 

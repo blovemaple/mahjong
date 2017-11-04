@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 import com.github.blovemaple.mj.action.AbstractActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -39,7 +39,7 @@ public class BugangActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
+	protected boolean isLegalActionWithPreconition(GameContextPlayerView context,
 			Set<Tile> tiles) {
 		return findLegalPengGroup(context.getMyInfo(), tiles).isPresent();
 	}

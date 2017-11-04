@@ -9,7 +9,7 @@ import java.util.function.BiPredicate;
 import com.github.blovemaple.mj.action.AbstractActionType;
 import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
@@ -38,7 +38,7 @@ public class DrawActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
+	protected boolean isLegalActionWithPreconition(GameContextPlayerView context,
 			Set<Tile> tiles) {
 		// 牌墙中必须有牌才能摸
 		return context.getTableView().getTileWallSize() > 0;
