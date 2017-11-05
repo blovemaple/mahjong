@@ -94,7 +94,7 @@ public class BazBot extends AbstractBot {
 					.map(aliveTile -> new Action(DISCARD, aliveTile))
 					.map(discard -> simAction(contextViewAfterAction, discard))
 					// 评分并选出最高
-					.map(contextViewAfterDiscard -> new BazBotScoreCalculator(contextViewAfterAction).calcScore())
+					.map(contextViewAfterDiscard -> new BazBotScoreCalculator(contextViewAfterDiscard).calcScore())
 					.max(Comparator.naturalOrder()).orElse(0d);
 		} else {
 			// 不是待出牌状态，直接评分
