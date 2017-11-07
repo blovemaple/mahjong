@@ -82,11 +82,10 @@ public class BazBot extends AbstractBot {
 					.map(aliveTile -> new Action(DISCARD, aliveTile))
 					.map(discard -> simAction(contextViewAfterAction, discard))
 					// 评分并选出最高
-					.map(contextViewAfterDiscard -> new BazBotScoreCalculator(contextViewAfterDiscard).calcScore())
-					.max(Comparator.naturalOrder()).orElse(0d);
+					.map(this::score).max(Comparator.naturalOrder()).orElse(0d);
 		} else {
 			// 不是待出牌状态，直接评分
-			return new BazBotScoreCalculator(contextViewAfterAction).calcScore();
+			return score(contextViewAfterAction);
 		}
 
 	}
@@ -106,6 +105,19 @@ public class BazBot extends AbstractBot {
 			// 非法动作，不可能发生，因为选择动作的时候就是只选的合法的
 			throw new RuntimeException("BazBot is simming illegal action: " + action, e);
 		}
+	}
+
+	/**
+	 * 根据指定的contextView计算该状态下的评分。
+	 */
+	private double score(GameContextPlayerView contextView) {
+		return
+		// 计算和牌需要得到的牌型
+		new BazBotPlayerTiles(contextView.getMyInfo()).tileTypesToWin()
+				// 计算每组牌型出现的概率
+				.stream().mapToDouble(tileTypes -> BazBotTileProbCalculator.of(contextView).calcProb(tileTypes))
+				// 相加
+				.sum();
 	}
 
 }
