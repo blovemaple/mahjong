@@ -1,12 +1,10 @@
 package com.github.blovemaple.mj.local.bazbot;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.utils.MyUtils.*;
 
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,7 +16,6 @@ import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.local.AbstractBot;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileType;
 
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
@@ -58,7 +55,8 @@ public class BazBot extends AbstractBot {
 						// 生成合法tiles
 						.getLegalActionTiles(contextView).stream()
 						// 按牌型去重
-						.filter(new ByTileTypesDistinctor())
+						.filter(distinctorBy(
+								tiles -> tiles.stream().map(Tile::type).sorted().collect(Collectors.toList())))
 						// 构造Action
 						.map(tiles -> new Action(actionType, tiles)));
 	}
@@ -68,16 +66,6 @@ public class BazBot extends AbstractBot {
 			return Stream.of((Action) null);
 		else
 			return Stream.empty();
-	}
-
-	private static class ByTileTypesDistinctor implements Predicate<Set<Tile>> {
-		private Set<List<TileType>> distinctTypes = new HashSet<>();
-
-		@Override
-		public boolean test(Set<Tile> tiles) {
-			return distinctTypes.add(tiles.stream().map(Tile::type).sorted().collect(Collectors.toList()));
-		}
-
 	}
 
 	/**
