@@ -1,9 +1,9 @@
 package com.github.blovemaple.mj.local.bazbot;
 
 import static com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType.*;
+import static java.util.Comparator.*;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,7 +31,7 @@ public class BazBotPlayerTiles {
 		this.playerTiles = playerTiles;
 	}
 
-	public Set<List<TileType>> tileTypesToWin() {
+	public List<List<TileType>> tileTypesToWin() {
 		neighborhoods = BazBotTileNeighborhood.parse(playerTiles.getAliveTiles());
 
 		return Stream.of(new BazBotChoosingTileUnits(neighborhoods, playerTiles.getTileGroups().size())) // 一个初始units，为flatmap做准备
@@ -41,7 +41,9 @@ public class BazBotPlayerTiles {
 				.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_TWO, false)) // 选所有合适的不完整顺刻组合（缺两张的）
 				.flatMap(units -> units.newToChoose(UNCOMPLETE_JIANG, false)) // 选所有合适的不完整将牌
 				.flatMap(BazBotChoosingTileUnits::tileTypesToWin) // 计算tileUnits和牌所需牌型
-				.collect(Collectors.toSet()) // 入set去重
+				.peek(tileTypes -> tileTypes.sort(naturalOrder())) // 每组tileType内部排序，准备去重
+				.distinct() // 去重
+				.collect(Collectors.toList()) // 收集结果
 		;
 	}
 
