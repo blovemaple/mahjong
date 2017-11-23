@@ -99,8 +99,9 @@ public class PlayerInfo extends PlayerTiles implements Cloneable {
 		return otherPlayerView;
 	}
 
-	public class PlayerView implements PlayerInfoPlayerView {
+	private class PlayerView implements PlayerInfoPlayerView {
 
+		@Override
 		public String getPlayerName() {
 			Player player = getPlayer();
 			return player != null ? getPlayer().getName() : null;
