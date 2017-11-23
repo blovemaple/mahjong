@@ -20,7 +20,7 @@ import com.github.blovemaple.mj.object.TileType;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BazBotTileProbCalculator {
+class BazBotTileProbCalculator {
 	/**
 	 * 返回指定contextView当前状态下的一个BazBotTileProbCalculator。<br>
 	 * TODO 缓存。BazBot的一次计算中可见牌都相同，为了共用同一个calculator，<br>
@@ -86,7 +86,7 @@ public class BazBotTileProbCalculator {
 				// 除以不可见牌的总数得出概率
 				.mapToDouble(count -> count.doubleValue() / (invisibleTotleCount - removedTotle.get()))
 				// 所有概率相乘
-				.reduce((prob1, prob2) -> prob1 * prob2).orElse(0d);
+				.reduce((prob1, prob2) -> prob1 * prob2).orElse(1d);
 	}
 
 }

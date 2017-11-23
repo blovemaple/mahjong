@@ -21,7 +21,7 @@ import com.github.blovemaple.mj.rule.TimeLimitStrategy;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BazBotSimContext implements GameContext {
+class BazBotSimContext implements GameContext {
 	// oriContextView是构造器传进来的，不可变，只用于获取信息
 	private GameContextPlayerView oriContextView;
 

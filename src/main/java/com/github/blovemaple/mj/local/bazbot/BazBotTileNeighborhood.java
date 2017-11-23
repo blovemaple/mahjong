@@ -7,15 +7,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
 
 /**
- * 互相可组成{@link BazBotTileUnit}（每张牌至少能和另一张牌组成一个{@link BazBotTileUnit}）的一组牌。
+ * 两两可组成{@link BazBotTileUnit}（每张牌至少能和另一张牌组成一个{@link BazBotTileUnit}）的一组牌。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BazBotTileNeighborhood {
+class BazBotTileNeighborhood {
 	/**
 	 * 把指定的Tile集合解析为若干个neiborhood并返回。TODO 缓存
 	 */
@@ -143,10 +144,10 @@ public class BazBotTileNeighborhood {
 
 	}
 
-	public void someMethod() {
+	public List<BazBotTileUnit> getNonConflictingUnits(BazBotTileUnitType type, List<BazBotTileUnit> conflictings) {
 		initParseUnits();
 
 		// TODO
-
+		return null;
 	}
 }
