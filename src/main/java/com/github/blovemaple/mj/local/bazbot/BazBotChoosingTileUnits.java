@@ -67,7 +67,7 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 	 *            是否包含不补充任何unit
 	 * @return 新TileUnits的Stream
 	 */
-	public Stream<BazBotChoosingTileUnits> appendUnits(BazBotTileUnitType type, boolean includeEmpty) {
+	public Stream<BazBotChoosingTileUnits> newToChoose(BazBotTileUnitType type, boolean includeEmpty) {
 		if (type.isJiang()) {
 			if (!forJiang)
 				return Stream.of(this);

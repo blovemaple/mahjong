@@ -35,11 +35,11 @@ public class BazBotPlayerTiles {
 		neighborhoods = BazBotTileNeighborhood.parse(playerTiles.getAliveTiles());
 
 		return Stream.of(new BazBotChoosingTileUnits(neighborhoods, playerTiles.getTileGroups().size())) // 一个初始units，为flatmap做准备
-				.flatMap(units -> units.appendUnits(COMPLETE_JIANG, true)) // 选所有完整将牌，以及不选完整将牌
-				.flatMap(units -> units.appendUnits(COMPLETE_SHUNKE, false)) // 选所有合适的完整顺刻组合
-				.flatMap(units -> units.appendUnits(UNCOMPLETE_SHUNKE_FOR_ONE, false)) // 选所有合适的不完整顺刻组合（缺一张的）
-				.flatMap(units -> units.appendUnits(UNCOMPLETE_SHUNKE_FOR_TWO, false)) // 选所有合适的不完整顺刻组合（缺两张的）
-				.flatMap(units -> units.appendUnits(UNCOMPLETE_JIANG, false)) // 选所有合适的不完整将牌
+				.flatMap(units -> units.newToChoose(COMPLETE_JIANG, true)) // 选所有完整将牌，以及不选完整将牌
+				.flatMap(units -> units.newToChoose(COMPLETE_SHUNKE, false)) // 选所有合适的完整顺刻组合
+				.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_ONE, false)) // 选所有合适的不完整顺刻组合（缺一张的）
+				.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_TWO, false)) // 选所有合适的不完整顺刻组合（缺两张的）
+				.flatMap(units -> units.newToChoose(UNCOMPLETE_JIANG, false)) // 选所有合适的不完整将牌
 				.flatMap(BazBotChoosingTileUnits::tileTypesToWin) // 计算tileUnits和牌所需牌型
 				.collect(Collectors.toSet()) // 入set去重
 		;

@@ -76,7 +76,7 @@ public class BazBot extends AbstractBot {
 		GameContextPlayerView contextViewAfterAction = simAction(contextView, action);
 
 		if (contextViewAfterAction.getMyInfo().getAliveTiles().size() % 3 == 2) {
-			// 待出牌状态，从出每一张牌后的状态中选最高评分
+			// 执行动作后为待出牌状态，从出每一张牌后的状态中选最高评分
 			return contextViewAfterAction.getMyInfo().getAliveTiles().stream()
 					// 生成、模拟出牌动作
 					.map(aliveTile -> new Action(DISCARD, aliveTile))
@@ -84,7 +84,7 @@ public class BazBot extends AbstractBot {
 					// 评分并选出最高
 					.map(this::score).max(Comparator.naturalOrder()).orElse(0d);
 		} else {
-			// 不是待出牌状态，直接评分
+			// 执行动作后不是待出牌状态，直接评分
 			return score(contextViewAfterAction);
 		}
 

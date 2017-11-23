@@ -87,10 +87,10 @@ class BazBotTileUnits {
 					List<BazBotTileUnit> unitsOfHood = firstHoodAndUnits.getValue();
 					BazBotTileUnit firstUnit = unitsOfHood.get(0);
 
-					// 剩余Units
+					// 剩余不冲突的Units
 					BazBotTileUnits remains = new BazBotTileUnits(this, null);
 					remains.unitsByNeighborhood.put(hood,
-							unitsOfHood.stream().filter(unit -> firstUnit.conflictWith(unit)).collect(toList()));
+							unitsOfHood.stream().filter(unit -> !firstUnit.conflictWith(unit)).collect(toList()));
 
 					// 递归取剩余Units的所有组合，并拼接第一个unit
 					remains.allCombs(forUnitCount - 1).stream().peek(units -> units.add(hood, firstUnit))
