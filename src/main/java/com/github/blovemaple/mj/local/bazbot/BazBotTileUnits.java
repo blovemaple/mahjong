@@ -8,7 +8,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
 
@@ -47,8 +48,12 @@ class BazBotTileUnits {
 		return unitsByNeighborhood.keySet();
 	}
 
-	public void forEachUnit(Consumer<? super BazBotTileUnit> action) {
-		unitsByNeighborhood.values().forEach(units -> units.forEach(action));
+	public Stream<BazBotTileUnit> units() {
+		return unitsByNeighborhood.values().stream().flatMap(List::stream);
+	}
+
+	public void forEachHoodAndUnits(BiConsumer<BazBotTileNeighborhood, List<BazBotTileUnit>> action) {
+		unitsByNeighborhood.forEach(action);
 	}
 
 	public List<BazBotTileUnit> unitsOfHood(BazBotTileNeighborhood hood) {

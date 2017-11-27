@@ -1,10 +1,14 @@
 package com.github.blovemaple.mj.local.bazbot;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
+import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileType;
 
 /**
@@ -44,7 +48,7 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 
 		this.forJiang = original.forJiang;
 		this.forShunkeCount = original.forShunkeCount;
-		forEachUnit(unit -> {
+		units().forEach(unit -> {
 			if (unit.type().isJiang()) {
 				if (!this.forJiang)
 					throw new RuntimeException("Redundant JIANG unit.");
@@ -88,13 +92,24 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 	}
 
 	/**
-	 * 计算从当前选择的units到和牌所需的牌型列表，把所有可能的牌型列表组成Stream并返回。
+	 * 计算从当前选择的units到和牌所需的牌型列表，把所有可能的牌型列表组成Stream并返回。不需要内部排序和去重。
 	 */
 	public Stream<List<TileType>> tileTypesToWin() {
+		Optional<Stream<List<TileType>>> resStream = Optional.of(Stream.of(List.of()));
 
-		// TODO
-		// TODO 过滤掉缺的牌和丢弃的牌有重复的组合
-		return null;
+		forEachHoodAndUnits((hood, units) -> {
+			// 当前hood丢弃的牌
+			Set<Tile> remainingTiles = new HashSet<>(hood.getRemainingTiles(units));
+			units.forEach(unit -> {
+				// 当前unit的（与丢弃的牌不冲突的）多组期望牌型
+				List<List<TileType>> newTypeLists = unit.forTileTypes(remainingTiles);
+				// stream中所有牌型列表复制、拼接当前unit的各组期望牌型
+				resStream.map(stream -> stream
+						.flatMap(typeList -> newTypeLists.stream().peek(newTypeList -> newTypeList.addAll(typeList))));
+			});
+		});
+
+		return resStream.get();
 	}
 
 }

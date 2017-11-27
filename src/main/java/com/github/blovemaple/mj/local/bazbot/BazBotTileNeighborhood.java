@@ -84,25 +84,27 @@ class BazBotTileNeighborhood {
 		switch (neighbors.length) {
 		case 1:
 			// 一张牌，是不完整的将牌、顺子、刻子
-			uncompletedJiangs.add(BazBotTileUnit.uncompleted(JIANG, Set.of(neighbors[0])));
-			uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0])));
-			uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0])));
+			uncompletedJiangs.add(BazBotTileUnit.uncompleted(JIANG, Set.of(neighbors[0]), this));
+			uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0]), this));
+			uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0]), this));
 			break;
 		case 2:
 			if (neighbors[0].type() == neighbors[1].type()) {
 				// 牌型相同的两张牌，是完整的将牌、不完整的刻子
-				completedJiangs.add(BazBotTileUnit.completed(JIANG, Set.of(neighbors[0], neighbors[1])));
-				uncompletedShunKesForOne.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0], neighbors[1])));
+				completedJiangs.add(BazBotTileUnit.completed(JIANG, Set.of(neighbors[0], neighbors[1]), this));
+				uncompletedShunKesForOne
+						.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0], neighbors[1]), this));
 			} else {
 				// 牌型不同的两张牌，是不完整的顺子
-				uncompletedShunKesForOne.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0], neighbors[1])));
+				uncompletedShunKesForOne
+						.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0], neighbors[1]), this));
 			}
 			break;
 		case 3:
 			if (neighbors[0].type() == neighbors[1].type() && neighbors[0].type() == neighbors[2].type()) {
 				// 牌型相同的三张牌，是完整的刻子
 				completedShunKes
-						.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0], neighbors[1], neighbors[2])));
+						.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0], neighbors[1], neighbors[2]), this));
 				break;
 			}
 			if (neighbors[0].type().rank() instanceof NumberRank) {
@@ -111,8 +113,8 @@ class BazBotTileNeighborhood {
 				int number2 = ((NumberRank) neighbors[2].type().rank()).number();
 				if (number0 + 1 == number1 && number1 + 1 == number2) {
 					// NumberRank连续的三张牌，是完整的顺子
-					completedShunKes
-							.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0], neighbors[1], neighbors[2])));
+					completedShunKes.add(
+							BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0], neighbors[1], neighbors[2]), this));
 					break;
 				}
 			}
@@ -147,6 +149,11 @@ class BazBotTileNeighborhood {
 	public List<BazBotTileUnit> getNonConflictingUnits(BazBotTileUnitType type, List<BazBotTileUnit> conflictings) {
 		initParseUnits();
 
+		// TODO
+		return null;
+	}
+
+	public List<Tile> getRemainingTiles(List<BazBotTileUnit> chosenUnits) {
 		// TODO
 		return null;
 	}
