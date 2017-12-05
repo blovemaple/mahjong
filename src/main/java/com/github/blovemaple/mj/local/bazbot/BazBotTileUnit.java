@@ -1,11 +1,15 @@
 package com.github.blovemaple.mj.local.bazbot;
 
+import static java.util.Collections.*;
+import static java.util.stream.Collectors.*;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.github.blovemaple.mj.object.StandardTileUnitType;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileType;
-import com.github.blovemaple.mj.object.TileUnitType;
 
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
@@ -14,8 +18,7 @@ class BazBotTileUnit {
 	@SuppressWarnings("unused")
 	private boolean completed;
 	@SuppressWarnings("unused")
-	private TileUnitType unitType;
-	@SuppressWarnings("unused")
+	private StandardTileUnitType unitType;
 	private Set<Tile> tiles;
 
 	private BazBotTileUnitType type;
@@ -53,21 +56,45 @@ class BazBotTileUnit {
 			return isJiang;
 		}
 
+		public static BazBotTileUnitType of(boolean completed, StandardTileUnitType unitType, Set<Tile> tiles) {
+			switch (unitType) {
+			case GANGZI:
+			case HUA_UNIT:
+				throw new RuntimeException("Unsupported StandardTileUnitType: " + unitType);
+			case JIANG:
+				return completed ? COMPLETE_JIANG : UNCOMPLETE_JIANG;
+			case KEZI:
+			case SHUNZI:
+				return completed ? COMPLETE_SHUNKE
+						: unitType.size() - tiles.size() == 1 ? UNCOMPLETE_SHUNKE_FOR_ONE : UNCOMPLETE_SHUNKE_FOR_TWO;
+			default:
+				throw new RuntimeException("Unrecognized StandardTileUnitType: " + unitType);
+			}
+		}
+
 	}
 
-	public static BazBotTileUnit completed(TileUnitType unitType, Set<Tile> tiles, BazBotTileNeighborhood hood) {
+	public static BazBotTileUnit completed(StandardTileUnitType unitType, Set<Tile> tiles,
+			BazBotTileNeighborhood hood) {
 		return new BazBotTileUnit(true, unitType, tiles, hood);
 	}
 
-	public static BazBotTileUnit uncompleted(TileUnitType unitType, Set<Tile> tiles, BazBotTileNeighborhood hood) {
+	public static BazBotTileUnit uncompleted(StandardTileUnitType unitType, Set<Tile> tiles,
+			BazBotTileNeighborhood hood) {
 		return new BazBotTileUnit(false, unitType, tiles, hood);
 	}
 
-	private BazBotTileUnit(boolean isCompleted, TileUnitType unitType, Set<Tile> tiles, BazBotTileNeighborhood hood) {
+	private BazBotTileUnit(boolean isCompleted, StandardTileUnitType unitType, Set<Tile> tiles,
+			BazBotTileNeighborhood hood) {
 		this.completed = isCompleted;
 		this.unitType = unitType;
 		this.tiles = tiles;
+		this.type = BazBotTileUnitType.of(isCompleted, unitType, tiles);
 		this.hood = hood;
+	}
+
+	public Set<Tile> tiles() {
+		return tiles;
 	}
 
 	public BazBotTileUnitType type() {
@@ -79,16 +106,27 @@ class BazBotTileUnit {
 	}
 
 	public boolean conflictWith(BazBotTileUnit other) {
+		if (tiles.isEmpty() || other.tiles.isEmpty())
+			return false;
 		if (this == other)
-			return true;
+			return !tiles.isEmpty();
+		return !disjoint(tiles, other.tiles);
+	}
 
-		// TODO
-		return false;
+	public boolean conflictWith(Collection<Tile> tiles) {
+		if (this.tiles.isEmpty() || tiles.isEmpty())
+			return false;
+		return !disjoint(this.tiles, tiles);
 	}
 
 	public List<List<TileType>> forTileTypes(Set<Tile> conflictTiles) {
-		// TODO
-		return null;
+		if (completed)
+			return List.of(List.of());
+		else {
+			Set<TileType> conflictTileTypes = conflictTiles.stream().map(Tile::type).collect(toSet());
+			return unitType.getLackedTypesForTiles(this.tiles).stream()
+					.filter(tileTypes -> disjoint(tileTypes, conflictTileTypes)).collect(toList());
+		}
 	}
 
 }

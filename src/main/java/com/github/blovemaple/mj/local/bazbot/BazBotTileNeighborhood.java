@@ -1,6 +1,7 @@
 package com.github.blovemaple.mj.local.bazbot;
 
 import static com.github.blovemaple.mj.object.StandardTileUnitType.*;
+import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,7 @@ class BazBotTileNeighborhood {
 	private List<BazBotTileUnit> uncompletedJiangs = new ArrayList<>();
 	private List<BazBotTileUnit> uncompletedShunKesForOne = new ArrayList<>();
 	private List<BazBotTileUnit> uncompletedShunKesForTwo = new ArrayList<>();
+	private List<BazBotTileUnit> allUnits = new ArrayList<>();
 
 	/**
 	 * @param tiles
@@ -76,6 +78,11 @@ class BazBotTileNeighborhood {
 
 		synchronized (this) {
 			parseUnits(true, tiles.stream().toArray(Tile[]::new));
+			allUnits.addAll(completedJiangs);
+			allUnits.addAll(completedShunKes);
+			allUnits.addAll(uncompletedJiangs);
+			allUnits.addAll(uncompletedShunKesForOne);
+			allUnits.addAll(uncompletedShunKesForTwo);
 			parsed = true;
 		}
 	}
@@ -149,12 +156,38 @@ class BazBotTileNeighborhood {
 	public List<BazBotTileUnit> getNonConflictingUnits(BazBotTileUnitType type, List<BazBotTileUnit> conflictings) {
 		initParseUnits();
 
-		// TODO
-		return null;
+		List<BazBotTileUnit> allUnits;
+		switch (type) {
+		case COMPLETE_JIANG:
+			allUnits = completedJiangs;
+			break;
+		case COMPLETE_SHUNKE:
+			allUnits = completedShunKes;
+			break;
+		case UNCOMPLETE_JIANG:
+			allUnits = uncompletedJiangs;
+			break;
+		case UNCOMPLETE_SHUNKE_FOR_ONE:
+			allUnits = uncompletedShunKesForOne;
+			break;
+		case UNCOMPLETE_SHUNKE_FOR_TWO:
+			allUnits = uncompletedShunKesForTwo;
+			break;
+		default:
+			throw new RuntimeException("Unrecignized BazBotTileUnitType: " + type);
+		}
+		if (allUnits.isEmpty())
+			return List.of();
+
+		Set<Tile> conflictTiles = conflictings.stream().map(BazBotTileUnit::tiles).flatMap(Set::stream)
+				.collect(toSet());
+		return allUnits.stream().filter(unit -> !unit.conflictWith(conflictTiles)).collect(toList());
 	}
 
 	public List<Tile> getRemainingTiles(List<BazBotTileUnit> chosenUnits) {
-		// TODO
-		return null;
+		if (chosenUnits.isEmpty())
+			return new ArrayList<>(tiles);
+		return allUnits.stream().filter(unit -> !chosenUnits.contains(unit)).map(BazBotTileUnit::tiles)
+				.flatMap(Set::stream).collect(toList());
 	}
 }
