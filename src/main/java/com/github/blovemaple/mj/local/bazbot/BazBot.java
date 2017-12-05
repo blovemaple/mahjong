@@ -11,8 +11,6 @@ import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.action.IllegalActionException;
-import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.local.AbstractBot;
 import com.github.blovemaple.mj.object.Tile;
@@ -35,13 +33,14 @@ public class BazBot extends AbstractBot {
 	@Override
 	protected Action chooseCpgdAction(GameContextPlayerView contextView, Set<ActionType> actionTypes)
 			throws InterruptedException {
+		BazBotSimContext simContext = new BazBotSimContext(contextView);
 		return
 		// 所有吃/碰/杠/出牌动作 + 放弃动作（如果合法的话）
 		Stream.concat(cpgdActions(contextView, actionTypes), passAction(contextView, actionTypes))
 				// 并行
 				.parallel()
-				// 选出评分最高的一个
-				.max(Comparator.comparing(action -> score(contextView, action))).orElse(null);
+				// 模拟动作并选出评分最高的一个
+				.max(Comparator.comparing(action -> simContext.afterSimAction(action).score())).orElse(null);
 	}
 
 	private Stream<Action> cpgdActions(GameContextPlayerView contextView, Set<ActionType> actionTypes) {
@@ -66,58 +65,6 @@ public class BazBot extends AbstractBot {
 			return Stream.of((Action) null);
 		else
 			return Stream.empty();
-	}
-
-	/**
-	 * 根据指定的contextView条件，对指定的action进行评分并返回分数。
-	 */
-	private double score(GameContextPlayerView contextView, Action action) {
-		// 动作模拟
-		GameContextPlayerView contextViewAfterAction = simAction(contextView, action);
-
-		if (contextViewAfterAction.getMyInfo().getAliveTiles().size() % 3 == 2) {
-			// 执行动作后为待出牌状态，从出每一张牌后的状态中选最高评分
-			return contextViewAfterAction.getMyInfo().getAliveTiles().stream()
-					// 生成、模拟出牌动作
-					.map(aliveTile -> new Action(DISCARD, aliveTile))
-					.map(discard -> simAction(contextViewAfterAction, discard))
-					// 评分并选出最高
-					.map(this::score).max(Comparator.naturalOrder()).orElse(0d);
-		} else {
-			// 执行动作后不是待出牌状态，直接评分
-			return score(contextViewAfterAction);
-		}
-
-	}
-
-	/**
-	 * 在指定contextView条件下模拟指定动作，并返回完成动作后的GameContextPlayerView。参数中的contextView不被修改。
-	 */
-	private GameContextPlayerView simAction(GameContextPlayerView contextView, Action action) {
-		if (action == null)
-			return contextView;
-
-		try {
-			GameContext simContext = new BazBotSimContext(contextView);
-			action.getType().doAction(simContext, contextView.getMyLocation(), action);
-			return simContext.getPlayerView(contextView.getMyLocation());
-		} catch (IllegalActionException e) {
-			// 非法动作，不可能发生，因为选择动作的时候就是只选的合法的
-			throw new RuntimeException("BazBot is simming illegal action: " + action, e);
-		}
-	}
-
-	/**
-	 * 根据指定的contextView计算该状态下的评分。
-	 */
-	private double score(GameContextPlayerView contextView) {
-		return
-		// 计算和牌需要得到的牌型
-		new BazBotPlayerTiles(contextView.getMyInfo()).tileTypesToWin()
-				// 计算每组牌型出现的概率
-				.stream().mapToDouble(tileTypes -> BazBotTileProbCalculator.of(contextView).calcProb(tileTypes))
-				// 相加
-				.sum();
 	}
 
 }
