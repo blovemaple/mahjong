@@ -3,9 +3,12 @@ package com.github.blovemaple.mj.local.bazbot;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
 import com.github.blovemaple.mj.object.Tile;
@@ -48,7 +51,7 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 
 		this.forJiang = original.forJiang;
 		this.forShunkeCount = original.forShunkeCount;
-		units().forEach(unit -> {
+		newUnits.units().forEach(unit -> {
 			if (unit.type().isJiang()) {
 				if (!this.forJiang)
 					throw new RuntimeException("Redundant JIANG unit.");
@@ -95,7 +98,7 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 	 * 计算从当前选择的units到和牌所需的牌型列表，把所有可能的牌型列表组成Stream并返回。不需要内部排序和去重。
 	 */
 	public Stream<List<TileType>> tileTypesToWin() {
-		Optional<Stream<List<TileType>>> resStream = Optional.of(Stream.of(List.of()));
+		MutableObject<Stream<List<TileType>>> resStream = new MutableObject<>(Stream.of(List.of()));
 
 		forEachHoodAndUnits((hood, units) -> {
 			// 当前hood丢弃的牌
@@ -104,12 +107,17 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 				// 当前unit的（与丢弃的牌不冲突的）多组期望牌型
 				List<List<TileType>> newTypeLists = unit.forTileTypes(remainingTiles);
 				// stream中所有牌型列表复制、拼接当前unit的各组期望牌型
-				resStream.map(stream -> stream
+				resStream.setValue(resStream.getValue()
 						.flatMap(typeList -> newTypeLists.stream().peek(newTypeList -> newTypeList.addAll(typeList))));
 			});
 		});
 
-		return resStream.get();
+		return resStream.getValue();
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
 	}
 
 }

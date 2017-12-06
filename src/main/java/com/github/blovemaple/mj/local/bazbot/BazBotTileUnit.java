@@ -3,6 +3,7 @@ package com.github.blovemaple.mj.local.bazbot;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -15,9 +16,7 @@ import com.github.blovemaple.mj.object.TileType;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 class BazBotTileUnit {
-	@SuppressWarnings("unused")
 	private boolean completed;
-	@SuppressWarnings("unused")
 	private StandardTileUnitType unitType;
 	private Set<Tile> tiles;
 
@@ -121,12 +120,17 @@ class BazBotTileUnit {
 
 	public List<List<TileType>> forTileTypes(Set<Tile> conflictTiles) {
 		if (completed)
-			return List.of(List.of());
+			return List.of(new ArrayList<>());
 		else {
 			Set<TileType> conflictTileTypes = conflictTiles.stream().map(Tile::type).collect(toSet());
 			return unitType.getLackedTypesForTiles(this.tiles).stream()
 					.filter(tileTypes -> disjoint(tileTypes, conflictTileTypes)).collect(toList());
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "{" + (completed ? "completed" : "uncompleted") + " " + unitType + ":" + tiles + "}";
 	}
 
 }

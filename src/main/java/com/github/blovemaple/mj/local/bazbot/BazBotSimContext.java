@@ -112,7 +112,7 @@ class BazBotSimContext implements GameContext {
 		}
 	}
 
-	public double prob(Collection<TileType> tileTypes) {
+	private double prob(Collection<TileType> tileTypes) {
 		if (oriContext != null)
 			// 为了避免重复统计不可见牌，如果存在oriContext就调用oriContext的功能，最终效果是BazBot的每次调用只调用最上层Context的calcProb
 			return oriContext.prob(tileTypes);

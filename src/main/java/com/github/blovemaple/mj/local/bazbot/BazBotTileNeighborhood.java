@@ -1,14 +1,20 @@
 package com.github.blovemaple.mj.local.bazbot;
 
 import static com.github.blovemaple.mj.object.StandardTileUnitType.*;
-import static java.util.stream.Collectors.*;
 import static com.github.blovemaple.mj.utils.LambdaUtils.*;
+import static com.github.blovemaple.mj.utils.MyUtils.*;
+import static java.util.Comparator.*;
+import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
 import com.github.blovemaple.mj.object.Tile;
@@ -30,7 +36,9 @@ class BazBotTileNeighborhood {
 	 * 把指定的Tile集合解析为若干个neiborhood并返回。
 	 */
 	public static List<BazBotTileNeighborhood> parse(Set<Tile> tiles) {
-		List<Tile> tileList = tiles.stream().sorted().collect(Collectors.toList());
+		List<Tile> tileList = tiles.stream() //
+				.sorted(comparing(Tile::type).thenComparing(Tile::id)) //
+				.collect(Collectors.toList());
 
 		List<List<Tile>> neighborhoodTilesList = new ArrayList<>();
 		List<Tile> crtNeighbors = null;
@@ -93,7 +101,7 @@ class BazBotTileNeighborhood {
 			return;
 
 		synchronized (this) {
-			parseUnits(true, tiles.stream().toArray(Tile[]::new));
+			parseUnits();
 			allUnits.addAll(completedJiangs);
 			allUnits.addAll(completedShunKes);
 			allUnits.addAll(uncompletedJiangs);
@@ -103,70 +111,78 @@ class BazBotTileNeighborhood {
 		}
 	}
 
-	private void parseUnits(boolean recursive, Tile... neighbors) {
-		switch (neighbors.length) {
-		case 1:
-			// 一张牌，是不完整的将牌、顺子、刻子
-			uncompletedJiangs.add(BazBotTileUnit.uncompleted(JIANG, Set.of(neighbors[0]), this));
-			uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0]), this));
-			uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0]), this));
-			break;
-		case 2:
-			if (neighbors[0].type() == neighbors[1].type()) {
-				// 牌型相同的两张牌，是完整的将牌、不完整的刻子
-				completedJiangs.add(BazBotTileUnit.completed(JIANG, Set.of(neighbors[0], neighbors[1]), this));
-				uncompletedShunKesForOne
-						.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0], neighbors[1]), this));
-			} else {
-				// 牌型不同的两张牌，是不完整的顺子
-				uncompletedShunKesForOne
-						.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0], neighbors[1]), this));
-			}
-			break;
-		case 3:
-			if (neighbors[0].type() == neighbors[1].type() && neighbors[0].type() == neighbors[2].type()) {
-				// 牌型相同的三张牌，是完整的刻子
+	private void parseUnits() {
+		parseUnits(true, this.tiles);
+	}
+
+	private void parseUnits(boolean init, List<Tile> tiles) {
+		if (init && tiles.size() == 3) {
+			if (SHUNZI.isLegalTiles(tiles)) {
+				// 整个neighborhood正好是一个顺子，不再拆开
 				completedShunKes
-						.add(BazBotTileUnit.uncompleted(KEZI, Set.of(neighbors[0], neighbors[1], neighbors[2]), this));
-				break;
+						.add(BazBotTileUnit.completed(SHUNZI, Set.of(tiles.get(0), tiles.get(1), tiles.get(2)), this));
+				return;
 			}
-			if (neighbors[0].type().rank() instanceof NumberRank) {
-				int number0 = ((NumberRank) neighbors[0].type().rank()).number();
-				int number1 = ((NumberRank) neighbors[1].type().rank()).number();
-				int number2 = ((NumberRank) neighbors[2].type().rank()).number();
-				if (number0 + 1 == number1 && number1 + 1 == number2) {
-					// NumberRank连续的三张牌，是完整的顺子
-					completedShunKes.add(
-							BazBotTileUnit.uncompleted(SHUNZI, Set.of(neighbors[0], neighbors[1], neighbors[2]), this));
-					break;
-				}
-			}
-			// 非顺子/刻子的三张牌，走default逻辑
-			if (!recursive)
-				break; // 四张和以上的由default分支递归解析三张牌时会走到这，不再走default逻辑，因为一张和两张的已经在default解析过了
-		default:
-			// default逻辑：解析全部一张、两张、三张的组合，其中三张不再重复递归，不然会无限递归
-			for (int i0 = 0; i0 < neighbors.length; i0++) {
-				if (i0 >= 1 && neighbors[i0].type() == neighbors[i0 - 1].type())
-					continue; // 牌型相同不再重复解析
-				parseUnits(false, neighbors[i0]);
-
-				for (int i1 = i0 + 1; i1 < neighbors.length && isNeighbors(neighbors[i0], neighbors[i1]); i1++) {
-					if (i1 >= i0 + 2 && neighbors[i1].type() == neighbors[i1 - 1].type())
-						continue; // 牌型相同不再重复解析
-					parseUnits(false, neighbors[i0], neighbors[i1]);
-
-					if (neighbors.length == 3)
-						continue; // 三张的在上面的case分支已经走过了
-					for (int i2 = i1 + 1; i2 < neighbors.length && isNeighbors(neighbors[i0], neighbors[i2]); i2++) {
-						if (i2 >= i1 + 2 && neighbors[i2].type() == neighbors[i2 - 1].type())
-							continue; // 牌型相同不再重复解析
-						parseUnits(false, neighbors[i0], neighbors[i1], neighbors[i2]);
-					}
-				}
+			if (KEZI.isLegalTiles(tiles)) {
+				// 整个neighborhood正好是一个刻子，不再拆开
+				completedShunKes
+						.add(BazBotTileUnit.completed(KEZI, Set.of(tiles.get(0), tiles.get(1), tiles.get(2)), this));
+				return;
 			}
 		}
 
+		// 第一张牌自己是不完整的将牌、顺子、刻子
+		Tile tile0 = tiles.get(0);
+		uncompletedJiangs.add(BazBotTileUnit.uncompleted(JIANG, Set.of(tile0), this));
+		uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(tile0), this));
+		uncompletedShunKesForTwo.add(BazBotTileUnit.uncompleted(KEZI, Set.of(tile0), this));
+
+		// 从第二张牌起，与每张neighbor去重后组成完整将牌、不完整顺子/刻子
+		if (tiles.size() >= 2) {
+			tiles.subList(1, tiles.size()).stream() //
+					.filter(distinctorBy(Tile::type)) //
+					.takeWhile(tileN -> isNeighbors(tile0, tileN)) //
+					.forEach(tileN -> {
+						if (tile0.type() == tileN.type()) {
+							completedJiangs.add(BazBotTileUnit.completed(JIANG, Set.of(tile0, tileN), this));
+							uncompletedShunKesForOne.add(BazBotTileUnit.uncompleted(KEZI, Set.of(tile0, tileN), this));
+						} else {
+							uncompletedShunKesForOne
+									.add(BazBotTileUnit.uncompleted(SHUNZI, Set.of(tile0, tileN), this));
+						}
+					});
+		}
+
+		// 从第二张牌起，与每两张neighbors组成完整顺子/刻子
+		if (tiles.size() >= 3) {
+			if (tile0.type() == tiles.get(1).type() && tile0.type() == tiles.get(2).type())
+				// 牌型相同的三张牌，是完整的刻子
+				completedShunKes.add(BazBotTileUnit.completed(KEZI, Set.of(tile0, tiles.get(1), tiles.get(2)), this));
+			if (tile0.type().suit().getRankClass() == NumberRank.class && tile0.type().number() <= 7) {
+				int rank0 = tile0.type().number();
+				Tile tile1 = null, tile2 = null;
+				for (int i = 1; i < tiles.size(); i++) {
+					Tile tileI = tiles.get(i);
+					if (tile1 == null && tileI.type().number() == rank0 + 1) {
+						tile1 = tileI;
+					} else if (tile2 == null && tileI.type().number() == rank0 + 2) {
+						tile2 = tileI;
+						break;
+					}
+				}
+				if (tile1 != null && tile2 != null)
+					// 数字连续的三张牌，是完整的顺子
+					completedShunKes.add(BazBotTileUnit.completed(SHUNZI, Set.of(tile0, tile1, tile2), this));
+			}
+		}
+
+		// 递归parse从与第一张不同牌型的牌开始的子列表
+		if (tiles.size() > 1)
+			IntStream.range(1, tiles.size()) //
+					.dropWhile(i -> tile0.type() == tiles.get(i).type()) //
+					.findFirst().ifPresent( //
+							firstIndexOfDiffType -> parseUnits(false,
+									tiles.subList(firstIndexOfDiffType, tiles.size())));
 	}
 
 	public List<BazBotTileUnit> getNonConflictingUnits(BazBotTileUnitType type, List<BazBotTileUnit> conflictings) {
@@ -203,7 +219,13 @@ class BazBotTileNeighborhood {
 	public List<Tile> getRemainingTiles(List<BazBotTileUnit> chosenUnits) {
 		if (chosenUnits.isEmpty())
 			return new ArrayList<>(tiles);
-		return allUnits.stream().filter(unit -> !chosenUnits.contains(unit)).map(BazBotTileUnit::tiles)
-				.flatMap(Set::stream).collect(toList());
+		List<Tile> remainingTiles = new ArrayList<>(tiles);
+		chosenUnits.stream().map(BazBotTileUnit::tiles).forEach(remainingTiles::removeAll);
+		return remainingTiles;
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
 	}
 }

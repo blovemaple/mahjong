@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.*;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.object.Tile;
@@ -19,7 +20,9 @@ import com.google.common.cache.CacheBuilder;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BazBotAliveTiles {
+class BazBotAliveTiles {
+	@SuppressWarnings("unused")
+	private static final Logger logger = Logger.getLogger(BazBotAliveTiles.class.getSimpleName());
 
 	private static final Cache<Set<Tile>, BazBotAliveTiles> cache = //
 			CacheBuilder.newBuilder().maximumSize(20).build();
@@ -34,10 +37,15 @@ public class BazBotAliveTiles {
 	}
 
 	private final Set<Tile> aliveTiles;
+	private List<BazBotTileNeighborhood> neighborhoods; // lazy
 	private List<List<TileType>> tileTypesToWin; // lazy
 
-	public BazBotAliveTiles(Set<Tile> aliveTiles) {
+	private BazBotAliveTiles(Set<Tile> aliveTiles) {
 		this.aliveTiles = aliveTiles;
+	}
+	
+	public List<BazBotTileNeighborhood> neighborhoods() {
+		return neighborhoods;
 	}
 
 	public List<List<TileType>> tileTypesToWin() {
@@ -48,7 +56,7 @@ public class BazBotAliveTiles {
 			if (tileTypesToWin != null)
 				return tileTypesToWin;
 
-			List<BazBotTileNeighborhood> neighborhoods = BazBotTileNeighborhood.parse(aliveTiles);
+			neighborhoods = BazBotTileNeighborhood.parse(aliveTiles);
 			int forShunkeCount = aliveTiles.size() / 3;
 
 			tileTypesToWin = Stream.of(new BazBotChoosingTileUnits(neighborhoods, forShunkeCount)) // 一个初始units，为flatmap做准备

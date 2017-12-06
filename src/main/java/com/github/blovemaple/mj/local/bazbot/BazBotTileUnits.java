@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
 
 /**
@@ -110,5 +113,10 @@ class BazBotTileUnits {
 
 	private void add(BazBotTileNeighborhood hood, BazBotTileUnit newUnit) {
 		unitsByNeighborhood.get(hood).add(newUnit);
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
 	}
 }
