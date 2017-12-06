@@ -2,15 +2,19 @@ package com.github.blovemaple.mj.local.bazbot;
 
 import static com.github.blovemaple.mj.object.StandardTileUnitType.*;
 import static java.util.stream.Collectors.*;
+import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * 两两可组成{@link BazBotTileUnit}（每张牌至少能和另一张牌组成一个{@link BazBotTileUnit}）的一组牌。
@@ -18,8 +22,12 @@ import com.github.blovemaple.mj.object.TileRank.NumberRank;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 class BazBotTileNeighborhood {
+
+	private static final Cache<List<Tile>, BazBotTileNeighborhood> cache = //
+			CacheBuilder.newBuilder().maximumSize(200).build();
+
 	/**
-	 * 把指定的Tile集合解析为若干个neiborhood并返回。TODO 缓存
+	 * 把指定的Tile集合解析为若干个neiborhood并返回。
 	 */
 	public static List<BazBotTileNeighborhood> parse(Set<Tile> tiles) {
 		List<Tile> tileList = tiles.stream().sorted().collect(Collectors.toList());
@@ -35,7 +43,15 @@ class BazBotTileNeighborhood {
 			crtNeighbors.add(tile);
 			lastTile = tile;
 		}
-		return neighborhoodTilesList.stream().map(BazBotTileNeighborhood::new).collect(Collectors.toList());
+		try {
+			return neighborhoodTilesList.stream()
+					.map(rethrowFunction(
+							hoodTiles -> cache.get(hoodTiles, () -> new BazBotTileNeighborhood(hoodTiles))))
+					.collect(Collectors.toList());
+		} catch (ExecutionException e) {
+			// not possible
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static boolean isNeighbors(Tile tile1, Tile tile2) {

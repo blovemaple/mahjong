@@ -29,10 +29,10 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 	/**
 	 * 构建一个初始的TileUnits，没有选择任何unit。
 	 */
-	public BazBotChoosingTileUnits(Collection<BazBotTileNeighborhood> neighborhoods, int crtGroupCount) {
+	public BazBotChoosingTileUnits(Collection<BazBotTileNeighborhood> neighborhoods, int forShunkeCount) {
 		super(neighborhoods);
 		forJiang = true;
-		forShunkeCount = 4 - crtGroupCount;
+		this.forShunkeCount = forShunkeCount;
 	}
 
 	/**

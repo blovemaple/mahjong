@@ -1,9 +1,7 @@
 package com.github.blovemaple.mj.local.bazbot;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
-import static com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType.*;
 import static com.github.blovemaple.mj.utils.LambdaUtils.*;
-import static java.util.Comparator.*;
 import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
@@ -16,8 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
@@ -108,28 +104,12 @@ class BazBotSimContext implements GameContext {
 			// 不是待出牌状态，直接评分
 			return
 			// 计算和牌需要得到的牌型
-			tileTypesToWin()
+			BazBotAliveTiles.of(crtMyInfo.getAliveTiles()).tileTypesToWin()
 					// 计算每组牌型出现的概率
 					.stream().mapToDouble(tileTypes -> prob(tileTypes))
 					// 相加
 					.sum();
 		}
-	}
-
-	public List<List<TileType>> tileTypesToWin() {
-		List<BazBotTileNeighborhood> neighborhoods = BazBotTileNeighborhood.parse(crtMyInfo.getAliveTiles());
-
-		return Stream.of(new BazBotChoosingTileUnits(neighborhoods, crtMyInfo.getTileGroups().size())) // 一个初始units，为flatmap做准备
-				.flatMap(units -> units.newToChoose(COMPLETE_JIANG, true)) // 选所有完整将牌，以及不选完整将牌
-				.flatMap(units -> units.newToChoose(COMPLETE_SHUNKE, false)) // 选所有合适的完整顺刻组合
-				.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_ONE, false)) // 选所有合适的不完整顺刻组合（缺一张的）
-				.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_TWO, false)) // 选所有合适的不完整顺刻组合（缺两张的）
-				.flatMap(units -> units.newToChoose(UNCOMPLETE_JIANG, false)) // 选所有合适的不完整将牌
-				.flatMap(BazBotChoosingTileUnits::tileTypesToWin) // 计算tileUnits和牌所需牌型
-				.peek(tileTypes -> tileTypes.sort(naturalOrder())) // 每组tileType内部排序，准备去重
-				.distinct() // 去重
-				.collect(Collectors.toList()) // 收集结果
-		;
 	}
 
 	public double prob(Collection<TileType> tileTypes) {
@@ -149,6 +129,9 @@ class BazBotSimContext implements GameContext {
 			return; // already inited
 
 		synchronized (this) {
+			if (invisibleCountByTileType != null)
+				return; // already inited
+
 			// 在所有牌中去掉所有可见牌，留下不可见的牌
 			Set<Tile> invisibleTiles = new HashSet<>(getGameStrategy().getAllTiles());
 			// 去掉：自己的活牌、打出的牌、牌组中的牌
