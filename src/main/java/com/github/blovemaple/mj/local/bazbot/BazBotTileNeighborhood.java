@@ -86,7 +86,7 @@ class BazBotTileNeighborhood {
 	private List<BazBotTileUnit> uncompletedJiangs = new ArrayList<>();
 	private List<BazBotTileUnit> uncompletedShunKesForOne = new ArrayList<>();
 	private List<BazBotTileUnit> uncompletedShunKesForTwo = new ArrayList<>();
-	private List<BazBotTileUnit> allUnits = new ArrayList<>();
+	private transient List<BazBotTileUnit> allUnits = new ArrayList<>();
 
 	/**
 	 * @param tiles

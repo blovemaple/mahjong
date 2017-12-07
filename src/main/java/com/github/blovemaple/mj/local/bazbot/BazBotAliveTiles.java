@@ -43,7 +43,7 @@ class BazBotAliveTiles {
 	private BazBotAliveTiles(Set<Tile> aliveTiles) {
 		this.aliveTiles = aliveTiles;
 	}
-	
+
 	public List<BazBotTileNeighborhood> neighborhoods() {
 		return neighborhoods;
 	}
@@ -65,7 +65,9 @@ class BazBotAliveTiles {
 					.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_ONE, false)) // 选所有合适的不完整顺刻组合（缺一张的）
 					.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_TWO, false)) // 选所有合适的不完整顺刻组合（缺两张的）
 					.flatMap(units -> units.newToChoose(UNCOMPLETE_JIANG, false)) // 选所有合适的不完整将牌
+//					.peek(System.out::println)
 					.flatMap(BazBotChoosingTileUnits::tileTypesToWin) // 计算tileUnits和牌所需牌型
+//					.peek(System.out::println)
 					.peek(tileTypes -> tileTypes.sort(naturalOrder())) // 每组tileType内部排序，准备去重
 					.distinct() // 去重
 					.collect(toList()) // 收集结果

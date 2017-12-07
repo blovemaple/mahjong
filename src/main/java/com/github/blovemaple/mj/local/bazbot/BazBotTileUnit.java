@@ -3,7 +3,6 @@ package com.github.blovemaple.mj.local.bazbot;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.*;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -120,7 +119,7 @@ class BazBotTileUnit {
 
 	public List<List<TileType>> forTileTypes(Set<Tile> conflictTiles) {
 		if (completed)
-			return List.of(new ArrayList<>());
+			return List.of(List.of());
 		else {
 			Set<TileType> conflictTileTypes = conflictTiles.stream().map(Tile::type).collect(toSet());
 			return unitType.getLackedTypesForTiles(this.tiles).stream()
@@ -130,7 +129,7 @@ class BazBotTileUnit {
 
 	@Override
 	public String toString() {
-		return "{" + (completed ? "completed" : "uncompleted") + " " + unitType + ":" + tiles + "}";
+		return "{" + (completed ? "" : "UC_") + unitType + ":" + tiles + "}";
 	}
 
 }

@@ -4,15 +4,14 @@ import static java.util.function.Function.*;
 import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
 
@@ -63,7 +62,7 @@ class BazBotTileUnits {
 		return unitsByNeighborhood.get(hood);
 	}
 
-	public BazBotTileUnits nonConflicts(BazBotTileUnitType type) {
+	public BazBotTileUnits nonConflictsInHoods(BazBotTileUnitType type) {
 		return new BazBotTileUnits( //
 				neighborhoods().stream()
 						.collect(toMap(identity(), hood -> hood.getNonConflictingUnits(type, unitsOfHood(hood)))) //
@@ -72,41 +71,56 @@ class BazBotTileUnits {
 
 	/**
 	 * 挑选符合数量要求的unit组合，返回所有的可能。<br>
-	 * 先找到第一个unit，然后把数量要求减1、去除与第一个unit冲突者，并递归调用，最后把第一个unit和递归调用的结果分别拼接并返回。
+	 * 先找到第一个unit，然后返回以下结果：
+	 * <li>把数量要求减1、去除与第一个unit冲突者，并递归调用，最后把第一个unit和递归调用的结果分别拼接；
+	 * <li>按照原数量要求，从所有剩余unit中递归获取结果。
 	 * 
 	 * @param forUnitCount
 	 *            需要返回的组合中的unit数量
 	 * @return 所有符合要求的unit组合列表
 	 */
 	public List<BazBotTileUnits> allCombs(int forUnitCount) {
-		if (forUnitCount <= 0) {
+		if (forUnitCount <= 0)
+			// 数量要求为0，选择一个空组合
+			return new ArrayList<>(Arrays.asList(new BazBotTileUnits(neighborhoods())));
+
+		List<BazBotTileUnit> allUnits = unitsByNeighborhood.values().stream().flatMap(List::stream).collect(toList());
+		if (allUnits.isEmpty())
+			// 没有unit可选
+			return new ArrayList<>();
+
+		return allCombs(allUnits, 0, List.of(), forUnitCount);
+	}
+
+	private List<BazBotTileUnits> allCombs(List<BazBotTileUnit> allUnits, int startIndex,
+			List<BazBotTileUnit> conflicts, int forUnitCount) {
+		if (forUnitCount <= 0)
 			// 数量要求为0，选择一个空组合
 			return List.of(new BazBotTileUnits(neighborhoods()));
-		}
+		if (allUnits.isEmpty() || startIndex >= allUnits.size())
+			// 没有unit可选
+			return List.of();
+
+		// 从startIndex开始，找到第一个与已选units不冲突的unit
+		int chosenIndex = IntStream.range(startIndex, allUnits.size())
+				.dropWhile(
+						index -> conflicts.stream().anyMatch(conflict -> conflict.conflictWith(allUnits.get(index))))
+				.findFirst().orElse(-1);
+		if (chosenIndex < 0)
+			// 没有unit可选（都冲突）
+			return List.of();
+		BazBotTileUnit chosenUnit = allUnits.get(chosenIndex);
 
 		List<BazBotTileUnits> res = new ArrayList<>();
 
-		unitsByNeighborhood.entrySet().stream()
-				// 找第一个候选unit
-				.filter(hoodAndUnits -> !hoodAndUnits.getValue().isEmpty()).findFirst()
-				.ifPresentOrElse(firstHoodAndUnits -> {
-					// 找到了第一个候选unit
-					BazBotTileNeighborhood hood = firstHoodAndUnits.getKey();
-					List<BazBotTileUnit> unitsOfHood = firstHoodAndUnits.getValue();
-					BazBotTileUnit firstUnit = unitsOfHood.get(0);
+		// 选择此unit，递归调用并与此unit组合
+		List<BazBotTileUnit> newConflicts = new ArrayList<>(conflicts);
+		newConflicts.add(chosenUnit);
+		allCombs(allUnits, chosenIndex + 1, newConflicts, forUnitCount - 1).stream()
+				.peek(units -> units.add(chosenUnit.hood(), chosenUnit)).forEach(res::add);
 
-					// 剩余不冲突的Units
-					BazBotTileUnits remains = new BazBotTileUnits(this, null);
-					remains.unitsByNeighborhood.put(hood,
-							unitsOfHood.stream().filter(unit -> !firstUnit.conflictWith(unit)).collect(toList()));
-
-					// 递归取剩余Units的所有组合，并拼接第一个unit
-					remains.allCombs(forUnitCount - 1).stream().peek(units -> units.add(hood, firstUnit))
-							.forEach(res::add);
-
-				}, () -> {
-					// 没有候选units，无法选择。下面直接返回空列表。
-				});
+		// 不选此unit，递归调用
+		allCombs(allUnits, chosenIndex + 1, conflicts, forUnitCount).forEach(res::add);
 
 		return res;
 	}
@@ -117,6 +131,6 @@ class BazBotTileUnits {
 
 	@Override
 	public String toString() {
-		return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
+		return units().collect(toList()).toString();
 	}
 }

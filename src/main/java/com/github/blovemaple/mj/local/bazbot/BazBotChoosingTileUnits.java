@@ -1,13 +1,13 @@
 package com.github.blovemaple.mj.local.bazbot;
 
+import static com.github.blovemaple.mj.utils.MyUtils.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.github.blovemaple.mj.local.bazbot.BazBotTileUnit.BazBotTileUnitType;
@@ -84,11 +84,15 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 		}
 
 		// 在所有与当前所选不冲突的units中得出符合缺数的所有unit组合
-		List<BazBotTileUnits> unitCombs = nonConflicts(type).allCombs(type.isJiang() ? 1 : forShunkeCount);
+		List<BazBotTileUnits> unitCombs = nonConflictsInHoods(type).allCombs(type.isJiang() ? 1 : forShunkeCount);
 
 		// 包括不选择
 		if (includeEmpty)
 			unitCombs.add(new BazBotTileUnits(neighborhoods()));
+
+		// 选不出来则直接返回当前units
+		if (unitCombs.isEmpty())
+			return Stream.of(this);
 
 		// 复制当前TileUnits并拼接
 		return unitCombs.stream().map(comb -> new BazBotChoosingTileUnits(this, comb));
@@ -98,7 +102,7 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 	 * 计算从当前选择的units到和牌所需的牌型列表，把所有可能的牌型列表组成Stream并返回。不需要内部排序和去重。
 	 */
 	public Stream<List<TileType>> tileTypesToWin() {
-		MutableObject<Stream<List<TileType>>> resStream = new MutableObject<>(Stream.of(List.of()));
+		MutableObject<Stream<List<TileType>>> resStream = new MutableObject<>(Stream.of(new ArrayList<>()));
 
 		forEachHoodAndUnits((hood, units) -> {
 			// 当前hood丢弃的牌
@@ -107,17 +111,13 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 				// 当前unit的（与丢弃的牌不冲突的）多组期望牌型
 				List<List<TileType>> newTypeLists = unit.forTileTypes(remainingTiles);
 				// stream中所有牌型列表复制、拼接当前unit的各组期望牌型
-				resStream.setValue(resStream.getValue()
-						.flatMap(typeList -> newTypeLists.stream().peek(newTypeList -> newTypeList.addAll(typeList))));
+				resStream.setValue(resStream.getValue() //
+						.flatMap(typeList -> newTypeLists.stream() //
+								.map(newTypeList -> merged(ArrayList::new, typeList, newTypeList))));
 			});
 		});
 
-		return resStream.getValue();
-	}
-
-	@Override
-	public String toString() {
-		return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
+		return resStream.getValue().peek(types -> System.out.println("units: " + this + "\n" + "for types: " + types));
 	}
 
 }
