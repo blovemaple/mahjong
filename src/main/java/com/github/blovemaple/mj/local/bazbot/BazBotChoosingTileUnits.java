@@ -71,7 +71,7 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 	 * @param type
 	 *            挑选的unit类型
 	 * @param includeEmpty
-	 *            是否包含不补充任何unit
+	 *            是否一定包含不补充任何unit，false表示只有没有unit可选或不需要补充时才包含不补充任何unit
 	 * @return 新TileUnits的Stream
 	 */
 	public Stream<BazBotChoosingTileUnits> newToChoose(BazBotTileUnitType type, boolean includeEmpty) {
@@ -84,11 +84,8 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 		}
 
 		// 在所有与当前所选不冲突的units中得出符合缺数的所有unit组合
-		List<BazBotTileUnits> unitCombs = nonConflictsInHoods(type).allCombs(type.isJiang() ? 1 : forShunkeCount);
-
-		// 包括不选择
-		if (includeEmpty)
-			unitCombs.add(new BazBotTileUnits(neighborhoods()));
+		List<BazBotTileUnits> unitCombs = nonConflictsInHoods(type).allCombs(type.isJiang() ? 1 : forShunkeCount,
+				includeEmpty);
 
 		// 选不出来则直接返回当前units
 		if (unitCombs.isEmpty())

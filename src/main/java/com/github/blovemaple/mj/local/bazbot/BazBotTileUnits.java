@@ -4,7 +4,6 @@ import static java.util.function.Function.*;
 import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -75,21 +74,23 @@ class BazBotTileUnits {
 	 * <li>把数量要求减1、去除与第一个unit冲突者，并递归调用，最后把第一个unit和递归调用的结果分别拼接；
 	 * <li>按照原数量要求，从所有剩余unit中递归获取结果。
 	 * 
-	 * @param forUnitCount
-	 *            需要返回的组合中的unit数量
+	 * @param maxUnitCount
+	 *            返回的组合中的最多unit数量
+	 * @param includeEmpty
+	 *            是否一定包含空组合，false表示只有没有unit可选或不需要补充时才包含空组合
 	 * @return 所有符合要求的unit组合列表
 	 */
-	public List<BazBotTileUnits> allCombs(int forUnitCount) {
-		if (forUnitCount <= 0)
+	public List<BazBotTileUnits> allCombs(int maxUnitCount, boolean includeEmpty) {
+		if (maxUnitCount <= 0)
 			// 数量要求为0，选择一个空组合
-			return new ArrayList<>(Arrays.asList(new BazBotTileUnits(neighborhoods())));
+			return List.of(new BazBotTileUnits(neighborhoods()));
 
 		List<BazBotTileUnit> allUnits = unitsByNeighborhood.values().stream().flatMap(List::stream).collect(toList());
 		if (allUnits.isEmpty())
 			// 没有unit可选
-			return new ArrayList<>();
+			return includeEmpty ? List.of(new BazBotTileUnits(neighborhoods())) : List.of();
 
-		return allCombs(allUnits, 0, List.of(), forUnitCount);
+		return allCombs(allUnits, 0, List.of(), maxUnitCount);
 	}
 
 	private List<BazBotTileUnits> allCombs(List<BazBotTileUnit> allUnits, int startIndex,
@@ -98,8 +99,8 @@ class BazBotTileUnits {
 			// 数量要求为0，选择一个空组合
 			return List.of(new BazBotTileUnits(neighborhoods()));
 		if (allUnits.isEmpty() || startIndex >= allUnits.size())
-			// 没有unit可选
-			return List.of();
+			// 没有unit可选，选择一个空组合
+			return List.of(new BazBotTileUnits(neighborhoods()));
 
 		// 从startIndex开始，找到第一个与已选units不冲突的unit
 		int chosenIndex = IntStream.range(startIndex, allUnits.size())
@@ -114,9 +115,9 @@ class BazBotTileUnits {
 		List<BazBotTileUnits> res = new ArrayList<>();
 
 		// 选择此unit，递归调用并与此unit组合
-		List<BazBotTileUnit> newConflicts = new ArrayList<>(conflicts);
-		newConflicts.add(chosenUnit);
-		allCombs(allUnits, chosenIndex + 1, newConflicts, forUnitCount - 1).stream()
+		List<BazBotTileUnit> crtConflicts = new ArrayList<>(conflicts);
+		crtConflicts.add(chosenUnit);
+		allCombs(allUnits, chosenIndex + 1, crtConflicts, forUnitCount - 1).stream()
 				.peek(units -> units.add(chosenUnit.hood(), chosenUnit)).forEach(res::add);
 
 		// 不选此unit，递归调用
