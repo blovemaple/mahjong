@@ -25,9 +25,12 @@ class BazBotTileUnits {
 	 */
 	private Map<BazBotTileNeighborhood, List<BazBotTileUnit>> unitsByNeighborhood;
 
+	private int size;
+
 	public BazBotTileUnits(Collection<BazBotTileNeighborhood> neighborhoods) {
 		unitsByNeighborhood = new LinkedHashMap<>();
 		neighborhoods.forEach(hood -> unitsByNeighborhood.put(hood, new ArrayList<>()));
+		size = 0;
 	}
 
 	public BazBotTileUnits(BazBotTileUnits original, BazBotTileUnits newUnits) {
@@ -39,10 +42,13 @@ class BazBotTileUnits {
 		// 把newUnits填入unitsByNeighborhood
 		if (newUnits != null)
 			newUnits.unitsByNeighborhood.forEach((hood, units) -> this.unitsByNeighborhood.get(hood).addAll(units));
+
+		size = original.size() + newUnits.size();
 	}
 
 	private BazBotTileUnits(Map<BazBotTileNeighborhood, List<BazBotTileUnit>> unitsByNeighborhood) {
 		this.unitsByNeighborhood = unitsByNeighborhood;
+		size = unitsByNeighborhood.values().stream().mapToInt(List::size).sum();
 	}
 
 	protected Collection<BazBotTileNeighborhood> neighborhoods() {
@@ -77,7 +83,7 @@ class BazBotTileUnits {
 	 * @param maxUnitCount
 	 *            返回的组合中的最多unit数量
 	 * @param includeEmpty
-	 *            是否一定包含空组合，false表示只有没有unit可选或不需要补充时才包含空组合
+	 *            是否一定包含空组合，false表示只有没有unit可选或maxUnitCount==0时才包含空组合
 	 * @return 所有符合要求的unit组合列表
 	 */
 	public List<BazBotTileUnits> allCombs(int maxUnitCount, boolean includeEmpty) {
@@ -90,44 +96,70 @@ class BazBotTileUnits {
 			// 没有unit可选
 			return includeEmpty ? List.of(new BazBotTileUnits(neighborhoods())) : List.of();
 
-		return allCombs(allUnits, 0, List.of(), maxUnitCount);
+		List<BazBotTileUnits> res = allCombs(allUnits, 0, List.of(), List.of(), true, maxUnitCount);
+
+		if (includeEmpty) {
+			res = new ArrayList<>(res);
+			res.add(new BazBotTileUnits(neighborhoods()));
+		}
+
+		return res;
 	}
 
 	private List<BazBotTileUnits> allCombs(List<BazBotTileUnit> allUnits, int startIndex,
-			List<BazBotTileUnit> conflicts, int forUnitCount) {
+			List<BazBotTileUnit> selecteds, List<BazBotTileUnit> droppeds, boolean satisfiedWithDroppeds,
+			int forUnitCount) {
 		if (forUnitCount <= 0)
 			// 数量要求为0，选择一个空组合
 			return List.of(new BazBotTileUnits(neighborhoods()));
 		if (allUnits.isEmpty() || startIndex >= allUnits.size())
-			// 没有unit可选，选择一个空组合
-			return List.of(new BazBotTileUnits(neighborhoods()));
+			// 没有unit可选
+			// 当satisfiedWithDroppeds时选择一个空组合，否则不选择
+			return satisfiedWithDroppeds ? List.of(new BazBotTileUnits(neighborhoods())) : List.of();
 
 		// 从startIndex开始，找到第一个与已选units不冲突的unit
 		int chosenIndex = IntStream.range(startIndex, allUnits.size())
-				.dropWhile(
-						index -> conflicts.stream().anyMatch(conflict -> conflict.conflictWith(allUnits.get(index))))
+				.dropWhile(index -> selecteds.stream().anyMatch(conflict -> conflict.conflictWith(allUnits.get(index))))
 				.findFirst().orElse(-1);
 		if (chosenIndex < 0)
 			// 没有unit可选（都冲突）
-			return List.of();
+			// 当satisfiedWithDroppeds时选择一个空组合，否则不选择
+			return satisfiedWithDroppeds ? List.of(new BazBotTileUnits(neighborhoods())) : List.of();
 		BazBotTileUnit chosenUnit = allUnits.get(chosenIndex);
 
 		List<BazBotTileUnits> res = new ArrayList<>();
 
 		// 选择此unit，递归调用并与此unit组合
-		List<BazBotTileUnit> crtConflicts = new ArrayList<>(conflicts);
-		crtConflicts.add(chosenUnit);
-		allCombs(allUnits, chosenIndex + 1, crtConflicts, forUnitCount - 1).stream()
-				.peek(units -> units.add(chosenUnit.hood(), chosenUnit)).forEach(res::add);
+		List<BazBotTileUnit> crtSelecteds = new ArrayList<>(selecteds);
+		crtSelecteds.add(chosenUnit);
+		boolean crtSatisfiedWithDroppeds = satisfiedWithDroppeds ? true
+				: droppeds.stream().allMatch(dropped -> dropped.conflictWith(chosenUnit));
+		if (!crtSatisfiedWithDroppeds) {
+			if (allUnits.size() - chosenIndex < forUnitCount)
+				return res;
+		}
+		allCombs(allUnits, chosenIndex + 1, crtSelecteds, droppeds, crtSatisfiedWithDroppeds, forUnitCount - 1).stream()
+				.peek(units -> units.add(chosenUnit.hood(), chosenUnit)) //
+				.filter(units -> crtSatisfiedWithDroppeds ? true : units.size() == forUnitCount) //
+				.forEach(res::add);
 
 		// 不选此unit，递归调用
-		allCombs(allUnits, chosenIndex + 1, conflicts, forUnitCount).forEach(res::add);
+		List<BazBotTileUnit> crtDroppeds = new ArrayList<>(droppeds);
+		crtDroppeds.add(chosenUnit);
+		allCombs(allUnits, chosenIndex + 1, selecteds, crtDroppeds, false, forUnitCount).stream()
+				.filter(units -> crtSatisfiedWithDroppeds ? true : units.size() == forUnitCount) //
+				.forEach(res::add);
 
 		return res;
 	}
 
 	private void add(BazBotTileNeighborhood hood, BazBotTileUnit newUnit) {
 		unitsByNeighborhood.get(hood).add(newUnit);
+		size += 1;
+	}
+
+	public int size() {
+		return size;
 	}
 
 	@Override

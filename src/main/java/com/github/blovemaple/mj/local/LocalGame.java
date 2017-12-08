@@ -6,7 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
 
 import com.github.blovemaple.mj.game.MahjongGame;
-import com.github.blovemaple.mj.local.barbot.BarBot;
+import com.github.blovemaple.mj.local.bazbot.BazBot;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.rule.GameStrategy;
@@ -21,7 +21,7 @@ import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 public class LocalGame {
 	private GameStrategy gameStrategy = new SimpleGameStrategy();
 	private TimeLimitStrategy timeStrategy = TimeLimitStrategy.NO_LIMIT;
-	private Class<? extends Player> botPlayerClass = BarBot.class;
+	private Class<? extends Player> botPlayerClass = BazBot.class;
 
 	private Player localPlayer;
 	private Supplier<Boolean> newGameChecker;

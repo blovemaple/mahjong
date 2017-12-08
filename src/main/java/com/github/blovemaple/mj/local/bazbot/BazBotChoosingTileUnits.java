@@ -114,7 +114,8 @@ class BazBotChoosingTileUnits extends BazBotTileUnits {
 			});
 		});
 
-		return resStream.getValue().peek(types -> System.out.println("units: " + this + "\n" + "for types: " + types));
+		return resStream.getValue();// .peek(types -> System.out.println("units: " + this + "\n" + "for types: " +
+									// types));
 	}
 
 }
