@@ -21,7 +21,6 @@ import com.google.common.cache.CacheBuilder;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 class BazBotAliveTiles {
-	@SuppressWarnings("unused")
 	private static final Logger logger = Logger.getLogger(BazBotAliveTiles.class.getSimpleName());
 
 	private static final Cache<Set<Tile>, BazBotAliveTiles> cache = //
@@ -29,6 +28,10 @@ class BazBotAliveTiles {
 
 	public static BazBotAliveTiles of(Set<Tile> aliveTiles) {
 		try {
+			if (cache.getIfPresent(aliveTiles) != null)
+				logger.fine(() -> "BazBotAliveTiles Cache hit.");
+			else
+				logger.fine(() -> "BazBotAliveTiles Cache NO hit.");
 			return cache.get(aliveTiles, () -> new BazBotAliveTiles(aliveTiles));
 		} catch (ExecutionException e) {
 			// not possible
@@ -45,6 +48,7 @@ class BazBotAliveTiles {
 	}
 
 	public List<BazBotTileNeighborhood> neighborhoods() {
+		tileTypesToWin();
 		return neighborhoods;
 	}
 
@@ -65,9 +69,9 @@ class BazBotAliveTiles {
 					.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_ONE, false)) // 选所有合适的不完整顺刻组合（缺一张的）
 					.flatMap(units -> units.newToChoose(UNCOMPLETE_SHUNKE_FOR_TWO, false)) // 选所有合适的不完整顺刻组合（缺两张的）
 					.flatMap(units -> units.newToChoose(UNCOMPLETE_JIANG, false)) // 选所有合适的不完整将牌
-//					.peek(System.out::println)
+					// .peek(System.out::println)
 					.flatMap(BazBotChoosingTileUnits::tileTypesToWin) // 计算tileUnits和牌所需牌型
-//					.peek(System.out::println)
+					// .peek(System.out::println)
 					.peek(tileTypes -> tileTypes.sort(naturalOrder())) // 每组tileType内部排序，准备去重
 					.distinct() // 去重
 					.collect(toList()) // 收集结果

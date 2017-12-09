@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -28,6 +29,7 @@ import com.google.common.cache.CacheBuilder;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 class BazBotTileNeighborhood {
+	private static final Logger logger = Logger.getLogger(BazBotTileNeighborhood.class.getSimpleName());
 
 	private static final Cache<List<Tile>, BazBotTileNeighborhood> cache = //
 			CacheBuilder.newBuilder().maximumSize(200).build();
@@ -52,10 +54,13 @@ class BazBotTileNeighborhood {
 			lastTile = tile;
 		}
 		try {
-			return neighborhoodTilesList.stream()
-					.map(rethrowFunction(
-							hoodTiles -> cache.get(hoodTiles, () -> new BazBotTileNeighborhood(hoodTiles))))
-					.collect(Collectors.toList());
+			return neighborhoodTilesList.stream().map(rethrowFunction(hoodTiles -> {
+				if (cache.getIfPresent(hoodTiles) != null)
+					logger.fine(() -> "BazBotTileNeighborhood Cache hit.");
+				else
+					logger.fine(() -> "BazBotTileNeighborhood Cache NO hit.");
+				return cache.get(hoodTiles, () -> new BazBotTileNeighborhood(hoodTiles));
+			})).collect(Collectors.toList());
 		} catch (ExecutionException e) {
 			// not possible
 			throw new RuntimeException(e);
@@ -101,6 +106,8 @@ class BazBotTileNeighborhood {
 			return;
 
 		synchronized (this) {
+			if (parsed)
+				return;
 			parseUnits();
 			allUnits.addAll(completedJiangs);
 			allUnits.addAll(completedShunKes);
@@ -226,6 +233,7 @@ class BazBotTileNeighborhood {
 
 	@Override
 	public String toString() {
+		initParseUnits();
 		return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
 	}
 }
