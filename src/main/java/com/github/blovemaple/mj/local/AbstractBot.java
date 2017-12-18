@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,6 +28,7 @@ public abstract class AbstractBot implements Player {
 	private static final Logger logger = Logger.getLogger(AbstractBot.class.getSimpleName());
 
 	private String name;
+	private int minThinkingMs = 1000, maxThinkingMs = 3000;
 
 	private long costSum;
 	private int invokeCount;
@@ -38,6 +40,13 @@ public abstract class AbstractBot implements Player {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public void setThinkingTime(int min, int max) {
+		if (min > max)
+			throw new IllegalArgumentException("Invalid thinking time: [" + min + "," + max + "]");
+		this.minThinkingMs = min;
+		this.maxThinkingMs = max;
 	}
 
 	public void resetCostStat() {
@@ -56,9 +65,17 @@ public abstract class AbstractBot implements Player {
 	@Override
 	public Action chooseAction(GameContextPlayerView contextView, Set<ActionType> actionTypes)
 			throws InterruptedException {
+		long startTime = System.nanoTime();
+
 		logger.info(() -> "BOT Alive tiles: " + aliveTilesStr(contextView));
 		Action action = chooseAction0(contextView, actionTypes);
 		logger.info(() -> "BOT Chosed action:" + action);
+
+		long endTime = System.nanoTime();
+		long nanoCost = endTime - startTime;
+		long delayMillis = minThinkingMs - TimeUnit.MILLISECONDS.convert(nanoCost, TimeUnit.NANOSECONDS);
+		TimeUnit.MILLISECONDS.sleep(delayMillis);
+
 		return action;
 	}
 
@@ -72,7 +89,6 @@ public abstract class AbstractBot implements Player {
 		if (actionTypes.contains(BUHUA)) {
 			Collection<Set<Tile>> buhuas = BUHUA.getLegalActionTiles(contextView);
 			if (!buhuas.isEmpty()) {
-				// 补花前延迟
 				return new Action(BUHUA, buhuas.iterator().next());
 			}
 		}
@@ -89,7 +105,6 @@ public abstract class AbstractBot implements Player {
 		// 如果可以摸牌，就摸牌
 		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
 			if (actionTypes.contains(drawType)) {
-				// 摸牌前延迟
 				return new Action(drawType);
 			}
 
@@ -140,6 +155,11 @@ public abstract class AbstractBot implements Player {
 			costSum += nanoCost;
 			invokeCount++;
 			logger.info("BOT Time cost(millis): " + Math.round(nanoCost / 1_000_000D));
+
+			// 没到目标时间的话假装再想一会儿
+			int targetThinkingTime = minThinkingMs + (int) (Math.random() * (maxThinkingMs - minThinkingMs));
+			long delayMillis = targetThinkingTime - TimeUnit.MILLISECONDS.convert(nanoCost, TimeUnit.NANOSECONDS);
+			TimeUnit.MILLISECONDS.sleep(delayMillis);
 		}
 	}
 
