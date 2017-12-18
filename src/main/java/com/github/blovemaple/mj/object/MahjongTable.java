@@ -137,7 +137,7 @@ public class MahjongTable {
 		return view;
 	}
 
-	public class PlayerView implements MahjongTablePlayerView {
+	private class PlayerView implements MahjongTablePlayerView {
 
 		private final PlayerLocation myLocation;
 

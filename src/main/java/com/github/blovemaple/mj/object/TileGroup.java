@@ -109,7 +109,7 @@ public class TileGroup implements Serializable {
 		return view;
 	}
 
-	public class PlayerView implements TileGroupPlayerView {
+	private class PlayerView implements TileGroupPlayerView {
 
 		@Override
 		public TileGroupType getType() {

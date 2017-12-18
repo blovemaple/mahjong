@@ -9,6 +9,11 @@ import java.util.List;
  */
 public interface PlayerInfoPlayerView {
 	/**
+	 * 返回玩家名称。
+	 */
+	public String getPlayerName();
+
+	/**
 	 * 返回手中的牌数。
 	 */
 	public int getAliveTileSize();
