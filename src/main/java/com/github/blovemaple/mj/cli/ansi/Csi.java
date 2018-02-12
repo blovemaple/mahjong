@@ -21,8 +21,8 @@ public class Csi {
 		return of(CsiFinalByte.ED);
 	}
 
-	public static String cup(int x, int y) {
-		return of(CsiFinalByte.CUP, x, y);
+	public static String cup(int rowIndex, int columnIndex) {
+		return of(CsiFinalByte.CUP, rowIndex, columnIndex);
 	}
 
 	public static String sgr(SgrParam... params) {

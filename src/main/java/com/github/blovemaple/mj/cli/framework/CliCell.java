@@ -2,6 +2,8 @@ package com.github.blovemaple.mj.cli.framework;
 
 import static com.github.blovemaple.mj.cli.ansi.AnsiColor.*;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.github.blovemaple.mj.cli.ansi.AnsiColor;
 import com.github.blovemaple.mj.cli.ansi.SgrParam;
 
@@ -11,14 +13,12 @@ import com.github.blovemaple.mj.cli.ansi.SgrParam;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class CliCell implements Cloneable {
-
-	/**
-	 * 由于汉字占两格，每个汉字后的单元格必须使用此cell作为占位符，以使行内单元格数与行宽匹配。
-	 */
-	public static final CliCell CHAR_PLACEHOLDER = new CliCell();
-
-	private AnsiColor foreground = DEFAULT, background = DEFAULT;
+	private AnsiColor foreground = DEFAULT, background = null;
 	private char text = ' ';
+	/**
+	 * 由于汉字占两格，每个汉字后的单元格使用占位符，以使行内单元格数与行宽匹配。
+	 */
+	private boolean isPlaceholder;
 
 	public CliCell() {
 	}
@@ -45,6 +45,14 @@ public class CliCell implements Cloneable {
 
 	public void setText(char text) {
 		this.text = text;
+	}
+
+	public boolean isPlaceholder() {
+		return isPlaceholder;
+	}
+
+	public void setPlaceholder(boolean isPlaceholder) {
+		this.isPlaceholder = isPlaceholder;
 	}
 
 	public SgrParam[] getSgrParams() {
@@ -86,6 +94,11 @@ public class CliCell implements Cloneable {
 		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this);
 	}
 
 }
