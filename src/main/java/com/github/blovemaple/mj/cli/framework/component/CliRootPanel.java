@@ -9,21 +9,23 @@ import com.github.blovemaple.mj.cli.ansi.AnsiColor;
 import com.github.blovemaple.mj.cli.framework.layout.CliFlowLayout;
 import com.github.blovemaple.mj.cli.framework.layout.CliFlowLayout.CliPanelFlowLayoutDirection;
 
+import jline.console.ConsoleReader;
+
 /**
  * 命令行界面根面板。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class CliRootPanel extends CliPanel {
+public final class CliRootPanel extends CliPanel {
 	public static void main(String[] args) throws IOException {
 		CliRootPanel rootPanel = CliRootPanel.get();
 		rootPanel.setBackground(AnsiColor.CYAN);
 
 		CliPanel panel = new CliPanel();
-		CliFlowLayout layout = new CliFlowLayout(CliPanelFlowLayoutDirection.BOTTOM_LEFT_VERTICAL);
+		CliFlowLayout layout = new CliFlowLayout(CliPanelFlowLayoutDirection.BOTTOM_RIGHT_VERTICAL);
 		layout.setColumnGap(3);
 		layout.setRowGap(5);
-		layout.setLineSize(2);
+		// layout.setLineSize(2);
 		panel.setLayout(layout);
 		panel.setBackground(AnsiColor.BLUE);
 		panel.setTopBySelf(() -> 1);
@@ -49,6 +51,8 @@ public class CliRootPanel extends CliPanel {
 		panel.addChild(label3);
 
 		rootPanel.repaint();
+		System.out.println(rootPanel.getWidth(null));
+		System.out.println(rootPanel.getHeight(null));
 		// System.out.println(label2.getTop(panel));
 		// System.out.println(label2.getLeft(panel));
 		// System.out.println(label2.getHeight(panel));
@@ -68,10 +72,10 @@ public class CliRootPanel extends CliPanel {
 		return i;
 	}
 
-	// private final ConsoleReader console;
+	private final ConsoleReader console;
 
 	private CliRootPanel() throws IOException {
-		// console = new ConsoleReader(null, System.in, System.out, null);
+		console = new ConsoleReader(null, System.in, System.out, null);
 		setBackground(AnsiColor.DEFAULT);
 	}
 
@@ -81,14 +85,14 @@ public class CliRootPanel extends CliPanel {
 
 	@Override
 	public OptionalInt getWidth(CliComponent parent) {
-		// return OptionalInt.of(console.getTerminal().getWidth());
-		return OptionalInt.of(100);
+		return OptionalInt.of(console.getTerminal().getWidth());
+		// return OptionalInt.of(100);
 	}
 
 	@Override
 	public OptionalInt getHeight(CliComponent parent) {
-		// return OptionalInt.of(console.getTerminal().getHeight());
-		return OptionalInt.of(50);
+		return OptionalInt.of(console.getTerminal().getHeight());
+		// return OptionalInt.of(50);
 	}
 
 	@Override

@@ -9,6 +9,6 @@
 
 ==如何运行==
 入口类：
- com.github.blovemaple.mj.cli.CliRunner
+ com.github.blovemaple.mj.cli.v1.CliRunner
 编译后可执行jar包：
  mahjong-*-jar-with-dependencies.jar

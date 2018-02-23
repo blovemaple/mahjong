@@ -1,4 +1,4 @@
-package com.github.blovemaple.mj.cli;
+package com.github.blovemaple.mj.cli.v1;
 
 import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;

@@ -5,7 +5,7 @@ import static com.github.blovemaple.mj.object.PlayerLocation.*;
 import java.util.List;
 import java.util.logging.LogManager;
 
-import com.github.blovemaple.mj.cli.CliRunner;
+import com.github.blovemaple.mj.cli.v1.CliRunner;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.game.MahjongGame;
 import com.github.blovemaple.mj.local.AbstractBot;

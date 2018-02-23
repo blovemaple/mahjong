@@ -1,4 +1,8 @@
-package com.github.blovemaple.mj.cli;
+package com.github.blovemaple.mj.cli.v1;
+
+import static com.github.blovemaple.mj.cli.v1.CliView.CharHandler.HandlingResult.*;
+import static com.github.blovemaple.mj.utils.LambdaUtils.*;
+import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -6,12 +10,8 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import com.github.blovemaple.mj.cli.CliView.CharHandler;
+import com.github.blovemaple.mj.cli.v1.CliView.CharHandler;
 import com.github.blovemaple.mj.local.LocalGame;
-
-import static com.github.blovemaple.mj.cli.CliView.CharHandler.HandlingResult.*;
-import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.*;
-import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 
 /**
  * 命令行入口。

@@ -1,8 +1,8 @@
-package com.github.blovemaple.mj.cli;
+package com.github.blovemaple.mj.cli.v1;
 
 import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
-import static com.github.blovemaple.mj.cli.CliGameView.*;
-import static com.github.blovemaple.mj.cli.CliView.CharHandler.HandlingResult.*;
+import static com.github.blovemaple.mj.cli.v1.CliGameView.*;
+import static com.github.blovemaple.mj.cli.v1.CliView.CharHandler.HandlingResult.*;
 import static com.github.blovemaple.mj.utils.LanguageManager.*;
 import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.*;
 
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.cli.CliView.CharHandler;
+import com.github.blovemaple.mj.cli.v1.CliView.CharHandler;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;

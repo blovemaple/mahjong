@@ -54,7 +54,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.github.blovemaple.mj.cli.CliRunner</mainClass>
+							<mainClass>com.github.blovemaple.mj.cli.v1.CliRunner</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -64,7 +64,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.github.blovemaple.mj.cli.CliRunner</mainClass>
+							<mainClass>com.github.blovemaple.mj.cli.v1.CliRunner</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
