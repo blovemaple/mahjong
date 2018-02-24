@@ -22,6 +22,10 @@ import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.rule.win.WinType;
 
+/**
+ * @author blovemaple <blovemaple2010(at)gmail.com>
+ */
+@Deprecated
 class BarBotCpgdChoice {
 	private final BarBotCpgdSelectTask task;
 	private final List<? extends WinType> forWinTypes;
@@ -104,7 +108,7 @@ class BarBotCpgdChoice {
 			throw new InterruptedException();
 
 		if (playerInfo.isTing() && changeCount > 0)
-			return false; // XXX - 写死了听牌后不能换牌
+			return false; // 写死了听牌后不能换牌
 
 		if (subChoices == null) {
 			// 没有后续动作，收集结果为和牌的换牌，并计算和牌概率（将其发生概率相加）

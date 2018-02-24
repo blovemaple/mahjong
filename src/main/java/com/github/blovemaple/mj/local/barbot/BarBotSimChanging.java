@@ -12,6 +12,10 @@ import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileUnit;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
+/**
+ * @author blovemaple <blovemaple2010(at)gmail.com>
+ */
+@Deprecated
 class BarBotSimChanging {
 	private BarBotCpgdChoice choice;
 

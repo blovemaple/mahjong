@@ -16,6 +16,7 @@ import com.github.blovemaple.mj.local.AbstractBot;
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
+@Deprecated
 public class BarBot extends AbstractBot {
 	private String name;
 

@@ -34,10 +34,11 @@ import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
- * TODO 换牌n个：remove n，add n+1
+ * 换牌n个：remove n，add n+1
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
+@Deprecated
 public class BarBotCpgdSelectTask implements Callable<Action> {
 	private static final Logger logger = Logger.getLogger(BarBotCpgdSelectTask.class.getSimpleName());
 
@@ -67,7 +68,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	}
 
 	@Override
-	// TODO interrupt
+	// interrupt
 	public Action call() throws Exception {
 		long startTime = System.currentTimeMillis();
 

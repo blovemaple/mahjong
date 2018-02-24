@@ -22,6 +22,7 @@ import com.github.blovemaple.mj.utils.MyUtils;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
+@Deprecated
 public class BarBotSimContext implements GameContext {
 	private GameStrategy gameStrategy;
 	private TimeLimitStrategy timeLimitStrategy;
