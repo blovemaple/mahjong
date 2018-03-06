@@ -45,8 +45,18 @@ public abstract class CliComponent extends CliPaintable {
 		children.add(child);
 	}
 
+	public final void setChild(int index, CliComponent child) {
+		if (leaf)
+			throw new UnsupportedOperationException();
+		children.set(index, child);
+	}
+
 	public final void removeChild(CliComponent child) {
 		children.remove(child);
+	}
+
+	public final void clearChildren() {
+		children.clear();
 	}
 
 	public void setWidthBySelf(IntSupplier widthBySelf) {

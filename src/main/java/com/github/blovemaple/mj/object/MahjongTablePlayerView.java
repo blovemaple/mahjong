@@ -25,16 +25,6 @@ public interface MahjongTablePlayerView {
 	public int getTileWallSize();
 
 	/**
-	 * 返回此局开始时的底牌数量。
-	 */
-	public int getInitBottomSize();
-
-	/**
-	 * 返回已经从底部摸牌的数量。
-	 */
-	public int getDrawedBottomSize();
-
-	/**
 	 * 返回PlayerInfo视图。
 	 */
 	public Map<PlayerLocation, PlayerInfoPlayerView> getPlayerInfoView();

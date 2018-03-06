@@ -13,11 +13,11 @@ import com.github.blovemaple.mj.cli.framework.component.CliComponent;
  */
 public class CliFlowLayout implements CliLayout {
 
-	private CliPanelFlowLayoutDirection direction;
+	private CliFlowLayoutDirection direction;
 	private int lineSize;
 	private int rowGap, columnGap;
 
-	public enum CliPanelFlowLayoutDirection {
+	public enum CliFlowLayoutDirection {
 		TOP_LEFT_HORIZONTAL(Direction.RIGHT, Direction.DOWN), //
 		TOP_LEFT_VERTICAL(Direction.DOWN, Direction.RIGHT), //
 		TOP_RIGHT_HORIZONTAL(Direction.LEFT, Direction.DOWN), //
@@ -30,7 +30,7 @@ public class CliFlowLayout implements CliLayout {
 
 		private final Direction firstDirection, secondDirection;
 
-		private CliPanelFlowLayoutDirection(Direction firstDirection, Direction secondDirection) {
+		private CliFlowLayoutDirection(Direction firstDirection, Direction secondDirection) {
 			this.firstDirection = firstDirection;
 			this.secondDirection = secondDirection;
 		}
@@ -92,18 +92,18 @@ public class CliFlowLayout implements CliLayout {
 	}
 
 	public CliFlowLayout() {
-		this.direction = CliPanelFlowLayoutDirection.TOP_LEFT_HORIZONTAL;
+		this.direction = CliFlowLayoutDirection.TOP_LEFT_HORIZONTAL;
 	}
 
-	public CliFlowLayout(CliPanelFlowLayoutDirection direction) {
+	public CliFlowLayout(CliFlowLayoutDirection direction) {
 		this.direction = direction;
 	}
 
-	public CliPanelFlowLayoutDirection getDirection() {
+	public CliFlowLayoutDirection getDirection() {
 		return direction;
 	}
 
-	public void setDirection(CliPanelFlowLayoutDirection direction) {
+	public void setDirection(CliFlowLayoutDirection direction) {
 		Objects.requireNonNull(direction);
 		this.direction = direction;
 	}

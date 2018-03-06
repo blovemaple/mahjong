@@ -16,24 +16,16 @@ import java.util.stream.Collectors;
  */
 public class MahjongTable {
 	/**
-	 * 牌墙。从0处摸牌。一局开始时如果产生底牌，应该把底牌从开头挪到尾部。
+	 * 牌墙。
 	 */
-	private List<Tile> tileWall;
-	/**
-	 * 一局开始时的底牌数量。
-	 */
-	private int initBottomSize;
-	/**
-	 * 已经从底部摸牌的数量。
-	 */
-	private int drawedBottomSize;
+	private TileWall wall;
 	/**
 	 * 所有玩家信息。
 	 */
 	private Map<PlayerLocation, PlayerInfo> playerInfos;
 
 	public void init() {
-		tileWall = new ArrayList<Tile>();
+		wall = new TileWall();
 		playerInfos = new EnumMap<>(PlayerLocation.class);
 		for (PlayerLocation location : PlayerLocation.values()) {
 			playerInfos.put(location, new PlayerInfo());
@@ -45,60 +37,30 @@ public class MahjongTable {
 	 */
 	public void readyForGame(Collection<Tile> allTiles) {
 		playerInfos.values().forEach(PlayerInfo::clear);
-		tileWall.clear();
-		tileWall.addAll(allTiles);
-		Collections.shuffle(tileWall);
-		initBottomSize = 0;
-		drawedBottomSize = 0;
+		List<Tile> tileList = new ArrayList<>(allTiles);
+		Collections.shuffle(tileList);
+		wall.init(tileList);
 	}
 
 	/**
 	 * 返回牌墙中的剩余牌数。
 	 */
 	public int getTileWallSize() {
-		return tileWall.size();
-	}
-
-	public int getInitBottomSize() {
-		return initBottomSize;
-	}
-
-	public void setInitBottomSize(int initBottomSize) {
-		this.initBottomSize = initBottomSize;
-	}
-
-	public int getDrawedBottomSize() {
-		return drawedBottomSize;
-	}
-
-	public void setDrawedBottomSize(int drawedBottomSize) {
-		this.drawedBottomSize = drawedBottomSize;
+		return wall.getRemainTileCount();
 	}
 
 	/**
 	 * 从牌墙的头部摸指定数量的牌并返回。
 	 */
 	public List<Tile> draw(int count) {
-		if (count <= 0 || count > tileWall.size())
-			return Collections.emptyList();
-		List<Tile> toBeDrawed = tileWall.subList(0, count);
-		List<Tile> drawed = new ArrayList<>(toBeDrawed);
-		toBeDrawed.clear();
-		return drawed;
+		return wall.draw(count);
 	}
 
 	/**
 	 * 从牌墙的底部摸指定数量的牌并返回。
 	 */
 	public List<Tile> drawBottom(int count) {
-		if (count <= 0 || count > tileWall.size())
-			return Collections.emptyList();
-		List<Tile> toBeDrawed = tileWall.subList(tileWall.size() - count,
-				tileWall.size());
-		List<Tile> drawed = new ArrayList<>(toBeDrawed);
-		toBeDrawed.clear();
-		drawedBottomSize += drawed.size();
-		return drawed;
+		return wall.drawBottom(count);
 	}
 
 	public Map<PlayerLocation, PlayerInfo> getPlayerInfos() {
@@ -162,20 +124,9 @@ public class MahjongTable {
 		}
 
 		@Override
-		public int getInitBottomSize() {
-			return MahjongTable.this.getInitBottomSize();
-		}
-
-		@Override
-		public int getDrawedBottomSize() {
-			return MahjongTable.this.getDrawedBottomSize();
-		}
-
-		@Override
 		public Map<PlayerLocation, PlayerInfoPlayerView> getPlayerInfoView() {
 			return playerInfos.entrySet().stream()
-					.collect(Collectors.toMap(entry -> entry.getKey()
-							, entry -> entry.getValue().getOtherPlayerView()));
+					.collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().getOtherPlayerView()));
 		}
 
 	}

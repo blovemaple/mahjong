@@ -7,7 +7,7 @@ import java.util.function.IntSupplier;
 
 import com.github.blovemaple.mj.cli.ansi.AnsiColor;
 import com.github.blovemaple.mj.cli.framework.layout.CliFlowLayout;
-import com.github.blovemaple.mj.cli.framework.layout.CliFlowLayout.CliPanelFlowLayoutDirection;
+import com.github.blovemaple.mj.cli.framework.layout.CliFlowLayout.CliFlowLayoutDirection;
 
 import jline.console.ConsoleReader;
 
@@ -22,7 +22,7 @@ public final class CliRootPanel extends CliPanel {
 		rootPanel.setBackground(AnsiColor.CYAN);
 
 		CliPanel panel = new CliPanel();
-		CliFlowLayout layout = new CliFlowLayout(CliPanelFlowLayoutDirection.BOTTOM_RIGHT_VERTICAL);
+		CliFlowLayout layout = new CliFlowLayout(CliFlowLayoutDirection.BOTTOM_RIGHT_VERTICAL);
 		layout.setColumnGap(3);
 		layout.setRowGap(5);
 		// layout.setLineSize(2);
