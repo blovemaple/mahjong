@@ -5,7 +5,7 @@ import java.util.Set;
 import com.github.blovemaple.mj.object.PlayerLocation.Relation;
 
 /**
- * {@link TileGroup}给其他玩家的视图接口。
+ * {@link TileGroup}接口。作为给其他玩家的视图时，隐藏暗杠的牌。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
@@ -37,6 +37,6 @@ public interface TileGroupPlayerView {
 	 * 
 	 * @return 得牌
 	 */
-	public Tile getGotTile() ;
+	public Tile getGotTile();
 
 }

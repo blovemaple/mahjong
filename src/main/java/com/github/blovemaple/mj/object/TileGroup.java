@@ -12,7 +12,7 @@ import com.github.blovemaple.mj.object.PlayerLocation.Relation;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class TileGroup implements Serializable {
+public class TileGroup implements TileGroupPlayerView, Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private TileGroupType type;

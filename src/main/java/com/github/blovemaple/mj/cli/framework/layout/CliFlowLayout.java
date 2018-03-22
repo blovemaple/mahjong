@@ -16,6 +16,7 @@ public class CliFlowLayout implements CliLayout {
 	private CliFlowLayoutDirection direction;
 	private int lineSize;
 	private int rowGap, columnGap;
+	private int childWidth, childHeight;
 
 	public enum CliFlowLayoutDirection {
 		TOP_LEFT_HORIZONTAL(Direction.RIGHT, Direction.DOWN), //
@@ -136,6 +137,26 @@ public class CliFlowLayout implements CliLayout {
 		this.columnGap = columnGap;
 	}
 
+	public int getChildWidth() {
+		return childWidth;
+	}
+
+	public void setChildWidth(int childWidth) {
+		if (childWidth < 0)
+			throw new IllegalArgumentException("Illegal child width: " + childWidth);
+		this.childWidth = childWidth;
+	}
+
+	public int getChildHeight() {
+		return childHeight;
+	}
+
+	public void setChildHeight(int childHeight) {
+		if (childHeight < 0)
+			throw new IllegalArgumentException("Illegal child height: " + childHeight);
+		this.childHeight = childHeight;
+	}
+
 	@Override
 	public Map<CliComponent, CliLayoutSetting> layout(CliComponent parent) {
 		Map<CliComponent, CliLayoutSetting> layout = new HashMap<>();
@@ -149,8 +170,17 @@ public class CliFlowLayout implements CliLayout {
 			layout.put(child, setting);
 
 			// 取子组件的宽高（逻辑上）
-			int width = child.get(getDirection().logiWidthType(), parent).orElse(0);
-			int height = child.get(getDirection().logiHeightType(), parent).orElse(0);
+			int width, height;
+			int fixedLogiWidth = getDirection().logiWidthType() == WIDTH ? childWidth : childHeight;
+			int fixedLogiHeight = getDirection().logiHeightType() == WIDTH ? childWidth : childHeight;
+			if (fixedLogiWidth == 0)
+				width = child.get(getDirection().logiWidthType(), parent).orElse(0);
+			else
+				width = fixedLogiWidth;
+			if (fixedLogiHeight == 0)
+				height = child.get(getDirection().logiHeightType(), parent).orElse(0);
+			else
+				height = fixedLogiHeight;
 
 			// 设置子组件属性
 			setting.set(getDirection().logiWidthType(), width);

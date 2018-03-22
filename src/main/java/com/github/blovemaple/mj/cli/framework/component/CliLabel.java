@@ -55,15 +55,15 @@ public class CliLabel extends CliComponent {
 		int phRemain = 0;
 
 		int rowIndex;
-		for (rowIndex = 0; nextCharIndex < text.length(); rowIndex++) {
+		for (rowIndex = 0; nextCharIndex < getText().length(); rowIndex++) {
 			for (int columnIndex = 0; columnIndex < width; columnIndex++) {
 				if (phRemain > 0) {
 					phRemain--;
 					continue;
 				}
 
-				if (nextCharIndex < text.length()) {
-					char crtChar = text.charAt(nextCharIndex);
+				if (nextCharIndex < getText().length()) {
+					char crtChar = getText().charAt(nextCharIndex);
 					int charWidth = strWidth(String.valueOf(crtChar));
 					if (charWidth <= width - columnIndex) {
 						nextCharIndex++;
@@ -100,8 +100,8 @@ public class CliLabel extends CliComponent {
 					continue;
 				}
 
-				if (nextCharIndex < text.length()) {
-					char crtChar = text.charAt(nextCharIndex);
+				if (nextCharIndex < getText().length()) {
+					char crtChar = getText().charAt(nextCharIndex);
 					int charWidth = strWidth(String.valueOf(crtChar));
 					if (charWidth <= width - columnIndex) {
 						cell.setText(crtChar);
