@@ -132,7 +132,7 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 	@Override
 	public ActionAndLocation getDefaultAction(GameContext context,
 			Map<PlayerLocation, Set<ActionType>> choises) {
-		if (context.getTable().getTileWallSize() == 0)
+		if (context.getTable().getTileWall().getRemainTileCount() == 0)
 			return new ActionAndLocation(new Action(LIUJU), null);
 		else
 			return null;

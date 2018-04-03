@@ -23,7 +23,7 @@ public class CliTileGroup extends CliDirectionalTilesPanel {
 		if (tileGroup.getType() == ANGANG_GROUP)
 			IntStream.range(0, 4).forEach(i -> addChild(CliTile.TILE_BACK));
 		else
-			tileGroup.getTiles().stream().sorted(comparing(Tile::type)).map(CliTile::of).forEach(this::addChild);
+			tileGroup.getTilesView().stream().sorted(comparing(Tile::type)).map(CliTile::of).forEach(this::addChild);
 	}
 
 	public void view(TileGroup tileGroup) {

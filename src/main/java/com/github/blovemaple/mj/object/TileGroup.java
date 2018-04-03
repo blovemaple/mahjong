@@ -65,6 +65,7 @@ public class TileGroup implements TileGroupPlayerView, Serializable {
 	 * 
 	 * @return 类型
 	 */
+	@Override
 	public TileGroupType getType() {
 		return type;
 	}
@@ -78,11 +79,17 @@ public class TileGroup implements TileGroupPlayerView, Serializable {
 		return tiles;
 	}
 
+	@Override
+	public Set<Tile> getTilesView() {
+		return getType() == TileGroupType.ANGANG_GROUP ? null : getTiles();
+	}
+
 	/**
 	 * 返回得牌来自于哪个关系的玩家。
 	 * 
 	 * @return 玩家位置
 	 */
+	@Override
 	public Relation getFromRelation() {
 		return fromRelation;
 	}
@@ -95,46 +102,10 @@ public class TileGroup implements TileGroupPlayerView, Serializable {
 	public Tile getGotTile() {
 		return gotTile;
 	}
-
-	private PlayerView view;
-
-	/**
-	 * 返回其他玩家的视图。
-	 * 
-	 * @return 视图
-	 */
-	public TileGroupPlayerView getOtherPlayerView() {
-		if (view == null)
-			view = new PlayerView();
-		return view;
-	}
-
-	private class PlayerView implements TileGroupPlayerView {
-
-		@Override
-		public TileGroupType getType() {
-			return TileGroup.this.getType();
-		}
-
-		@Override
-		public Set<Tile> getTiles() {
-			if (getType() == TileGroupType.ANGANG_GROUP)
-				return null;
-			return TileGroup.this.getTiles();
-		}
-
-		@Override
-		public Relation getFromRelation() {
-			return TileGroup.this.getFromRelation();
-		}
-
-		@Override
-		public Tile getGotTile() {
-			if (getType() == TileGroupType.ANGANG_GROUP)
-				return null;
-			return TileGroup.this.getGotTile();
-		}
-
+	
+	@Override
+	public Tile getGotTileView() {
+		return getType() == TileGroupType.ANGANG_GROUP ? null : getGotTile();
 	}
 
 	@Override

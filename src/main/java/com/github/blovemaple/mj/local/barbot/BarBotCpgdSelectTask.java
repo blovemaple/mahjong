@@ -177,9 +177,9 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 			// 除了本家手牌、所有玩家groups、已经打出的牌
 			Set<Tile> existTiles = new HashSet<>();
 			existTiles.addAll(contextView.getMyInfo().getAliveTiles());
-			contextView.getTableView().getPlayerInfoView().values().forEach(playerInfo -> {
+			contextView.getTableView().getPlayerInfos().values().forEach(playerInfo -> {
 				playerInfo.getTileGroups().stream()
-						.map(TileGroupPlayerView::getTiles).filter(Objects::nonNull)
+						.map(TileGroupPlayerView::getTilesView).filter(Objects::nonNull)
 						.forEach(existTiles::addAll);
 				existTiles.addAll(playerInfo.getDiscardedTiles());
 			});

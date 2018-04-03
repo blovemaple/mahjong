@@ -31,6 +31,10 @@ public class PlayerTiles {
 	public void setAliveTiles(Set<Tile> aliveTiles) {
 		this.aliveTiles = aliveTiles;
 	}
+	
+	public void removeAliveTiles(Set<Tile> tiles) {
+		aliveTiles.removeAll(tiles);
+	}
 
 	public List<TileGroup> getTileGroups() {
 		return tileGroups;

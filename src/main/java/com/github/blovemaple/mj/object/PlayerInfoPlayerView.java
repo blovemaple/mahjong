@@ -24,9 +24,9 @@ public interface PlayerInfoPlayerView {
 	public List<Tile> getDiscardedTiles();
 
 	/**
-	 * 返回牌组视图列表。
+	 * 返回牌组列表。
 	 */
-	public List<TileGroupPlayerView> getTileGroups();
+	public List<? extends TileGroupPlayerView> getTileGroups();
 
 	/**
 	 * 返回是否听和。

@@ -30,7 +30,7 @@ public class GameContextPlayerViewImpl implements GameContextPlayerView {
 
 	@Override
 	public MahjongTablePlayerView getTableView() {
-		return gameContext.getTable().getPlayerView(myLocation);
+		return gameContext.getTable();
 	}
 
 	@Override

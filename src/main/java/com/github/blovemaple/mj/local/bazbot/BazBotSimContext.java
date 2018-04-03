@@ -139,10 +139,10 @@ class BazBotSimContext implements GameContext {
 			invisibleTiles.removeAll(crtMyInfo.getDiscardedTiles());
 			crtMyInfo.getTileGroups().forEach(group -> invisibleTiles.removeAll(group.getTiles()));
 			// 去掉：其他玩家打出的牌、牌组中可见的牌
-			oriContextView.getTableView().getPlayerInfoView().forEach((location, playerView) -> {
+			oriContextView.getTableView().getPlayerInfos().forEach((location, playerView) -> {
 				if (location != oriContextView.getMyLocation()) {
 					invisibleTiles.removeAll(playerView.getDiscardedTiles());
-					playerView.getTileGroups().stream().map(TileGroupPlayerView::getTiles).filter(Objects::nonNull)
+					playerView.getTileGroups().stream().map(TileGroupPlayerView::getTilesView).filter(Objects::nonNull)
 							.forEach(invisibleTiles::removeAll);
 				}
 			});

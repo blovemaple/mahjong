@@ -14,7 +14,7 @@ public class CliDirectionalTilesPanel extends CliDirectionalPanel {
 
 		CliFlowLayout layout = getLayout();
 		switch (direction) {
-		case UNDER:
+		case LOWER:
 		case UPPER:
 			layout.setColumnGap(1);
 			layout.setChildWidth(2);

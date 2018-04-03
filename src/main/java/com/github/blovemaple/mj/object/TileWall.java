@@ -14,50 +14,8 @@ import com.github.blovemaple.mj.object.PlayerLocation.Relation;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class TileWall {
-	public class TilePile {
-		private Tile upper, under;
-
-		public Tile getUpper() {
-			return upper;
-		}
-
-		public void setUpper(Tile upper) {
-			if (upper != null && getUnder() == null)
-				throw new IllegalStateException();
-			this.upper = upper;
-		}
-
-		public Tile getUnder() {
-			return under;
-		}
-
-		public void setUnder(Tile under) {
-			if (under == null && getUpper() != null)
-				throw new IllegalStateException();
-			this.under = under;
-		}
-
-		public int getSize() {
-			return under == null ? 0 : upper == null ? 1 : 2;
-		}
-
-		public Tile draw() {
-			Tile drawed;
-			if (upper != null) {
-				drawed = upper;
-				upper = null;
-			} else if (under != null) {
-				drawed = under;
-				under = null;
-			} else {
-				throw new IllegalStateException("No remaining tiles.");
-			}
-			return drawed;
-		}
-	}
-
-	private final Map<PlayerLocation, List<TilePile>> piles;
+public class TileWall implements TileWallPlayerView {
+	private final Map<PlayerLocation, List<TileWallPile>> piles;
 	private int remainTileCount;
 	private PlayerLocation headLocation, bottomLocation;
 	private int headPileIndex, bottomPileIndex;
@@ -75,18 +33,18 @@ public class TileWall {
 
 		piles.values().forEach(List::clear);
 
-		TilePile pile = null;
+		TileWallPile pile = null;
 		int index = 0;
 		for (Tile tile : tiles) {
 			PlayerLocation location = PlayerLocation.values()[Math.min(4, index / (tiles.size() / 4))];
 
 			if (pile == null) {
-				pile = new TilePile();
+				pile = new TileWallPile();
 				piles.get(location).add(pile);
 			}
 
-			if (pile.getUnder() == null) {
-				pile.setUnder(tile);
+			if (pile.getLower() == null) {
+				pile.setLower(tile);
 			} else {
 				pile.setUpper(tile);
 				pile = null;
@@ -130,7 +88,7 @@ public class TileWall {
 
 		List<Tile> drawed = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
-			TilePile pile = piles.get(headLocation).get(headPileIndex);
+			TileWallPile pile = piles.get(headLocation).get(headPileIndex);
 			drawed.add(pile.draw());
 			if (pile.getSize() == 0) {
 				if (headPileIndex < piles.get(headLocation).size() - 1) {
@@ -156,7 +114,7 @@ public class TileWall {
 
 		List<Tile> drawed = new ArrayList<>(count);
 		for (int i = 0; i < count; i++) {
-			TilePile pile = piles.get(bottomLocation).get(bottomPileIndex);
+			TileWallPile pile = piles.get(bottomLocation).get(bottomPileIndex);
 			drawed.add(pile.draw());
 			if (pile.getSize() == 0) {
 				if (bottomPileIndex > 0) {
@@ -173,11 +131,13 @@ public class TileWall {
 		return drawed;
 	}
 
+	@Override
 	public int getRemainTileCount() {
 		return remainTileCount;
 	}
 
-	public List<TilePile> getPiles(PlayerLocation location) {
+	@Override
+	public List<TileWallPile> getPiles(PlayerLocation location) {
 		return Collections.unmodifiableList(piles.get(location));
 	}
 }

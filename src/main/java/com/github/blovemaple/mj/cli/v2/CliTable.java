@@ -1,12 +1,14 @@
 package com.github.blovemaple.mj.cli.v2;
 
+import static com.github.blovemaple.mj.cli.v2.CliViewDirection.*;
+
 import java.util.EnumMap;
 import java.util.Map;
 
 import com.github.blovemaple.mj.cli.framework.component.CliPanel;
 import com.github.blovemaple.mj.object.MahjongTablePlayerView;
+import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
-import com.github.blovemaple.mj.object.TileWall;
 
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
@@ -52,7 +54,7 @@ public class CliTable extends CliPanel {
 				playerTiles.setBottomBySelf(() -> wallSide.getBottom(this).orElse(0) - 2);
 				playerTiles.setLeftBySelf(() -> wallSide.getRight(this).orElse(0) + 3);
 				break;
-			case UNDER:
+			case LOWER:
 				wallSide.setLeftBySelf(() -> pool.getLeft(this).orElse(0));
 				wallSide.setTopBySelf(() -> pool.getBottom(this).orElse(0) + 1);
 				playerTiles.setLeftBySelf(() -> wallSide.getLeft(this).orElse(0) + 6);
@@ -78,13 +80,25 @@ public class CliTable extends CliPanel {
 		this.selfLocation = selfLocation;
 	}
 
-	public void view(MahjongTablePlayerView table) {
-		// TODO
-	}
+	public void view(MahjongTablePlayerView table, PlayerInfo selfInfo) {
+		for (var location : PlayerLocation.values()) {
+			var direction = self().getLocationOf(selfLocation.getRelationOf(location));
 
-	private void viewWall(TileWall wall) {
-		for (var location : PlayerLocation.values())
-			wallSides.get(CliViewDirection.UNDER.getLocationOf(selfLocation.getRelationOf(location)))
-					.view(wall.getPiles(location));
+			// view poll
+			pool.view(direction, table.getPlayerInfo(location).getDiscardedTiles());
+
+			// view wall
+			wallSides.get(direction).view(table.getTileWall().getPiles(location));
+
+			// view playerTiles
+			if (location == selfLocation) {
+				// self
+				playerTileses.get(direction).view(selfInfo, selfInfo.getLastDrawedTile());
+			} else {
+				// others
+				var playerInfo = table.getPlayerInfo(location);
+				playerTileses.get(direction).view(playerInfo.getTileGroups(), playerInfo.getAliveTileSize());
+			}
+		}
 	}
 }

@@ -18,7 +18,7 @@ public class CliDirectionalPanel extends CliPanel {
 		setLayout(layout);
 
 		switch (direction) {
-		case UNDER:
+		case LOWER:
 			layout.setDirection(TOP_LEFT_HORIZONTAL);
 			break;
 		case RIGHT:

@@ -1,17 +1,17 @@
 package com.github.blovemaple.mj.object;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 麻将桌上一个玩家的信息，包括玩家对象、牌，以及其他信息。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class PlayerInfo extends PlayerTiles implements Cloneable {
+public class PlayerInfo extends PlayerTiles implements PlayerInfoPlayerView, Cloneable {
 	/**
 	 * 玩家。
 	 */
@@ -37,6 +37,16 @@ public class PlayerInfo extends PlayerTiles implements Cloneable {
 		this.player = player;
 	}
 
+	@Override
+	public String getPlayerName() {
+		return player != null ? player.getName() : null;
+	}
+
+	@Override
+	public int getAliveTileSize() {
+		return getAliveTiles().size();
+	}
+
 	public Tile getLastDrawedTile() {
 		return lastDrawedTile;
 	}
@@ -45,14 +55,16 @@ public class PlayerInfo extends PlayerTiles implements Cloneable {
 		this.lastDrawedTile = lastDrawedTile;
 	}
 
+	@Override
 	public List<Tile> getDiscardedTiles() {
-		return discardedTiles;
+		return Collections.unmodifiableList(discardedTiles);
 	}
 
-	public void setDiscardedTiles(List<Tile> discardedTiles) {
-		this.discardedTiles = discardedTiles;
+	public void addDiscardedTiles(Collection<Tile> tiles) {
+		discardedTiles.addAll(tiles);
 	}
 
+	@Override
 	public boolean isTing() {
 		return isTing;
 	}
@@ -85,48 +97,6 @@ public class PlayerInfo extends PlayerTiles implements Cloneable {
 		c.discardedTiles = new ArrayList<>(discardedTiles);
 		c.tileGroups = new ArrayList<>(tileGroups);
 		return c;
-	}
-
-	private PlayerView otherPlayerView;
-
-	/**
-	 * 获取其他玩家的视图。
-	 */
-	public PlayerInfoPlayerView getOtherPlayerView() {
-		if (otherPlayerView == null) { // 不需要加锁，因为多创建了也没事
-			otherPlayerView = new PlayerView();
-		}
-		return otherPlayerView;
-	}
-
-	private class PlayerView implements PlayerInfoPlayerView {
-
-		@Override
-		public String getPlayerName() {
-			Player player = getPlayer();
-			return player != null ? getPlayer().getName() : null;
-		}
-
-		@Override
-		public int getAliveTileSize() {
-			return getAliveTiles().size();
-		}
-
-		@Override
-		public List<Tile> getDiscardedTiles() {
-			return Collections.unmodifiableList(discardedTiles);
-		}
-
-		@Override
-		public List<TileGroupPlayerView> getTileGroups() {
-			return tileGroups.stream().map(TileGroup::getOtherPlayerView).collect(Collectors.toList());
-		}
-
-		@Override
-		public boolean isTing() {
-			return isTing;
-		}
-
 	}
 
 }

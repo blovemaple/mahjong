@@ -23,7 +23,7 @@ public interface TileGroupPlayerView {
 	 * 
 	 * @return tiles 集合
 	 */
-	public Set<Tile> getTiles();
+	public Set<Tile> getTilesView();
 
 	/**
 	 * 返回得牌来自于哪个关系的玩家。
@@ -37,6 +37,6 @@ public interface TileGroupPlayerView {
 	 * 
 	 * @return 得牌
 	 */
-	public Tile getGotTile();
+	public Tile getGotTileView();
 
 }

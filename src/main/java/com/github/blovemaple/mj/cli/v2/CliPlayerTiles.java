@@ -31,7 +31,7 @@ public class CliPlayerTiles extends CliDirectionalPanel {
 		aliveTilesPanel.view(playerTiles.getAliveTiles(), lastDrawedTile);
 	}
 
-	public void view(List<TileGroupPlayerView> tileGroups, int aliveTileCount) {
+	public void view(List<? extends TileGroupPlayerView> tileGroups, int aliveTileCount) {
 		clearChildren();
 		viewGroups(tileGroups);
 		addChild(aliveTilesPanel);
@@ -41,7 +41,7 @@ public class CliPlayerTiles extends CliDirectionalPanel {
 	private void viewGroups(List<? extends TileGroupPlayerView> tileGroups){
 		List<Tile> huas = tileGroups.stream() //
 				.filter(tileGroup -> tileGroup.getType() == BUHUA_GROUP) //
-				.map(TileGroupPlayerView::getTiles).flatMap(Collection::stream) //
+				.map(TileGroupPlayerView::getTilesView).flatMap(Collection::stream) //
 				.collect(Collectors.toList());
 		if (!huas.isEmpty()) {
 			CliTileGroup groupPanel = new CliTileGroup(getDirection());
