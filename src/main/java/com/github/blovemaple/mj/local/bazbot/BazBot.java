@@ -1,15 +1,5 @@
 package com.github.blovemaple.mj.local.bazbot;
 
-import static java.util.Comparator.*;
-import static java.util.stream.Collectors.*;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.IllegalActionException;
@@ -18,6 +8,16 @@ import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.local.AbstractBot;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
@@ -74,6 +74,10 @@ public class BazBot extends AbstractBot {
 	protected Action chooseCpgdAction(GameContextPlayerView contextView, Set<ActionType> actionTypes,
 			List<Action> actions) throws InterruptedException {
 		BazBotSimContext simContext = new BazBotSimContext(contextView);
+
+//		System.out.println("discarded tiles" + contextView.getDoneActions().toString());
+//		System.out.println("actions: " + actions.toString());
+
 		List<Pair<Action, Double>> actionAndScores = actions.stream()
 				// 并行
 				.parallel()
