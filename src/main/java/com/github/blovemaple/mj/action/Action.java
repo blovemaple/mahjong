@@ -1,10 +1,10 @@
 package com.github.blovemaple.mj.action;
 
+import com.github.blovemaple.mj.object.Tile;
+
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
-
-import com.github.blovemaple.mj.object.Tile;
 
 /**
  * 动作。
@@ -55,7 +55,7 @@ public class Action {
 	public Tile getTile() {
 		if (tiles.size() > 1)
 			throw new IllegalStateException(
-					"Tile count is more than 1: " + tiles.size());
+					"Tile count is more than 1: " + tiles.size() + tiles.toString());
 		if (tiles.isEmpty())
 			return null;
 		return tiles.iterator().next();

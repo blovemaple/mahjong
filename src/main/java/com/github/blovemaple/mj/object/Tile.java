@@ -79,7 +79,15 @@ public class Tile implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		return "[" + type + ", " + id + "]";
+		if(type.isNumberRank()) {
+			return "" + type.suit() + type.number();
+		}else {
+			if(type.suit().equals(TileSuit.HUA)){
+				return ""+type;
+			}
+			return "" + type.suit() + type.notNumberIndex();
+		}
+//		return "[" + type + ", " + id + "]";
 	}
 
 }

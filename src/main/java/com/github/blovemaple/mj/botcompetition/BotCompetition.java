@@ -1,28 +1,32 @@
 package com.github.blovemaple.mj.botcompetition;
 
-import static com.github.blovemaple.mj.object.PlayerLocation.*;
-
-import java.util.List;
-import java.util.logging.LogManager;
-
 import com.github.blovemaple.mj.cli.CliRunner;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.game.MahjongGame;
 import com.github.blovemaple.mj.local.AbstractBot;
-import com.github.blovemaple.mj.local.barbot.BarBot;
-import com.github.blovemaple.mj.local.bazbot.BazBot;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 
+import java.util.List;
+import java.util.logging.LogManager;
+
+import AgentBot.Agent;
+import AgentRandomBot.RandomAgent;
+
+import static com.github.blovemaple.mj.object.PlayerLocation.EAST;
+import static com.github.blovemaple.mj.object.PlayerLocation.NORTH;
+import static com.github.blovemaple.mj.object.PlayerLocation.SOUTH;
+import static com.github.blovemaple.mj.object.PlayerLocation.WEST;
+
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class BotCompetition {
 	public static void main(String[] args) {
-		new BotCompetition(BarBot.class, BazBot.class).compete(1000);
+		new BotCompetition(Agent.class, RandomAgent.class).compete(1000);
 	}
 
 	private Class<? extends AbstractBot> botType1, botType2;
@@ -71,7 +75,8 @@ public class BotCompetition {
 
 				List<String> outputs = List.of( //
 						Integer.toString(gameIndex), //
-						winner == null ? "0" : winner == bot11 || winner == bot12 ? "1" : "2", //
+						winner == null ? "0" : winner == bot11 || winner == bot12 ?
+										"winner: 1" : "winner: 2", //
 						zhuang == bot11 || zhuang == bot12 ? "1" : "2", //
 						Long.toString(Math.round(cost1 / 1_000_000D)), //
 						Integer.toString(invoke1), //

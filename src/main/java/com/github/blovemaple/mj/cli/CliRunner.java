@@ -1,17 +1,20 @@
 package com.github.blovemaple.mj.cli;
 
+import com.github.blovemaple.mj.cli.CliView.CharHandler;
+import com.github.blovemaple.mj.local.LocalGame;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import com.github.blovemaple.mj.cli.CliView.CharHandler;
-import com.github.blovemaple.mj.local.LocalGame;
-
-import static com.github.blovemaple.mj.cli.CliView.CharHandler.HandlingResult.*;
-import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.*;
-import static com.github.blovemaple.mj.utils.LambdaUtils.*;
+import static com.github.blovemaple.mj.cli.CliView.CharHandler.HandlingResult.IGNORE;
+import static com.github.blovemaple.mj.cli.CliView.CharHandler.HandlingResult.QUIT;
+import static com.github.blovemaple.mj.utils.LambdaUtils.rethrowSupplier;
+import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.GITHUB_TIP;
+import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.MOVE_TIP;
+import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.NEW_GAME_QUESTION;
 
 /**
  * 命令行入口。

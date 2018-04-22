@@ -1,20 +1,5 @@
 package com.github.blovemaple.mj.local.bazbot;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
-import static com.github.blovemaple.mj.utils.LambdaUtils.*;
-import static java.util.stream.Collectors.*;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.action.IllegalActionException;
@@ -31,6 +16,22 @@ import com.github.blovemaple.mj.object.TileGroupPlayerView;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.github.blovemaple.mj.action.standard.StandardActionType.DISCARD;
+import static com.github.blovemaple.mj.utils.LambdaUtils.rethrowFunction;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * BazBot模拟执行动作使用的GameContext。对BazBot提供模拟执行动作和计算评分的功能。<br>
@@ -142,6 +143,8 @@ class BazBotSimContext implements GameContext {
 			oriContextView.getTableView().getPlayerInfoView().forEach((location, playerView) -> {
 				if (location != oriContextView.getMyLocation()) {
 					invisibleTiles.removeAll(playerView.getDiscardedTiles());
+//					System.out.println(location + playerView.getDiscardedTiles()
+//									.toString() + playerView.isTing());
 					playerView.getTileGroups().stream().map(TileGroupPlayerView::getTiles).filter(Objects::nonNull)
 							.forEach(invisibleTiles::removeAll);
 				}
