@@ -13,13 +13,13 @@ public class CliTilePoolSide extends CliDirectionalTilesPanel {
 		switch (direction) {
 		case UPPER:
 		case LOWER:
-			setWidthBySelf(() -> HORIZONTAL_WIDTH);
-			setHeightBySelf(() -> HORIZONTAL_HEIGHT);
+			setWidth(() -> HORIZONTAL_WIDTH);
+			setHeight(() -> HORIZONTAL_HEIGHT);
 			break;
 		case LEFT:
 		case RIGHT:
-			setWidthBySelf(() -> VERTICAL_WIDTH);
-			setHeightBySelf(() -> VERTICAL_HEIGHT);
+			setWidth(() -> VERTICAL_WIDTH);
+			setHeight(() -> VERTICAL_HEIGHT);
 			break;
 		default:
 			throw new RuntimeException();

@@ -16,12 +16,8 @@ public class CliLabel extends CliComponent {
 	private AnsiColor foreground, background;
 
 	public CliLabel(String text) {
-		super(true);
+		super();
 		this.text = text;
-
-		setWidthBySelf(() -> strWidth(text));
-		setHeightBySelf(() -> getDefaultHeight(null));
-		setHeightWithParent(p -> getDefaultHeight(p));
 	}
 
 	public CliLabel() {
@@ -48,73 +44,71 @@ public class CliLabel extends CliComponent {
 		this.background = background;
 	}
 
-	private int getDefaultHeight(CliComponent parent) {
-		int width = getWidth(parent).orElse(0);
-
-		int nextCharIndex = 0;
-		int phRemain = 0;
-
-		int rowIndex;
-		for (rowIndex = 0; nextCharIndex < getText().length(); rowIndex++) {
-			for (int columnIndex = 0; columnIndex < width; columnIndex++) {
-				if (phRemain > 0) {
-					phRemain--;
-					continue;
-				}
-
-				if (nextCharIndex < getText().length()) {
-					char crtChar = getText().charAt(nextCharIndex);
-					int charWidth = strWidth(String.valueOf(crtChar));
-					if (charWidth <= width - columnIndex) {
-						nextCharIndex++;
-						if (charWidth > 1)
-							phRemain = charWidth - 1;
-					}
-					if (charWidth > width - columnIndex && columnIndex == 0) {
-						nextCharIndex++;
-					}
-				}
-			}
-		}
-		return rowIndex;
+	@Override
+	public int getDefaultWidth(int height) {
+		return strWidth(text);
 	}
 
 	@Override
+	public int getDefaultHeight(int width) {
+		return paint(width, PREF_VALUE).height();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @param height
+	 *            -1表示使用默认高度
+	 * @see com.github.blovemaple.mj.cli.framework.component.CliComponent#paint(int,
+	 *      int)
+	 */
+	@Override
 	public CliCellGroup paint(int width, int height) {
 		int nextCharIndex = 0;
-		int phRemain = 0;
+		int remainingSkips = 0;
 
 		CliCellGroup cellGroup = new CliCellGroup();
-		for (int rowIndex = 0; rowIndex < height; rowIndex++) {
-			for (int columnIndex = 0; columnIndex < width; columnIndex++) {
-				CliCell cell = new CliCell();
+		for (int rowIndex = 0; height >= 0 ? rowIndex < height
+				: nextCharIndex < text.length() || remainingSkips > 0; rowIndex++) {
+			for (int columnIndex = 0; width >= 0 ? columnIndex < width
+					: nextCharIndex < text.length() || remainingSkips > 0; columnIndex++) {
+				CliCell cell = new CliCell(this);
+				cellGroup.setCellAt(rowIndex, columnIndex, cell);
+
+				// 设置前景、背景色
 				if (foreground != null)
 					cell.setForeground(foreground);
 				if (background != null)
 					cell.setBackground(background);
 
-				if (phRemain > 0) {
-					cell.setPlaceholder(true);
-					cellGroup.setCellAt(rowIndex, columnIndex, cell);
-					phRemain--;
+				if (nextCharIndex >= text.length())
+					// 已经超过text末尾，没有字符可输出
+					continue;
+
+				if (remainingSkips > 0) {
+					// 还有剩余应跳过的单元格，不输出字符
+					remainingSkips--;
 					continue;
 				}
 
-				if (nextCharIndex < getText().length()) {
-					char crtChar = getText().charAt(nextCharIndex);
-					int charWidth = strWidth(String.valueOf(crtChar));
-					if (charWidth <= width - columnIndex) {
-						cell.setText(crtChar);
+				char crtChar = getText().charAt(nextCharIndex);
+				int charWidth = strWidth(String.valueOf(crtChar));
+
+				if (charWidth > width - columnIndex) {
+					// 字符宽度超出当前行剩余单元格数，不输出字符
+					if (charWidth > width)
+						// 字符宽度超出行宽，跳过此字符
 						nextCharIndex++;
-						if (charWidth > 1)
-							phRemain = charWidth - 1;
-					}
-					if (charWidth > width - columnIndex && columnIndex == 0) {
-						cell.setText(' ');
-						nextCharIndex++;
-					}
+					continue;
 				}
-				cellGroup.setCellAt(rowIndex, columnIndex, cell);
+
+				// 输出字符
+				cell.setText(crtChar);
+				nextCharIndex++;
+
+				if (charWidth > 1)
+					// 字符宽度大于1，在当前行跳过其后的n-1个单元格
+					remainingSkips = charWidth - 1;
 			}
 		}
 		return cellGroup;

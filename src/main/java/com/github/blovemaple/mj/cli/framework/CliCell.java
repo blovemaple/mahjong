@@ -2,10 +2,15 @@ package com.github.blovemaple.mj.cli.framework;
 
 import static com.github.blovemaple.mj.cli.ansi.AnsiColor.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.github.blovemaple.mj.cli.ansi.AnsiColor;
 import com.github.blovemaple.mj.cli.ansi.SgrParam;
+import com.github.blovemaple.mj.cli.framework.component.CliComponent;
+import com.github.blovemaple.mj.utils.MyUtils;
 
 /**
  * 命令行界面单元格，即一个字符的位置。
@@ -13,14 +18,16 @@ import com.github.blovemaple.mj.cli.ansi.SgrParam;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class CliCell implements Cloneable {
+	private final List<CliComponent> ownerChain = new ArrayList<>();
 	private AnsiColor foreground = DEFAULT, background = null;
 	private char text = ' ';
-	/**
-	 * 由于汉字占两格，每个汉字后的单元格使用占位符，以使行内单元格数与行宽匹配。
-	 */
-	private boolean isPlaceholder;
 
-	public CliCell() {
+	public CliCell(CliComponent finalOwder) {
+		ownerChain.add(finalOwder);
+	}
+
+	public void addOwner(CliComponent owner) {
+		ownerChain.add(owner);
 	}
 
 	public AnsiColor getForeground() {
@@ -47,16 +54,24 @@ public class CliCell implements Cloneable {
 		this.text = text;
 	}
 
-	public boolean isPlaceholder() {
-		return isPlaceholder;
-	}
-
-	public void setPlaceholder(boolean isPlaceholder) {
-		this.isPlaceholder = isPlaceholder;
+	public int getTextWidth() {
+		return MyUtils.strWidth(String.valueOf(text));
 	}
 
 	public SgrParam[] getSgrParams() {
 		return new SgrParam[] { foreground.getFgParam(), background.getBgParam() };
+	}
+
+	public boolean equalByContent(CliCell other) {
+		if (other == null)
+			return false;
+		if (background != other.background)
+			return false;
+		if (foreground != other.foreground)
+			return false;
+		if (text != other.text)
+			return false;
+		return true;
 	}
 
 	@Override

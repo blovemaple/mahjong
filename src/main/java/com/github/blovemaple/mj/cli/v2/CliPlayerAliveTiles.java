@@ -20,7 +20,7 @@ public class CliPlayerAliveTiles extends CliDirectionalTilesPanel {
 
 	public void view(int hiddenCount) {
 		clearChildren();
-		IntStream.range(0, hiddenCount).forEach(i -> addChild(CliTile.TILE_BACK));
+		IntStream.range(0, hiddenCount).forEach(i -> addChild(CliTile.TILE_BACK_FULL));
 	}
 
 	public void view(Collection<Tile> aliveTiles, Tile lastDrawedTile) {

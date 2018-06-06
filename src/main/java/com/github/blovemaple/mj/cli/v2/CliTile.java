@@ -13,9 +13,9 @@ import com.github.blovemaple.mj.object.TileType;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class CliTile extends CliLabel {
-	public static final CliLabel TILE_BACK = new CliLabel("▇▇");
-	public static final CliLabel TILE_HALF = new CliLabel("▄▄");
-	public static final CliLabel TILE_NONE = new CliLabel("  ");
+	public static final CliLabel TILE_BACK_FULL = new CliLabel("▇▇");
+	public static final CliLabel TILE_BACK_HALF = new CliLabel("▄▄");
+	public static final CliLabel TILE_PLACEHOLDER = new CliLabel("  ");
 
 	private static final Map<TileType, CliTile> INSTANCES = new HashMap<>();
 

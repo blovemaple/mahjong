@@ -25,12 +25,23 @@ public class CliSpace extends CliComponent {
 	private final int width, height;
 
 	private CliSpace(int width, int height) {
-		super(true);
+		super();
 		this.width = width;
 		this.height = height;
+		setMinWidth(()->getWidth());
+		setMaxWidth(()->getWidth());
+		setMinHeight(()->getHeight());
+		setMaxHeight(()->getHeight());
+	}
 
-		setWidthBySelf(() -> getWidth());
-		setHeightBySelf(() -> getHeight());
+	@Override
+	public int getDefaultWidth(int height) {
+		return getWidth();
+	}
+
+	@Override
+	public int getDefaultHeight(int width) {
+		return getHeight();
 	}
 
 	public int getWidth() {
@@ -44,7 +55,7 @@ public class CliSpace extends CliComponent {
 	@Override
 	public CliCellGroup paint(int width, int height) {
 		CliCellGroup group = new CliCellGroup();
-		CliCell cell = new CliCell();
+		CliCell cell = new CliCell(this);
 		for (int w = 0; w < width; w++)
 			for (int h = 0; h < height; h++)
 				group.setCellAt(h, w, cell);

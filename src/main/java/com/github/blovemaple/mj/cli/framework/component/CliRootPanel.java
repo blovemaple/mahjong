@@ -28,31 +28,31 @@ public final class CliRootPanel extends CliPanel {
 		// layout.setLineSize(2);
 		panel.setLayout(layout);
 		panel.setBackground(AnsiColor.BLUE);
-		panel.setTopBySelf(() -> 1);
-		panel.setLeftBySelf(() -> 1);
-		rootPanel.addChild(panel);
-
-		CliLabel label1 = new CliLabel("World一二三Haha1");
-		label1.setBackground(AnsiColor.GREEN);
-		label1.setWidthBySelf(() -> 1);
-		panel.addChild(label1);
-
-		CliLabel label2 = new CliLabel("World一二三Haha2");
-		label2.setForeground(AnsiColor.RED);
-		label2.setBackground(AnsiColor.GREEN);
-		label2.setWidthBySelf(() -> 5);
-		label2.setTopBySelf(() -> label1.getBottom(panel).orElse(0) + 3);
-		panel.addChild(label2);
-
-		CliLabel label3 = new CliLabel("World一二三Haha3");
-		label3.setBackground(AnsiColor.GREEN);
-		label3.setWidthBySelf(() -> 3);
-		label3.setTopBySelf(() -> label2.getBottom(panel).orElse(0) + 3);
-		panel.addChild(label3);
-
-		rootPanel.repaint();
-		System.out.println(rootPanel.getWidth(null));
-		System.out.println(rootPanel.getHeight(null));
+//		panel.setTop(() -> 1);
+//		panel.setLeft(() -> 1);
+//		rootPanel.addChild(panel);
+//
+//		CliLabel label1 = new CliLabel("World一二三Haha1");
+//		label1.setBackground(AnsiColor.GREEN);
+//		label1.setWidth(() -> 1);
+//		panel.addChild(label1);
+//
+//		CliLabel label2 = new CliLabel("World一二三Haha2");
+//		label2.setForeground(AnsiColor.RED);
+//		label2.setBackground(AnsiColor.GREEN);
+//		label2.setWidth(() -> 5);
+//		label2.setTop(() -> label1.getBottom(panel).orElse(0) + 3);
+//		panel.addChild(label2);
+//
+//		CliLabel label3 = new CliLabel("World一二三Haha3");
+//		label3.setBackground(AnsiColor.GREEN);
+//		label3.setWidth(() -> 3);
+//		label3.setTop(() -> label2.getBottom(panel).orElse(0) + 3);
+//		panel.addChild(label3);
+//
+//		rootPanel.repaint();
+//		System.out.println(rootPanel.getWidth(null));
+//		System.out.println(rootPanel.getHeight(null));
 		// System.out.println(label2.getTop(panel));
 		// System.out.println(label2.getLeft(panel));
 		// System.out.println(label2.getHeight(panel));
@@ -80,98 +80,72 @@ public final class CliRootPanel extends CliPanel {
 	}
 
 	@Override
-	protected void setDefaultWidthAndHeight() {
+	public int getDefaultWidth(int height) {
+		return getWidth();
 	}
 
 	@Override
-	public OptionalInt getWidth(CliComponent parent) {
-		return OptionalInt.of(console.getTerminal().getWidth());
-		// return OptionalInt.of(100);
+	public int getDefaultHeight(int width) {
+		return getHeight();
+	}
+
+	public int getWidth() {
+		return console.getTerminal().getWidth();
+		// return 100;
+	}
+
+	public int getHeight() {
+		return console.getTerminal().getHeight();
+		// return 50;
 	}
 
 	@Override
-	public OptionalInt getHeight(CliComponent parent) {
-		return OptionalInt.of(console.getTerminal().getHeight());
-		// return OptionalInt.of(50);
-	}
-
-	@Override
-	public OptionalInt getLeft(CliComponent parent) {
+	public void setMinWidth(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public OptionalInt getRight(CliComponent parent) {
+	public void setPrefWidth(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public OptionalInt getTop(CliComponent parent) {
+	public void setMaxWidth(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public OptionalInt getBottom(CliComponent parent) {
+	public void setMinHeight(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setWidthBySelf(IntSupplier widthBySelf) {
+	public void setPrefHeight(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setHeightBySelf(IntSupplier heightBySelf) {
+	public void setMaxHeight(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setLeftBySelf(IntSupplier leftBySelf) {
+	public void setFreeLeft(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setRightBySelf(IntSupplier rightBySelf) {
+	public void setFreeRight(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setTopBySelf(IntSupplier topBySelf) {
+	public void setFreeTop(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setBottomBySelf(IntSupplier bottomBySelf) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setWidthWithParent(Function<CliComponent, Integer> widthWithParent) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setHeightWithParent(Function<CliComponent, Integer> heightWithParent) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setLeftWithParent(Function<CliComponent, Integer> leftWithParent) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setRightWithParent(Function<CliComponent, Integer> rightWithParent) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setTopWithParent(Function<CliComponent, Integer> topWithParent) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setBottomWithParent(Function<CliComponent, Integer> bottomWithParent) {
+	public void setFreeBottom(IntSupplier value) {
 		throw new UnsupportedOperationException();
 	}
 

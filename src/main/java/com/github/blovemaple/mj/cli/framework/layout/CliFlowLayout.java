@@ -1,12 +1,13 @@
 package com.github.blovemaple.mj.cli.framework.layout;
 
-import static com.github.blovemaple.mj.cli.framework.layout.CliLayoutSettingType.*;
+import static com.github.blovemaple.mj.cli.framework.layout.CliBoundField.*;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import com.github.blovemaple.mj.cli.framework.component.CliComponent;
+import com.github.blovemaple.mj.cli.framework.component.CliPanel;
 
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
@@ -44,45 +45,45 @@ public class CliFlowLayout implements CliLayout {
 			return secondDirection;
 		}
 
-		public CliLayoutSettingType logiWidthType() {
+		public CliBoundField logiWidthType() {
 			return firstDirection().logiLengthType();
 		}
 
-		public CliLayoutSettingType logiHeightType() {
+		public CliBoundField logiHeightType() {
 			return secondDirection().logiLengthType();
 		}
 
-		public CliLayoutSettingType logiLeftType() {
+		public CliBoundField logiLeftType() {
 			return firstDirection().logiStartType();
 		}
 
-		public CliLayoutSettingType logiTopType() {
+		public CliBoundField logiTopType() {
 			return secondDirection().logiStartType();
 		}
 
 	}
 
 	private enum Direction {
-		LEFT(WIDTH, CliLayoutSettingType.RIGHT, true), //
-		RIGHT(WIDTH, CliLayoutSettingType.LEFT, false), //
-		UP(HEIGHT, CliLayoutSettingType.BOTTOM, true), //
-		DOWN(HEIGHT, CliLayoutSettingType.TOP, false), //
+		LEFT(WIDTH, CliBoundField.RIGHT, true), //
+		RIGHT(WIDTH, CliBoundField.LEFT, false), //
+		UP(HEIGHT, CliBoundField.BOTTOM, true), //
+		DOWN(HEIGHT, CliBoundField.TOP, false), //
 		;
 
-		private final CliLayoutSettingType logiLengthType, logiStartType;
+		private final CliBoundField logiLengthType, logiStartType;
 		private final boolean reversed;
 
-		private Direction(CliLayoutSettingType logiLengthType, CliLayoutSettingType logiStartType, boolean reversed) {
+		private Direction(CliBoundField logiLengthType, CliBoundField logiStartType, boolean reversed) {
 			this.logiLengthType = logiLengthType;
 			this.logiStartType = logiStartType;
 			this.reversed = reversed;
 		}
 
-		public CliLayoutSettingType logiLengthType() {
+		public CliBoundField logiLengthType() {
 			return logiLengthType;
 		}
 
-		public CliLayoutSettingType logiStartType() {
+		public CliBoundField logiStartType() {
 			return logiStartType;
 		}
 
@@ -158,16 +159,16 @@ public class CliFlowLayout implements CliLayout {
 	}
 
 	@Override
-	public Map<CliComponent, CliLayoutSetting> layout(CliComponent parent) {
-		Map<CliComponent, CliLayoutSetting> layout = new HashMap<>();
+	public Map<CliComponent, CliBound> layout(CliPanel parent, int parentWidth, int parentHeight) {
+		Map<CliComponent, CliBound> layout = new HashMap<>();
 
 		int crtLineLength = 0; // 当前行已有子组件个数
 		int crtLineTop = 0; // 当前行顶部（逻辑上）位置
 		int nextLeft = 0; // 下一个子组件左边（逻辑上）位置
 		int crtLineHeight = 0; // 当前行高度（逻辑上）
 		for (CliComponent child : parent.getChildren()) {
-			CliLayoutSetting setting = new CliLayoutSetting();
-			layout.put(child, setting);
+			CliBound bound = new CliBound();
+			layout.put(child, bound);
 
 			// 取子组件的宽高（逻辑上）
 			int width, height;
@@ -183,10 +184,10 @@ public class CliFlowLayout implements CliLayout {
 				height = fixedLogiHeight;
 
 			// 设置子组件属性
-			setting.set(getDirection().logiWidthType(), width);
-			setting.set(getDirection().logiHeightType(), height);
-			setting.set(getDirection().logiLeftType(), nextLeft);
-			setting.set(getDirection().logiTopType(), crtLineTop);
+			bound.set(getDirection().logiWidthType(), width);
+			bound.set(getDirection().logiHeightType(), height);
+			bound.set(getDirection().logiLeftType(), nextLeft);
+			bound.set(getDirection().logiTopType(), crtLineTop);
 
 			// 调整临时变量
 			crtLineLength++;
@@ -206,23 +207,23 @@ public class CliFlowLayout implements CliLayout {
 
 		// 统一移动所有子组件位置，消除负数
 		int minLeft = 0, minTop = 0;
-		for (CliLayoutSetting setting : layout.values()) {
+		for (CliBound setting : layout.values()) {
 			minLeft = Math.min(minLeft, setting.get(LEFT));
 			minTop = Math.min(minTop, setting.get(TOP));
 		}
 		if (minLeft < 0) {
-			for (CliLayoutSetting setting : layout.values()) {
+			for (CliBound setting : layout.values()) {
 				setting.moveRight(-minLeft);
 			}
 		}
 		if (minTop < 0) {
-			for (CliLayoutSetting setting : layout.values()) {
+			for (CliBound setting : layout.values()) {
 				setting.moveDown(-minTop);
 			}
 		}
 
 		// 校验合法性
-		layout.values().forEach(CliLayoutSetting::validate);
+		layout.values().forEach(CliBound::validate);
 
 		return layout;
 	}

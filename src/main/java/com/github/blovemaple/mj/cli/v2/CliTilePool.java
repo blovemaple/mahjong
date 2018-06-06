@@ -24,26 +24,26 @@ public class CliTilePool extends CliPanel {
 		addChild(centerSpace);
 
 		CliTilePoolSide lowerPool = new CliTilePoolSide(LOWER);
-		lowerPool.setLeftBySelf(() -> centerSpace.getLeft(this).orElseThrow(RuntimeException::new));
-		lowerPool.setTopBySelf(() -> centerSpace.getBottom(this).orElseThrow(RuntimeException::new) + 1);
+		lowerPool.setLeft(() -> centerSpace.getLeft(this).orElseThrow(RuntimeException::new));
+		lowerPool.setTop(() -> centerSpace.getBottom(this).orElseThrow(RuntimeException::new) + 1);
 		sidesByDirection.put(LOWER, lowerPool);
 		addChild(lowerPool);
 
 		CliTilePoolSide rightPool = new CliTilePoolSide(RIGHT);
-		rightPool.setBottomBySelf(() -> centerSpace.getBottom(this).orElseThrow(RuntimeException::new));
-		rightPool.setLeftBySelf(() -> centerSpace.getRight(this).orElseThrow(RuntimeException::new) + 1);
+		rightPool.setBottom(() -> centerSpace.getBottom(this).orElseThrow(RuntimeException::new));
+		rightPool.setLeft(() -> centerSpace.getRight(this).orElseThrow(RuntimeException::new) + 1);
 		sidesByDirection.put(RIGHT, rightPool);
 		addChild(rightPool);
 
 		CliTilePoolSide upperPool = new CliTilePoolSide(UPPER);
-		upperPool.setRightBySelf(() -> centerSpace.getRight(this).orElseThrow(RuntimeException::new));
-		upperPool.setBottomBySelf(() -> centerSpace.getTop(this).orElseThrow(RuntimeException::new) - 1);
+		upperPool.setRight(() -> centerSpace.getRight(this).orElseThrow(RuntimeException::new));
+		upperPool.setBottom(() -> centerSpace.getTop(this).orElseThrow(RuntimeException::new) - 1);
 		sidesByDirection.put(UPPER, upperPool);
 		addChild(upperPool);
 
 		CliTilePoolSide leftPool = new CliTilePoolSide(LEFT);
-		leftPool.setTopBySelf(() -> centerSpace.getTop(this).orElseThrow(RuntimeException::new));
-		leftPool.setRightBySelf(() -> centerSpace.getLeft(this).orElseThrow(RuntimeException::new) - 1);
+		leftPool.setTop(() -> centerSpace.getTop(this).orElseThrow(RuntimeException::new));
+		leftPool.setRight(() -> centerSpace.getLeft(this).orElseThrow(RuntimeException::new) - 1);
 		sidesByDirection.put(LEFT, leftPool);
 		addChild(leftPool);
 	}

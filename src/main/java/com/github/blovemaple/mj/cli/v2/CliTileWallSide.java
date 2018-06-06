@@ -21,7 +21,7 @@ public class CliTileWallSide extends CliDirectionalPanel {
 
 	public synchronized void view(List<? extends TileWallPilePlayerView> piles) {
 		clearChildren();
-		piles.stream().map(pile -> pile.getSize() == 2 ? TILE_BACK : pile.getSize() == 1 ? TILE_HALF : TILE_NONE)
+		piles.stream().map(pile -> pile.getSize() == 2 ? TILE_BACK_FULL : pile.getSize() == 1 ? TILE_BACK_HALF : TILE_PLACEHOLDER)
 				.forEach(this::addChild);
 	}
 

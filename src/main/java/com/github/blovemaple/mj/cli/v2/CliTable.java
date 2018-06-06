@@ -43,28 +43,28 @@ public class CliTable extends CliPanel {
 			var playerTiles = playerTileses.get(direction);
 			switch (direction) {
 			case LEFT:
-				wallSide.setTopBySelf(() -> pool.getTop(this).orElse(0));
-				wallSide.setRightBySelf(() -> pool.getLeft(this).orElse(0) - 2);
-				playerTiles.setTopBySelf(() -> wallSide.getTop(this).orElse(0) + 2);
-				playerTiles.setRightBySelf(() -> wallSide.getLeft(this).orElse(0) - 3);
+				wallSide.setTop(() -> pool.getTop(this).orElse(0));
+				wallSide.setRight(() -> pool.getLeft(this).orElse(0) - 2);
+				playerTiles.setTop(() -> wallSide.getTop(this).orElse(0) + 2);
+				playerTiles.setRight(() -> wallSide.getLeft(this).orElse(0) - 3);
 				break;
 			case RIGHT:
-				wallSide.setBottomBySelf(() -> pool.getBottom(this).orElse(0));
-				wallSide.setLeftBySelf(() -> pool.getRight(this).orElse(0) + 2);
-				playerTiles.setBottomBySelf(() -> wallSide.getBottom(this).orElse(0) - 2);
-				playerTiles.setLeftBySelf(() -> wallSide.getRight(this).orElse(0) + 3);
+				wallSide.setBottom(() -> pool.getBottom(this).orElse(0));
+				wallSide.setLeft(() -> pool.getRight(this).orElse(0) + 2);
+				playerTiles.setBottom(() -> wallSide.getBottom(this).orElse(0) - 2);
+				playerTiles.setLeft(() -> wallSide.getRight(this).orElse(0) + 3);
 				break;
 			case LOWER:
-				wallSide.setLeftBySelf(() -> pool.getLeft(this).orElse(0));
-				wallSide.setTopBySelf(() -> pool.getBottom(this).orElse(0) + 1);
-				playerTiles.setLeftBySelf(() -> wallSide.getLeft(this).orElse(0) + 6);
-				playerTiles.setTopBySelf(() -> wallSide.getBottom(this).orElse(0) + 2);
+				wallSide.setLeft(() -> pool.getLeft(this).orElse(0));
+				wallSide.setTop(() -> pool.getBottom(this).orElse(0) + 1);
+				playerTiles.setLeft(() -> wallSide.getLeft(this).orElse(0) + 6);
+				playerTiles.setTop(() -> wallSide.getBottom(this).orElse(0) + 2);
 				break;
 			case UPPER:
-				wallSide.setRightBySelf(() -> pool.getRight(this).orElse(0));
-				wallSide.setBottomBySelf(() -> pool.getTop(this).orElse(0) - 1);
-				playerTiles.setRightBySelf(() -> wallSide.getRight(this).orElse(0) - 6);
-				playerTiles.setBottomBySelf(() -> wallSide.getTop(this).orElse(0) - 2);
+				wallSide.setRight(() -> pool.getRight(this).orElse(0));
+				wallSide.setBottom(() -> pool.getTop(this).orElse(0) - 1);
+				playerTiles.setRight(() -> wallSide.getRight(this).orElse(0) - 6);
+				playerTiles.setBottom(() -> wallSide.getTop(this).orElse(0) - 2);
 				break;
 			default:
 				throw new RuntimeException();

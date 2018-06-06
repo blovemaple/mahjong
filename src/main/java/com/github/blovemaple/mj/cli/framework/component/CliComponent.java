@@ -1,235 +1,167 @@
 package com.github.blovemaple.mj.cli.framework.component;
 
-import static com.github.blovemaple.mj.cli.framework.layout.CliLayoutSettingType.*;
+import static com.github.blovemaple.mj.cli.framework.layout.CliBoundField.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.OptionalInt;
-import java.util.function.Function;
+import java.util.Objects;
 import java.util.function.IntSupplier;
+import java.util.function.IntUnaryOperator;
 
-import com.github.blovemaple.mj.cli.framework.CliPaintable;
-import com.github.blovemaple.mj.cli.framework.layout.CliLayoutSettingType;
+import com.github.blovemaple.mj.cli.framework.CliCellGroup;
+import com.github.blovemaple.mj.cli.framework.layout.CliBoundField;
 
 /**
- * 命令行界面组件。一个组件属于一个父组件，也可以有0至多个子组件。每个组件定义相对其父组件的位置和绝对尺寸。
+ * 命令行界面组件。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public abstract class CliComponent extends CliPaintable {
-	private final List<CliComponent> children = new ArrayList<>();
-	private final boolean leaf;
+public abstract class CliComponent {
+	private final Map<CliBoundField, IntUnaryOperator> minSize = new EnumMap<>(CliBoundField.class);
+	private final Map<CliBoundField, IntUnaryOperator> prefSize = new EnumMap<>(CliBoundField.class);
+	private final Map<CliBoundField, IntUnaryOperator> maxSize = new EnumMap<>(CliBoundField.class);
+	private final Map<CliBoundField, IntSupplier> freePosition = new EnumMap<>(CliBoundField.class);
 
-	private final Map<CliLayoutSettingType, IntSupplier> settingBySelf = new HashMap<>();
-	private final Map<CliLayoutSettingType, Function<CliComponent, Integer>> settingWithParent = new HashMap<>();
+	public static final int PREF_VALUE = -1;
 
-	public CliComponent(boolean leaf) {
-		this.leaf = leaf;
-
-		set(LEFT, () -> 0);
-		set(TOP, () -> 0);
-		set(WIDTH, () -> 0);
-		set(HEIGHT, () -> 0);
+	public CliComponent() {
+		// 设置默认范围：首选尺寸为默认尺寸，不限制最小和最大尺寸，自由位置在左上角
+		setMinWidth(() -> 0);
+		setPrefWidth(height -> getDefaultWidth(height));
+		setMaxWidth(() -> Integer.MAX_VALUE);
+		setMinHeight(() -> 0);
+		setPrefHeight(width -> getDefaultHeight(width));
+		setMaxHeight(() -> Integer.MAX_VALUE);
+		setFreeLeft(() -> 0);
+		setFreeTop(() -> 0);
 	}
 
-	public final List<CliComponent> getChildren() {
-		return Collections.unmodifiableList(children);
+	public void setMinWidth(IntSupplier value) {
+		Objects.requireNonNull(value);
+		setMinWidth(i -> value.getAsInt());
 	}
 
-	public final void addChild(CliComponent child) {
-		if (leaf)
-			throw new UnsupportedOperationException();
-		children.add(child);
+	public void setMinWidth(IntUnaryOperator value) {
+		Objects.requireNonNull(value);
+		minSize.put(WIDTH, value);
 	}
 
-	public final void setChild(int index, CliComponent child) {
-		if (leaf)
-			throw new UnsupportedOperationException();
-		children.set(index, child);
+	public void setPrefWidth(IntSupplier value) {
+		Objects.requireNonNull(value);
+		setPrefWidth(i -> value.getAsInt());
 	}
 
-	public final void removeChild(CliComponent child) {
-		children.remove(child);
+	public void setPrefWidth(IntUnaryOperator value) {
+		Objects.requireNonNull(value);
+		prefSize.put(WIDTH, value);
 	}
 
-	public final void clearChildren() {
-		children.clear();
+	public void setMaxWidth(IntSupplier value) {
+		Objects.requireNonNull(value);
+		setMaxWidth(i -> value.getAsInt());
 	}
 
-	public void setWidthBySelf(IntSupplier widthBySelf) {
-		set(WIDTH, widthBySelf);
+	public void setMaxWidth(IntUnaryOperator value) {
+		Objects.requireNonNull(value);
+		maxSize.put(WIDTH, value);
 	}
 
-	public void setHeightBySelf(IntSupplier heightBySelf) {
-		set(HEIGHT, heightBySelf);
+	public abstract int getDefaultWidth(int height);
+
+	public void setMinHeight(IntSupplier value) {
+		Objects.requireNonNull(value);
+		setMinHeight(i -> value.getAsInt());
 	}
 
-	public void setLeftBySelf(IntSupplier leftBySelf) {
-		set(LEFT, leftBySelf);
+	public void setMinHeight(IntUnaryOperator value) {
+		Objects.requireNonNull(value);
+		minSize.put(HEIGHT, value);
 	}
 
-	public void setRightBySelf(IntSupplier rightBySelf) {
-		set(RIGHT, rightBySelf);
+	public void setPrefHeight(IntSupplier value) {
+		Objects.requireNonNull(value);
+		setPrefHeight(i -> value.getAsInt());
 	}
 
-	public void setTopBySelf(IntSupplier topBySelf) {
-		set(TOP, topBySelf);
+	public void setPrefHeight(IntUnaryOperator value) {
+		Objects.requireNonNull(value);
+		prefSize.put(HEIGHT, value);
 	}
 
-	public void setBottomBySelf(IntSupplier bottomBySelf) {
-		set(BOTTOM, bottomBySelf);
+	public void setMaxHeight(IntSupplier value) {
+		Objects.requireNonNull(value);
+		setMaxHeight(i -> value.getAsInt());
 	}
 
-	public void setWidthWithParent(Function<CliComponent, Integer> widthWithParent) {
-		set(WIDTH, widthWithParent);
+	public void setMaxHeight(IntUnaryOperator value) {
+		Objects.requireNonNull(value);
+		maxSize.put(HEIGHT, value);
 	}
 
-	public void setHeightWithParent(Function<CliComponent, Integer> heightWithParent) {
-		set(HEIGHT, heightWithParent);
+	public abstract int getDefaultHeight(int width);
+
+	public void setFreeLeft(IntSupplier value) {
+		Objects.requireNonNull(value);
+		freePosition.remove(RIGHT);
+		freePosition.put(LEFT, value);
 	}
 
-	public void setLeftWithParent(Function<CliComponent, Integer> leftWithParent) {
-		set(LEFT, leftWithParent);
+	public void setFreeRight(IntSupplier value) {
+		Objects.requireNonNull(value);
+		freePosition.remove(LEFT);
+		freePosition.put(RIGHT, value);
 	}
 
-	public void setRightWithParent(Function<CliComponent, Integer> rightWithParent) {
-		set(RIGHT, rightWithParent);
+	public void setFreeTop(IntSupplier value) {
+		Objects.requireNonNull(value);
+		freePosition.remove(BOTTOM);
+		freePosition.put(TOP, value);
 	}
 
-	public void setTopWithParent(Function<CliComponent, Integer> topWithParent) {
-		set(TOP, topWithParent);
+	public void setFreeBottom(IntSupplier value) {
+		Objects.requireNonNull(value);
+		freePosition.remove(TOP);
+		freePosition.put(BOTTOM, value);
 	}
 
-	public void setBottomWithParent(Function<CliComponent, Integer> bottomWithParent) {
-		set(BOTTOM, bottomWithParent);
+	public int getMinSize(CliBoundField field, int another) {
+		if (!field.isSizeField())
+			throw new IllegalArgumentException(field + " is not a size field.");
+		return minSize.get(field).applyAsInt(another);
 	}
 
-	private void set(CliLayoutSettingType type, IntSupplier bySelf) {
-		if (bySelf != null) {
-			checkConflict(type);
-			settingBySelf.put(type, bySelf);
-		} else
-			settingBySelf.remove(type);
+	public int getPrefSize(CliBoundField field, int another) {
+		if (!field.isSizeField())
+			throw new IllegalArgumentException(field + " is not a size field.");
+		return prefSize.get(field).applyAsInt(another);
 	}
 
-	private void set(CliLayoutSettingType type, Function<CliComponent, Integer> withParent) {
-		if (withParent != null) {
-			checkConflict(type);
-			settingWithParent.put(type, withParent);
-		} else
-			settingWithParent.remove(type);
+	public int getMaxSize(CliBoundField field, int another) {
+		if (!field.isSizeField())
+			throw new IllegalArgumentException(field + " is not a size field.");
+		return maxSize.get(field).applyAsInt(another);
 	}
 
-	private void checkConflict(CliLayoutSettingType type) {
-		List<CliLayoutSettingType> conflictTypes;
-		switch (type) {
-		case WIDTH:
-			conflictTypes = List.of(LEFT, RIGHT);
-			break;
-		case HEIGHT:
-			conflictTypes = List.of(TOP, BOTTOM);
-			break;
-		case LEFT:
-			conflictTypes = List.of(WIDTH, RIGHT);
-			break;
-		case RIGHT:
-			conflictTypes = List.of(LEFT, WIDTH);
-			break;
-		case TOP:
-			conflictTypes = List.of(HEIGHT, BOTTOM);
-			break;
-		case BOTTOM:
-			conflictTypes = List.of(TOP, HEIGHT);
-			break;
-		default:
-			throw new RuntimeException();
-		}
-		if (conflictTypes.stream().allMatch(t -> settingBySelf.containsKey(t) || settingWithParent.containsKey(t)))
-			throw new IllegalStateException("Cannot set " + type + " with " + conflictTypes + " set.");
-	}
-
-	/**
-	 * 返回绝对宽度。
-	 * 
-	 * @param 父组件。null表示不可依赖父组件。
-	 */
-	public OptionalInt getWidth(CliComponent parent) {
-		return get(WIDTH, parent);
-	}
-
-	/**
-	 * 返回绝对高度。
-	 * 
-	 * @param 父组件。null表示不可依赖父组件。
-	 */
-	public OptionalInt getHeight(CliComponent parent) {
-		return get(HEIGHT, parent);
+	public int getFreePosition(CliBoundField field) {
+		return freePosition.getOrDefault(field, () -> {
+			switch (field) {
+			case LEFT:
+				return getFreePosition(RIGHT) - getPrefSize(WIDTH, 0);
+			case RIGHT:
+				return getFreePosition(LEFT) + getPrefSize(WIDTH, 0);
+			case TOP:
+				return getFreePosition(BOTTOM) - getPrefSize(HEIGHT, 0);
+			case BOTTOM:
+				return getFreePosition(TOP) + getPrefSize(HEIGHT, 0);
+			default:
+				throw new IllegalArgumentException(field + " is not a position field.");
+			}
+		}).getAsInt();
 	}
 
 	/**
-	 * 返回左侧与父组件左侧的相对位置。
-	 * 
-	 * @param 父组件。null表示不可依赖父组件。
+	 * 画自己。
 	 */
-	public OptionalInt getLeft(CliComponent parent) {
-		return get(LEFT, parent);
-	}
-
-	/**
-	 * 返回右侧与父组件左侧的相对位置。
-	 * 
-	 * @param 父组件。null表示不可依赖父组件。
-	 */
-	public OptionalInt getRight(CliComponent parent) {
-		return get(RIGHT, parent);
-	}
-
-	/**
-	 * 返回顶端与父组件顶端的相对位置。
-	 * 
-	 * @param 父组件。null表示不可依赖父组件。
-	 */
-	public OptionalInt getTop(CliComponent parent) {
-		return get(TOP, parent);
-	}
-
-	/**
-	 * 返回底端与父组件顶端的相对位置。
-	 * 
-	 * @param 父组件。null表示不可依赖父组件。
-	 */
-	public OptionalInt getBottom(CliComponent parent) {
-		return get(BOTTOM, parent);
-	}
-
-	public OptionalInt get(CliLayoutSettingType type, CliComponent parent) {
-		// with parent or by self
-		OptionalInt specified = getSpecified(type, parent);
-		if (specified.isPresent())
-			return specified;
-
-		// by calculation
-		OptionalInt specified1 = getSpecified(type.getCalcParamType1(), parent);
-		if (!specified1.isPresent())
-			return OptionalInt.empty();
-		OptionalInt specified2 = getSpecified(type.getCalcParamType2(), parent);
-		if (!specified2.isPresent())
-			return OptionalInt.empty();
-		return OptionalInt.of(type.getCalculator().applyAsInt(specified1.getAsInt(), specified2.getAsInt()));
-	}
-
-	private OptionalInt getSpecified(CliLayoutSettingType type, CliComponent parent) {
-		if (parent != null && settingWithParent.containsKey(type)) {
-			Integer width = settingWithParent.get(type).apply(parent);
-			if (width != null)
-				return OptionalInt.of(width);
-		}
-		if (settingBySelf.containsKey(type))
-			return OptionalInt.of(settingBySelf.get(type).getAsInt());
-		return OptionalInt.empty();
-	}
+	public abstract CliCellGroup paint(int width, int height);
 
 }

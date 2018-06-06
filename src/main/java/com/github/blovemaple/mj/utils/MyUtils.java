@@ -397,10 +397,11 @@ public class MyUtils {
 	}
 
 	/**
-	 * 返回指定字符串在命令行终端里的宽度（一个汉字算两个英文字符的宽度）。
+	 * 返回指定字符串在命令行终端里的宽度（全角字符算两个半角字符的宽度）。
 	 */
 	public static int strWidth(String str) {
-		return str.replaceAll("[^\\x00-\\xff]", "**").length();
+		return str.chars().map(c -> Character.isIdeographic(c) || (c >= 65281 && c <= 65374 || c == 12288) ? 2 : 1)
+				.sum();
 	}
 
 	/**
