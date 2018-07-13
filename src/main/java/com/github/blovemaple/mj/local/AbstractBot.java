@@ -1,6 +1,6 @@
 package com.github.blovemaple.mj.local;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 import static java.util.stream.Collectors.*;
 
@@ -15,10 +15,11 @@ import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.cli.CliGameView;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.Player;
-import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
 /**
@@ -63,12 +64,12 @@ public abstract class AbstractBot implements Player {
 	}
 
 	@Override
-	public Action chooseAction(GameContextPlayerView contextView, Set<ActionType> actionTypes)
+	public PlayerAction chooseAction(GameContextPlayerView contextView, Set<PlayerActionType> actionTypes)
 			throws InterruptedException {
 		long startTime = System.nanoTime();
 
 		logger.info(() -> "BOT Alive tiles: " + aliveTilesStr(contextView));
-		Action action = chooseAction0(contextView, actionTypes);
+		PlayerAction action = chooseAction0(contextView, actionTypes);
 		logger.info(() -> "BOT Chosed action:" + action);
 
 		long endTime = System.nanoTime();
@@ -79,24 +80,24 @@ public abstract class AbstractBot implements Player {
 		return action;
 	}
 
-	private Action chooseAction0(GameContextPlayerView contextView, Set<ActionType> actionTypes)
+	private PlayerAction chooseAction0(GameContextPlayerView contextView, Set<PlayerActionType> actionTypes)
 			throws InterruptedException {
 		// 如果可以和，就和
 		if (actionTypes.contains(WIN))
-			return new Action(WIN);
+			return new PlayerAction(contextView.getMyLocation(), WIN);
 
 		// 如果可以补花，就补花
 		if (actionTypes.contains(BUHUA)) {
 			Collection<Set<Tile>> buhuas = BUHUA.getLegalActionTiles(contextView);
 			if (!buhuas.isEmpty()) {
-				return new Action(BUHUA, buhuas.iterator().next());
+				return new PlayerAction(contextView.getMyLocation(), BUHUA, buhuas.iterator().next());
 			}
 		}
 
 		// 如果可以吃/碰/杠/出牌，就选择
-		List<Action> cpgdActions = Stream.concat(cpgdActions(contextView, actionTypes), passAction(contextView))
-				.collect(toList());
-		Action action = cpgdActions.isEmpty() ? null
+		List<PlayerAction> cpgdActions = Stream
+				.concat(cpgdActions(contextView, actionTypes), passAction(contextView)).collect(toList());
+		PlayerAction action = cpgdActions.isEmpty() ? null
 				: cpgdActions.size() == 1 ? cpgdActions.get(0)
 						: chooseCpgdActionWithTimer(contextView, actionTypes, cpgdActions);
 		if (action != null)
@@ -105,7 +106,7 @@ public abstract class AbstractBot implements Player {
 		// 如果可以摸牌，就摸牌
 		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
 			if (actionTypes.contains(drawType)) {
-				return new Action(drawType);
+				return new PlayerAction(contextView.getMyLocation(), drawType);
 			}
 
 		// 啥都没选择，放弃了
@@ -120,7 +121,7 @@ public abstract class AbstractBot implements Player {
 		return aliveTilesStr.toString();
 	}
 
-	private Stream<Action> cpgdActions(GameContextPlayerView contextView, Set<ActionType> actionTypes) {
+	private Stream<PlayerAction> cpgdActions(GameContextPlayerView contextView, Set<PlayerActionType> actionTypes) {
 		return
 		// 吃/碰/杠/出牌动作类型
 		Stream.of(CHI, PENG, ZHIGANG, BUGANG, ANGANG, DISCARD, DISCARD_WITH_TING)
@@ -134,18 +135,18 @@ public abstract class AbstractBot implements Player {
 						.filter(distinctorBy(
 								tiles -> tiles.stream().map(Tile::type).sorted().collect(Collectors.toList())))
 						// 构造Action
-						.map(tiles -> new Action(actionType, tiles)));
+						.map(tiles -> new PlayerAction(contextView.getMyLocation(), actionType, tiles)));
 	}
 
-	private Stream<Action> passAction(GameContextPlayerView contextView) {
+	private Stream<PlayerAction> passAction(GameContextPlayerView contextView) {
 		if (contextView.getMyInfo().getAliveTiles().size() % 3 == 1)
-			return Stream.of((Action) null);
+			return Stream.of((PlayerAction) null);
 		else
 			return Stream.empty();
 	}
 
-	private Action chooseCpgdActionWithTimer(GameContextPlayerView contextView, Set<ActionType> actionTypes,
-			List<Action> actions) throws InterruptedException {
+	private PlayerAction chooseCpgdActionWithTimer(GameContextPlayerView contextView, Set<PlayerActionType> actionTypes,
+			List<PlayerAction> actions) throws InterruptedException {
 		long startTime = System.nanoTime();
 		try {
 			return chooseCpgdAction(contextView, actionTypes, actions);
@@ -163,18 +164,18 @@ public abstract class AbstractBot implements Player {
 		}
 	}
 
-	protected abstract Action chooseCpgdAction(GameContextPlayerView contextView, Set<ActionType> actionTypes,
-			List<Action> actions) throws InterruptedException;
+	protected abstract PlayerAction chooseCpgdAction(GameContextPlayerView contextView,
+			Set<PlayerActionType> actionTypes, List<PlayerAction> actions) throws InterruptedException;
 
 	@Override
-	public Action chooseAction(GameContextPlayerView contextView, Set<ActionType> actionTypes, Action illegalAction)
-			throws InterruptedException {
+	public PlayerAction chooseAction(GameContextPlayerView contextView, Set<PlayerActionType> actionTypes,
+			PlayerAction illegalAction) throws InterruptedException {
 		logger.severe("Selected illegal action: " + illegalAction);
 		return null;
 	}
 
 	@Override
-	public void actionDone(GameContextPlayerView contextView, PlayerLocation actionLocation, Action action) {
+	public void actionDone(GameContextPlayerView contextView, Action action) {
 	}
 
 	@Override

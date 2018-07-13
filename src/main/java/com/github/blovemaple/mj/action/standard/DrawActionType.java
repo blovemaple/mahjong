@@ -1,13 +1,14 @@
 package com.github.blovemaple.mj.action.standard;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.object.PlayerLocation.Relation.*;
 
 import java.util.Set;
 import java.util.function.BiPredicate;
 
-import com.github.blovemaple.mj.action.AbstractActionType;
-import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.AbstractPlayerActionType;
+import com.github.blovemaple.mj.action.Action;
+import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -18,7 +19,10 @@ import com.github.blovemaple.mj.object.Tile;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class DrawActionType extends AbstractActionType {
+public class DrawActionType extends AbstractPlayerActionType {
+
+	protected DrawActionType() {
+	}
 
 	@Override
 	public boolean canPass(GameContext context, PlayerLocation location) {
@@ -26,10 +30,10 @@ public class DrawActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
+	protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
 		// 必须是上家打牌后
-		return (al, location) -> DISCARD.matchBy(al.getActionType())
-				&& location.getRelationOf(al.getLocation()) == PREVIOUS;
+		return (a, location) -> DISCARD.matchBy(a.getType())
+				&& location.getRelationOf(((PlayerAction) a).getLocation()) == PREVIOUS;
 	}
 
 	@Override

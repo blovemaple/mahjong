@@ -8,8 +8,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
-import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.local.AbstractBot;
 
@@ -34,18 +34,18 @@ public class BarBot extends AbstractBot {
 		return name;
 	}
 
-	private Future<Action> selectFuture;
+	private Future<PlayerAction> selectFuture;
 
 	@Override
-	protected Action chooseCpgdAction(GameContextPlayerView contextView, Set<ActionType> actionTypes,
-			List<Action> actions) throws InterruptedException {
+	protected PlayerAction chooseCpgdAction(GameContextPlayerView contextView, Set<PlayerActionType> actionTypes,
+			List<PlayerAction> actions) throws InterruptedException {
 		if (selectFuture != null && !selectFuture.isDone())
 			throw new IllegalStateException("Another select task is active.");
 
 		if (Collections.disjoint(actionTypes, BarBotCpgdSelectTask.ACTION_TYPES))
 			return null;
 
-		Future<Action> futureResult = ForkJoinPool.commonPool()
+		Future<PlayerAction> futureResult = ForkJoinPool.commonPool()
 				.submit(new BarBotCpgdSelectTask(contextView, actionTypes));
 		try {
 			return futureResult.get();

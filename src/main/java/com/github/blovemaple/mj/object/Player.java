@@ -3,7 +3,8 @@ package com.github.blovemaple.mj.object;
 import java.util.Set;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 
 /**
@@ -32,8 +33,8 @@ public interface Player {
 	 * @throws InterruptedException
 	 *             线程被中断时抛出此异常。选择过程中随时可能被中断，实现时应该经常检查。
 	 */
-	public default Action chooseAction(GameContextPlayerView contextView,
-			Set<ActionType> actionTypes) throws InterruptedException {
+	public default PlayerAction chooseAction(GameContextPlayerView contextView,
+			Set<PlayerActionType> actionTypes) throws InterruptedException {
 		return chooseAction(contextView, actionTypes, null);
 	}
 
@@ -51,15 +52,14 @@ public interface Player {
 	 * @throws InterruptedException
 	 *             线程被中断时抛出此异常。选择过程中随时可能被中断，实现时应该经常检查。
 	 */
-	public Action chooseAction(GameContextPlayerView contextView,
-			Set<ActionType> actionTypes, Action illegalAction)
+	public PlayerAction chooseAction(GameContextPlayerView contextView,
+			Set<PlayerActionType> actionTypes, PlayerAction illegalAction)
 			throws InterruptedException;
 
 	/**
 	 * 完成一个动作时通知。
 	 */
-	void actionDone(GameContextPlayerView contextView,
-			PlayerLocation actionLocation, Action action);
+	void actionDone(GameContextPlayerView contextView, Action action);
 
 	/**
 	 * 倒计时有变化时通知。（会通知所有玩家，被通知的玩家不一定要做动作）

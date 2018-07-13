@@ -3,7 +3,6 @@ package com.github.blovemaple.mj.game;
 import java.util.List;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.object.MahjongTablePlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -49,11 +48,6 @@ public interface GameContextPlayerView {
 	public PlayerLocation getZhuangLocation();
 
 	/**
-	 * 返回到目前为止做出的最后一个动作和玩家位置。
-	 */
-	public ActionAndLocation getLastActionAndLocation();
-
-	/**
 	 * 返回到目前为止做出的最后一个动作。
 	 */
 	public Action getLastAction();
@@ -71,7 +65,7 @@ public interface GameContextPlayerView {
 	/**
 	 * 返回已经做完的动作。
 	 */
-	public List<ActionAndLocation> getDoneActions();
+	public List<Action> getDoneActions();
 
 	/**
 	 * 如果已结束则返回游戏结果，否则返回null。

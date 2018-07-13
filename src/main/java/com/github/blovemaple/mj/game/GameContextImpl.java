@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -29,7 +29,7 @@ public class GameContextImpl implements GameContext {
 	private TimeLimitStrategy timeLimitStrategy;
 	
 	private PlayerLocation zhuangLocation;
-	private List<ActionAndLocation> doneActions = new ArrayList<>();
+	private List<Action> doneActions = new ArrayList<>();
 	private GameResult gameResult;
 	
 	public GameContextImpl(MahjongTable table, GameStrategy gameStrategy, TimeLimitStrategy timeLimitStrategy) {
@@ -69,34 +69,30 @@ public class GameContextImpl implements GameContext {
 	}
 
 	@Override
-	public void actionDone(Action action, PlayerLocation location) {
-		doneActions.add(new ActionAndLocation(action, location));
+	public void actionDone(Action action) {
+		doneActions.add(action);
 	}
 
 	@Override
-	public ActionAndLocation getLastActionAndLocation() {
+	public Action getLastAction() {
 		return doneActions.isEmpty() ? null
 				: doneActions.get(doneActions.size() - 1);
 	}
 
 	@Override
-	public Action getLastAction() {
-		ActionAndLocation lastAction = getLastActionAndLocation();
-		return lastAction == null ? null : lastAction.getAction();
-	}
-
-	@Override
 	public PlayerLocation getLastActionLocation() {
-		ActionAndLocation lastAction = getLastActionAndLocation();
-		return lastAction == null ? null : lastAction.getLocation();
+		Action lastAction = getLastAction();
+		if (lastAction == null || !(lastAction instanceof PlayerAction))
+			return null;
+		return ((PlayerAction) lastAction).getLocation();
 	}
 
 	@Override
-	public List<ActionAndLocation> getDoneActions() {
+	public List<Action> getDoneActions() {
 		return doneActions;
 	}
 
-	protected void setDoneActions(List<ActionAndLocation> doneActions) {
+	protected void setDoneActions(List<Action> doneActions) {
 		this.doneActions = doneActions;
 	}
 

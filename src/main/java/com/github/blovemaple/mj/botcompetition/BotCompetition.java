@@ -20,6 +20,7 @@ import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
+@SuppressWarnings("deprecation")
 public class BotCompetition {
 	public static void main(String[] args) {
 		new BotCompetition(BarBot.class, BazBot.class).compete(1000);

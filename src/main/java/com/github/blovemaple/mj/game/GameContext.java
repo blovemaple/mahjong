@@ -3,7 +3,6 @@ package com.github.blovemaple.mj.game;
 import java.util.List;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -29,15 +28,13 @@ public interface GameContext {
 
 	public void setZhuangLocation(PlayerLocation zhuangLocation);
 
-	public void actionDone(Action action, PlayerLocation location);
-
-	public ActionAndLocation getLastActionAndLocation();
+	public void actionDone(Action action);
 
 	public Action getLastAction();
 
 	public PlayerLocation getLastActionLocation();
 
-	public List<ActionAndLocation> getDoneActions();
+	public List<Action> getDoneActions();
 
 	public GameResult getGameResult();
 
