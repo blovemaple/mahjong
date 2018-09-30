@@ -47,6 +47,10 @@ public abstract class AbstractPlayerActionType implements PlayerActionType {
 	 * 默认实现调用相应方法对上一个动作和活牌数量进行限制，进行判断。
 	 */
 	protected boolean meetPrecondition(GameContextPlayerView context) {
+		// 验证听牌条件
+		if (!isAllowedInTing() && context.getMyInfo().isTing())
+			return false;
+
 		// 验证aliveTiles数量条件
 		Predicate<Integer> aliveTileSizeCondition = getAliveTileSizePrecondition();
 		if (aliveTileSizeCondition != null)
@@ -64,6 +68,13 @@ public abstract class AbstractPlayerActionType implements PlayerActionType {
 					return false;
 		}
 
+		return true;
+	}
+
+	/**
+	 * 返回听牌时是否可进行此动作。默认true。
+	 */
+	protected boolean isAllowedInTing() {
 		return true;
 	}
 

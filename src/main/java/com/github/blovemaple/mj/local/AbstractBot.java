@@ -4,7 +4,6 @@ import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 import static java.util.stream.Collectors.*;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.cli.CliGameView;
@@ -86,6 +84,10 @@ public abstract class AbstractBot implements Player {
 		if (actionTypes.contains(WIN))
 			return new PlayerAction(contextView.getMyLocation(), WIN);
 
+		// 如果可以摸底，就摸底
+		if (actionTypes.contains(DRAW_BOTTOM))
+			return new PlayerAction(contextView.getMyLocation(), DRAW_BOTTOM);
+
 		// 如果可以补花，就补花
 		if (actionTypes.contains(BUHUA)) {
 			Collection<Set<Tile>> buhuas = BUHUA.getLegalActionTiles(contextView);
@@ -104,10 +106,8 @@ public abstract class AbstractBot implements Player {
 			return action;
 
 		// 如果可以摸牌，就摸牌
-		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
-			if (actionTypes.contains(drawType)) {
-				return new PlayerAction(contextView.getMyLocation(), drawType);
-			}
+		if (actionTypes.contains(DRAW))
+			return new PlayerAction(contextView.getMyLocation(), DRAW);
 
 		// 啥都没选择，放弃了
 		return null;

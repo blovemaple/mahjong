@@ -29,6 +29,7 @@ import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroupPlayerView;
 import com.github.blovemaple.mj.object.TileType;
+import com.github.blovemaple.mj.rule.GameStage;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
@@ -212,6 +213,16 @@ class BazBotSimContext implements GameContext {
 
 	@Override
 	public void setZhuangLocation(PlayerLocation zhuangLocation) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public GameStage getStage() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setStage(GameStage stage) {
 		throw new UnsupportedOperationException();
 	}
 

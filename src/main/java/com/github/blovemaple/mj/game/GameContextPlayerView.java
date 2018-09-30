@@ -48,6 +48,11 @@ public interface GameContextPlayerView {
 	public PlayerLocation getZhuangLocation();
 
 	/**
+	 * 返回当前阶段名称。
+	 */
+	public String getStageName();
+
+	/**
 	 * 返回到目前为止做出的最后一个动作。
 	 */
 	public Action getLastAction();

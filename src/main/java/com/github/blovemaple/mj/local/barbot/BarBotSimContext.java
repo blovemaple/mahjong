@@ -12,6 +12,7 @@ import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
+import com.github.blovemaple.mj.rule.GameStage;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.utils.MyUtils;
@@ -69,6 +70,16 @@ public class BarBotSimContext implements GameContext {
 
 	@Override
 	public void setZhuangLocation(PlayerLocation zhuangLocation) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public GameStage getStage() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setStage(GameStage stage) {
 		throw new UnsupportedOperationException();
 	}
 

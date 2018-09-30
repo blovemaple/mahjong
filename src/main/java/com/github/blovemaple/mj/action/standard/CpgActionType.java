@@ -75,6 +75,11 @@ public class CpgActionType extends AbstractPlayerActionType {
 	}
 
 	@Override
+	protected boolean isAllowedInTing() {
+		return false;
+	}
+
+	@Override
 	protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
 		// 必须是指定关系的人出牌后
 		return (a, location) -> DISCARD.matchBy(a.getType())

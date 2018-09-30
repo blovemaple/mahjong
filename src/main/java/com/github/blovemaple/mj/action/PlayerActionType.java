@@ -9,7 +9,7 @@ import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
 /**
- * 玩家动作类型。
+ * 由玩家做出的动作类型。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */

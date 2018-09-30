@@ -1,11 +1,14 @@
 package com.github.blovemaple.mj.game;
 
 import static com.github.blovemaple.mj.utils.LambdaUtils.*;
+import static java.util.stream.Collectors.*;
 
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -28,6 +31,7 @@ import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
+import com.google.common.collect.Streams;
 
 /**
  * 麻将游戏。此类的功能是麻将游戏的基本流程（初始化、发牌、循环选择和执行动作、检查游戏结束等）。<br>
@@ -70,21 +74,10 @@ public class MahjongGame {
 
 		logger.info("[Main] init done.");
 
-		// 发牌
-		Action dealAction = gameStrategy.getDealAction(context);
-		try {
-			doAction(context, dealAction);
-		} catch (IllegalActionException e) {
-			// 策略返回的发牌动作是非法动作
-			throw new RuntimeException("Illegal deal action: " + dealAction);
-		}
-
-		logger.info("[Main] deal done.");
-
 		// 循环执行动作，直到结束
 		while (true) {
 			// 执行一次动作
-			boolean actionDone = doOneAction(context);
+			boolean actionDone = chooseAndDoAction(context);
 
 			// 从策略判断游戏是否结束
 			boolean end = gameStrategy.tryEndGame(context);
@@ -107,7 +100,7 @@ public class MahjongGame {
 	 * @return 有没有执行动作
 	 * @throws InterruptedException
 	 */
-	private boolean doOneAction(GameContext context) throws InterruptedException {
+	private boolean chooseAndDoAction(GameContext context) throws InterruptedException {
 		Action action = chooseAction(context);
 		logger.info("[Action ready] " + action);
 		if (action != null) {
@@ -117,7 +110,7 @@ public class MahjongGame {
 				logger.info("[Action done] " + action);
 				return true;
 			} catch (IllegalActionException e) {
-				// 玩家默认动作或默认动作不合法（玩家选择的动作已经经过了合法性判断）
+				// 动作不合法（玩家选择的动作已经经过了合法性判断）
 				throw new RuntimeException("Illegal action: " + action);
 			}
 		}
@@ -125,9 +118,12 @@ public class MahjongGame {
 	}
 
 	/**
-	 * 决定要执行的动作。先让玩家选择，如果玩家无可选动作或者都选择不做动作，则从策略获取默认动作。
+	 * 决定要执行的动作。先让stage和玩家选择，如果无可选动作或者都选择不做动作，则从stage获取默认动作。
 	 */
 	public Action chooseAction(GameContext context) throws InterruptedException {
+		// 从stage取自动动作
+		List<Action> autoActions = context.getStage().getAutoActionTypes().stream().map(Action::new).collect(toList());
+
 		// 查找所有玩家可以做的动作类型
 		Map<PlayerLocation, Set<PlayerActionType>> choicesByLocation = new HashMap<>();
 		context.getTable().getPlayerInfos().forEach((location, playerInfo) -> {
@@ -185,7 +181,7 @@ public class MahjongGame {
 			// 如果出现目前等待的玩家中优先级最高的动作，或者所有玩家都做出了动作，则进行做出的优先级最高的动作
 			synchronized (choseActionByLocation) {
 				while (true) {
-					Action action = determineAction(choicesByLocation, choseActionByLocation, context);
+					Action action = determineAction(choicesByLocation, choseActionByLocation, autoActions, context);
 					if (action != null) {
 						// 动作已决定
 						// 中断未作出选择的玩家的选择逻辑并返回
@@ -202,9 +198,9 @@ public class MahjongGame {
 			executor.shutdownNow();
 		}
 
-		// 如果上面没有产生要做的动作，则从策略获取默认动作
+		// 如果上面没有产生要做的动作，则从stage获取默认动作
 		logger.info("Start get def action...");
-		Action defAction = gameStrategy.getDefaultAction(context, choicesByLocation);
+		Action defAction = context.getStage().getFinalAction(context);
 		logger.info("End get def action: " + defAction);
 		return defAction;
 	}
@@ -275,23 +271,23 @@ public class MahjongGame {
 		}
 	}
 
-	private PlayerAction determineAction(Map<PlayerLocation, Set<PlayerActionType>> choicesByLocation,
-			Map<PlayerLocation, PlayerAction> choseActionByLocation, GameContext context) {
+	private Action determineAction(Map<PlayerLocation, Set<PlayerActionType>> choicesByLocation,
+			Map<PlayerLocation, PlayerAction> choseActionByLocation, List<Action> autoActions, GameContext context) {
 		if (choseActionByLocation.isEmpty())
 			return null;
 
 		Comparator<ActionTypeAndLocation> actionPriorityComparator = gameStrategy.getActionPriorityComparator();
 
 		// 得出已选动作类型中优先级最高的
-		PlayerAction chosePriorAction = choseActionByLocation.entrySet().stream()
-				// 过滤掉放弃的
-				.filter(entry -> entry.getValue() != null)
+		Action chosePriorAction = Streams.<Action> concat(
+				// 玩家选择的动作
+				choseActionByLocation.values().stream().filter(Objects::nonNull)
+				// 自动动作
+				, autoActions.stream())
 				// 选优先级最高的一个
-				.min(Comparator.comparing(
-						entry -> new ActionTypeAndLocation(entry.getValue().getType(), entry.getKey(), context),
+				.min(Comparator.comparing(action -> new ActionTypeAndLocation(action.getType(), null, context),
 						actionPriorityComparator))
-				// 创建成ActionAndLocation
-				.map(entry -> entry.getValue()).orElse(null);
+				.orElse(null);
 
 		if (chosePriorAction == null)
 			return null;
@@ -319,8 +315,11 @@ public class MahjongGame {
 
 		// 如果未选动作中没有超过已选动作优先级的，则确定做最高优先级的已选动作，
 		// 否则返回null继续等待选择
-		if (actionPriorityComparator.compare(new ActionTypeAndLocation(chosePriorAction.getType(),
-				chosePriorAction.getLocation(), context), priorAction) <= 0)
+		PlayerLocation priorActionLocaion = (chosePriorAction instanceof PlayerAction)
+				? ((PlayerAction) chosePriorAction).getLocation()
+				: null;
+		if (actionPriorityComparator.compare(
+				new ActionTypeAndLocation(chosePriorAction.getType(), priorActionLocaion, context), priorAction) <= 0)
 			return chosePriorAction;
 		else
 			return null;

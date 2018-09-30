@@ -2,8 +2,11 @@ package com.github.blovemaple.mj.rule;
 
 import static com.github.blovemaple.mj.action.standard.AutoActionTypes.*;
 import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
+import static java.util.function.Function.*;
+import static java.util.stream.Collectors.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +33,8 @@ import com.github.blovemaple.mj.object.Tile;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public abstract class AbstractGameStrategy implements GameStrategy {
+	
+	private Map<String,GameStage> stages;
 
 	/**
 	 * {@inheritDoc}<br>
@@ -48,15 +53,32 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 		return Tile.all();
 	}
 
+	@Override
+	public GameStage getStageByName(String stageName) {
+		if (stages == null) {
+			synchronized (this) {
+				if (stages == null)
+					stages = getAllStages().stream().collect(toMap(GameStage::getName, identity()));
+			}
+		}
+		return stages.get(stageName);
+	}
+
+	/**
+	 * 返回所有阶段对象。
+	 */
+	protected abstract Collection<GameStage> getAllStages();
+
 	/**
 	 * {@inheritDoc}<br>
-	 * 在一局开始之前设置庄家位置。
+	 * 在一局开始之前设置庄家位置和初始阶段。
 	 * 
 	 * @see com.github.blovemaple.mj.rule.GameStrategy#readyContext(com.github.blovemaple.mj.game.GameContext)
 	 */
 	@Override
 	public void readyContext(GameContext context) {
 		context.setZhuangLocation(nextZhuangLocation(context));
+		context.setStage(getFirstStage());
 	}
 
 	/**
@@ -64,10 +86,10 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 	 */
 	protected abstract PlayerLocation nextZhuangLocation(GameContext context);
 
-	@Override
-	public Action getDealAction(GameContext context) {
-		return new Action(DEAL);
-	}
+	/**
+	 * 返回初始阶段。
+	 */
+	protected abstract GameStage getFirstStage();
 
 	private static final Set<PlayerActionType> ALL_ACTION_TYPES = new HashSet<>(
 			Arrays.asList(PlayerActionTypes.values()));
@@ -87,7 +109,7 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 	 * 进行比较时反过来用index比较，不在列表里的为-1。
 	 */
 	private static final List<ActionType> ACTION_TYPE_PRIORITY_LIST = Arrays
-			.asList(CHI, PENG, ZHIGANG, BUHUA, WIN);
+			.asList(CHI, PENG, ZHIGANG, BUHUA, DRAW_BOTTOM, WIN);
 
 	/**
 	 * 和>补花>杠>碰>吃>其他，相同的比较与上次动作的玩家位置关系。
@@ -102,7 +124,7 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 		c = c.thenComparing(a -> {
 			PlayerLocation lastLocation = a.getContext()
 					.getLastActionLocation();
-			return lastLocation == null ? Relation.SELF
+			return lastLocation == null || a.getLocation() == null ? Relation.SELF
 					: lastLocation.getRelationOf(a.getLocation());
 		});
 		return c;

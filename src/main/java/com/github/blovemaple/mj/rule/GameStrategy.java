@@ -39,14 +39,14 @@ public interface GameStrategy {
 	public List<Tile> getAllTiles();
 
 	/**
+	 * 根据阶段名称返回阶段。
+	 */
+	public GameStage getStageByName(String stageName);
+
+	/**
 	 * 在一局开始之前对上下文进行必要操作。
 	 */
 	public void readyContext(GameContext context);
-
-	/**
-	 * 根据当前状态获取开局的发牌动作，用于发牌。
-	 */
-	public Action getDealAction(GameContext context);
 
 	/**
 	 * 返回游戏进行中（发牌后，直到结束）所有动作类型列表。

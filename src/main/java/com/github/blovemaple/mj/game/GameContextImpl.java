@@ -11,6 +11,7 @@ import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
+import com.github.blovemaple.mj.rule.GameStage;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
@@ -29,6 +30,7 @@ public class GameContextImpl implements GameContext {
 	private TimeLimitStrategy timeLimitStrategy;
 	
 	private PlayerLocation zhuangLocation;
+	private GameStage stage;
 	private List<Action> doneActions = new ArrayList<>();
 	private GameResult gameResult;
 	
@@ -66,6 +68,16 @@ public class GameContextImpl implements GameContext {
 	@Override
 	public void setZhuangLocation(PlayerLocation zhuangLocation) {
 		this.zhuangLocation = zhuangLocation;
+	}
+
+	@Override
+	public GameStage getStage() {
+		return stage;
+	}
+
+	@Override
+	public void setStage(GameStage stage) {
+		this.stage = stage;
 	}
 
 	@Override

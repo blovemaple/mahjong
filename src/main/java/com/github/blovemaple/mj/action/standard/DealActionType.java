@@ -3,7 +3,7 @@ package com.github.blovemaple.mj.action.standard;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.AutoActionType;
 import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.MahjongTable;
@@ -12,19 +12,18 @@ import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.PlayerLocation.Relation;
 
 /**
- * 动作类型“发牌”。<br>
- * 发牌动作不由玩家执行，只实现doAction方法。
+ * 动作类型“发牌”。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class DealActionType implements ActionType {
+public class DealActionType implements AutoActionType {
 
 	protected DealActionType() {
 	}
 
 	@Override
 	public boolean isLegalAction(GameContext context, Action action) {
-		throw new UnsupportedOperationException();
+		return context.getDoneActions().stream().map(Action::getType).noneMatch(this::matchBy);
 	}
 
 	@Override

@@ -59,6 +59,11 @@ public class GameContextPlayerViewImpl implements GameContextPlayerView {
 	}
 
 	@Override
+	public String getStageName() {
+		return gameContext.getStage().getName();
+	}
+
+	@Override
 	public Action getLastAction() {
 		return gameContext.getLastAction();
 	}

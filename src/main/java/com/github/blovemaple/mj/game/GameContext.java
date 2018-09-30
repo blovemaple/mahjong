@@ -6,6 +6,7 @@ import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
+import com.github.blovemaple.mj.rule.GameStage;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
@@ -27,6 +28,10 @@ public interface GameContext {
 	public PlayerLocation getZhuangLocation();
 
 	public void setZhuangLocation(PlayerLocation zhuangLocation);
+
+	public GameStage getStage();
+
+	public void setStage(GameStage stage);
 
 	public void actionDone(Action action);
 

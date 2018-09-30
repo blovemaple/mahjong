@@ -2,6 +2,7 @@ package com.github.blovemaple.mj.action.standard;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.AutoActionType;
 import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.game.GameContext;
 
@@ -11,7 +12,7 @@ import com.github.blovemaple.mj.game.GameContext;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public enum AutoActionTypes implements ActionType {
+public enum AutoActionTypes implements AutoActionType {
 	/**
 	 * 发牌
 	 */
