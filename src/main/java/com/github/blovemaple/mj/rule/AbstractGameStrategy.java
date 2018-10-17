@@ -8,7 +8,6 @@ import static java.util.stream.Collectors.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,7 +19,6 @@ import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.ActionTypeAndLocation;
 import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.action.PlayerActionType;
-import com.github.blovemaple.mj.action.standard.PlayerActionTypes;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -78,31 +76,12 @@ public abstract class AbstractGameStrategy implements GameStrategy {
 	@Override
 	public void readyContext(GameContext context) {
 		context.setZhuangLocation(nextZhuangLocation(context));
-		context.setStage(getFirstStage());
 	}
 
 	/**
 	 * 在一局开始之前，根据context返回此局的庄家位置。
 	 */
 	protected abstract PlayerLocation nextZhuangLocation(GameContext context);
-
-	/**
-	 * 返回初始阶段。
-	 */
-	protected abstract GameStage getFirstStage();
-
-	private static final Set<PlayerActionType> ALL_ACTION_TYPES = new HashSet<>(
-			Arrays.asList(PlayerActionTypes.values()));
-
-	@Override
-	public Set<PlayerActionType> getAllActionTypesInGame() {
-		return ALL_ACTION_TYPES;
-	}
-
-	@Override
-	public Set<PlayerActionType> getAllActionTypesInTing() {
-		return Set.of(DRAW, DISCARD, BUHUA, DRAW_BOTTOM, WIN);
-	}
 
 	/**
 	 * 动作类型优先级倒序，先低后高，不在列表里的为最低。<br>

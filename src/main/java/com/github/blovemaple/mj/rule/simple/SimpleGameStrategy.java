@@ -46,7 +46,7 @@ public class SimpleGameStrategy extends AbstractGameStrategy {
 	}
 
 	@Override
-	protected GameStage getFirstStage() {
+	public GameStage getFirstStage() {
 		return stages.get(0);
 	}
 

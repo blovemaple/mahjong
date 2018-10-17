@@ -35,7 +35,7 @@ public class BeforePlayingStage implements GameStage {
 	}
 
 	@Override
-	public Action chooseAction(GameContext context) {
+	public Action getPriorAction(GameContext context) {
 		return null;
 	}
 

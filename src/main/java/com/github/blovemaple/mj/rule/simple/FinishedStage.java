@@ -32,7 +32,7 @@ public class FinishedStage implements GameStage {
 	}
 
 	@Override
-	public Action chooseAction(GameContext context) {
+	public Action getPriorAction(GameContext context) {
 		return null;
 	}
 

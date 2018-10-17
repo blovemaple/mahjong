@@ -42,7 +42,7 @@ public class BuhuaActionType extends AbstractPlayerActionType {
 							.filter(action -> (action instanceof PlayerAction)
 									&& ((PlayerAction) action).getLocation() == context.getMyLocation()))
 					.map(Action::getType).orElse(null);
-			if (this.matchBy(lastActionType))
+			if (lastActionType != null && this.matchBy(lastActionType))
 				return false;
 			break;
 		case PlayingStage.NAME:

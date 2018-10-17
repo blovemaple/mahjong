@@ -271,13 +271,6 @@ public class CliGameView {
 
 	public void showAction(Action action)
 			throws IOException {
-		if (!(action.getType() instanceof PlayerActionTypes)) {
-			showActionDefault(action);
-			return;
-		}
-
-		PlayerLocation location = ((PlayerAction) action).getLocation();
-
 		if (action.getType() instanceof AutoActionTypes) {
 			switch ((AutoActionTypes) action.getType()) {
 			case DEAL:
@@ -289,7 +282,7 @@ public class CliGameView {
 				showStr.append(':').append(str(zhuangRelation)).append(str(contextView.getZhuangLocation()));
 				showStr.append(' ')
 						.append(str(contextView.getTableView().getPlayerName(contextView.getZhuangLocation())));
-				showActionStr(location, showStr);
+				showActionStr(null, showStr);
 				break;
 			default:
 				showActionDefault(action);
@@ -297,6 +290,7 @@ public class CliGameView {
 			}
 		} else if (action.getType() instanceof PlayerActionTypes) {
 			PlayerAction playerAction = (PlayerAction) action;
+			PlayerLocation location = playerAction.getLocation();
 			switch ((PlayerActionTypes) action.getType()) {
 			case CHI:
 			case PENG:

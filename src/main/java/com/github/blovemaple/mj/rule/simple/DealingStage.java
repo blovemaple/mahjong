@@ -34,7 +34,7 @@ public class DealingStage implements GameStage {
 	}
 
 	@Override
-	public Action chooseAction(GameContext context) {
+	public Action getPriorAction(GameContext context) {
 		return null;
 	}
 

@@ -30,12 +30,14 @@ public interface GameStage {
 	public List<? extends AutoActionType> getAutoActionTypes();
 
 	/**
-	 * 根据当前状态决定阶段动作（如切换到其他阶段）并返回，不执行动作时返回null。
+	 * 根据当前状态决定阶段动作（如切换到其他阶段）并返回，不执行动作时返回null。<br>
+	 * 此方法返回的动作具有最高优先级。
 	 */
-	public Action chooseAction(GameContext context);
+	public Action getPriorAction(GameContext context);
 
 	/**
-	 * 返回当玩家和自动动作类型都无动作可做时应该执行的动作（如切换到其他阶段）。
+	 * 返回当玩家和自动动作类型都无动作可做时应该执行的动作（如切换到其他阶段）。<br>
+	 * 此方法返回的动作具有最低优先级。
 	 */
 	public Action getFinalAction(GameContext context);
 }

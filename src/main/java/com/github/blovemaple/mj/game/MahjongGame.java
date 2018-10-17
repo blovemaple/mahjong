@@ -30,6 +30,7 @@ import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.rule.GameStrategy;
+import com.github.blovemaple.mj.rule.InitStage;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 import com.google.common.collect.Streams;
 
@@ -71,6 +72,7 @@ public class MahjongGame {
 
 		// 初始化上下文
 		gameStrategy.readyContext(context);
+		context.setStage(new InitStage());
 
 		logger.info("[Main] init done.");
 
@@ -121,15 +123,19 @@ public class MahjongGame {
 	 * 决定要执行的动作。先让stage和玩家选择，如果无可选动作或者都选择不做动作，则从stage获取默认动作。
 	 */
 	public Action chooseAction(GameContext context) throws InterruptedException {
+		// 从stage取优先动作
+		Action priorAction = context.getStage().getPriorAction(context);
+		if (priorAction != null)
+			return priorAction;
+
 		// 从stage取自动动作
 		List<Action> autoActions = context.getStage().getAutoActionTypes().stream().map(Action::new).collect(toList());
 
 		// 查找所有玩家可以做的动作类型
 		Map<PlayerLocation, Set<PlayerActionType>> choicesByLocation = new HashMap<>();
 		context.getTable().getPlayerInfos().forEach((location, playerInfo) -> {
-			// 从策略获取所有动作类型
-			Set<PlayerActionType> choises = (playerInfo.isTing() ? gameStrategy.getAllActionTypesInTing()
-					: gameStrategy.getAllActionTypesInGame()).stream()
+			// 从stage获取玩家的所有动作类型
+			Set<PlayerActionType> choises = context.getStage().getPlayerActionTypes().stream()
 							// 过滤出可以做的动作类型
 							.filter(actionType -> actionType.canDo(context, location))
 							.collect(Collectors.<PlayerActionType> toSet());
@@ -199,9 +205,7 @@ public class MahjongGame {
 		}
 
 		// 如果上面没有产生要做的动作，则从stage获取默认动作
-		logger.info("Start get def action...");
 		Action defAction = context.getStage().getFinalAction(context);
-		logger.info("End get def action: " + defAction);
 		return defAction;
 	}
 

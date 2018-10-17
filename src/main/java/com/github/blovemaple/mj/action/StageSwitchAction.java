@@ -20,4 +20,9 @@ public class StageSwitchAction extends Action {
 		return nextStageName;
 	}
 
+	@Override
+	public String toString() {
+		return "[STAGE " + nextStageName + "]";
+	}
+
 }

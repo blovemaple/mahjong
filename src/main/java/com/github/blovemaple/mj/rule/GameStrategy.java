@@ -44,19 +44,14 @@ public interface GameStrategy {
 	public GameStage getStageByName(String stageName);
 
 	/**
+	 * 返回初始阶段。
+	 */
+	public GameStage getFirstStage();
+
+	/**
 	 * 在一局开始之前对上下文进行必要操作。
 	 */
 	public void readyContext(GameContext context);
-
-	/**
-	 * 返回游戏进行中（发牌后，直到结束）所有动作类型列表。
-	 */
-	public Set<PlayerActionType> getAllActionTypesInGame();
-
-	/**
-	 * 返回听牌状态中（听牌后，直到结束，听牌的玩家）所有动作类型列表。
-	 */
-	public Set<PlayerActionType> getAllActionTypesInTing();
 
 	/**
 	 * 获取动作优先级比较器。优先级越高的越小。

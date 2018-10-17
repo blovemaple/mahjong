@@ -13,8 +13,12 @@ import com.github.blovemaple.mj.rule.GameStage;
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class StageSwitchActionType implements ActionType {
-	public static final StageSwitchActionType INSTANCE=new StageSwitchActionType();
+	public static final StageSwitchActionType INSTANCE = new StageSwitchActionType();
 
+	@Override
+	public String name() {
+		return "STAGE";
+	}
 
 	@Override
 	public boolean isLegalAction(GameContext context, Action action) {
@@ -29,6 +33,11 @@ public class StageSwitchActionType implements ActionType {
 		if (nextStage == null)
 			throw new IllegalActionException(context, action);
 		context.setStage(nextStage);
+	}
+
+	@Override
+	public String toString() {
+		return name();
 	}
 
 }
