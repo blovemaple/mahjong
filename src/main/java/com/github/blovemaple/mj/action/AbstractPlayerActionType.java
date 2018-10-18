@@ -19,14 +19,14 @@ import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
 /**
- * 各种ActionType的共同逻辑。
+ * 玩家做出的各种动作类型的共同逻辑。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public abstract class AbstractActionType implements ActionType {
+public abstract class AbstractPlayerActionType implements PlayerActionType {
 	@SuppressWarnings("unused")
 	private static final Logger logger = Logger
-			.getLogger(AbstractActionType.class.getSimpleName());
+			.getLogger(AbstractPlayerActionType.class.getSimpleName());
 
 	/**
 	 * 先使用{@link #meetPrecondition}检查前提条件，如果满足再调用{@link #canDoWithPrecondition}
@@ -47,6 +47,10 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现调用相应方法对上一个动作和活牌数量进行限制，进行判断。
 	 */
 	protected boolean meetPrecondition(GameContextPlayerView context) {
+		// 验证听牌条件
+		if (!isAllowedInTing() && context.getMyInfo().isTing())
+			return false;
+
 		// 验证aliveTiles数量条件
 		Predicate<Integer> aliveTileSizeCondition = getAliveTileSizePrecondition();
 		if (aliveTileSizeCondition != null)
@@ -55,9 +59,9 @@ public abstract class AbstractActionType implements ActionType {
 				return false;
 
 		// 验证上一个动作条件
-		BiPredicate<ActionAndLocation, PlayerLocation> lastActionPrecondition = getLastActionPrecondition();
+		BiPredicate<Action, PlayerLocation> lastActionPrecondition = getLastActionPrecondition();
 		if (lastActionPrecondition != null) {
-			ActionAndLocation lastAction = context.getLastActionAndLocation();
+			Action lastAction = context.getLastAction();
 			if (lastAction != null)
 				if (!lastActionPrecondition.test(lastAction,
 						context.getMyLocation()))
@@ -68,12 +72,19 @@ public abstract class AbstractActionType implements ActionType {
 	}
 
 	/**
+	 * 返回听牌时是否可进行此动作。默认true。
+	 */
+	protected boolean isAllowedInTing() {
+		return true;
+	}
+
+	/**
 	 * 返回进行此类型动作时对上一个动作和本家位置的限制条件。<br>
 	 * 不允许返回null，不限制应该返回恒null的函数。默认返回恒true。<br>
 	 * 此方法用于{@link #meetPrecondition}的默认实现。
 	 */
-	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
-		return (al, l) -> true;
+	protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
+		return (a, l) -> true;
 	}
 
 	/**
@@ -96,11 +107,6 @@ public abstract class AbstractActionType implements ActionType {
 				.isPresent();
 	}
 
-	/**
-	 * 调用{@link #legalActionTilesStream}并收集为Set返回。
-	 * 
-	 * @see com.github.blovemaple.mj.action.ActionType#getLegalActionTiles(com.github.blovemaple.mj.game.GameContext)
-	 */
 	@Override
 	public Collection<Set<Tile>> getLegalActionTiles(GameContextPlayerView context) {
 		if (!meetPrecondition(context))
@@ -113,18 +119,18 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现为将action为null的和动作类型不符合的报异常，然后用{@link #isLegalActionTiles}检查是否合法。
 	 * 
 	 * @see com.github.blovemaple.mj.action.ActionType#isLegalAction(GameContext,
-	 *      PlayerLocation, com.github.blovemaple.mj.action.Action)
+	 *      com.github.blovemaple.mj.action.Action)
 	 */
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location,
-			Action action) {
+	public boolean isLegalAction(GameContext context, Action action) {
 		Objects.requireNonNull(action);
+		if (!(action instanceof PlayerAction))
+			throw new IllegalArgumentException(action + " is not a PlayerAction");
 		if (!matchBy(action.getType()))
 			throw new IllegalArgumentException(
-					action.getType().getRealTypeClass().getSimpleName()
-							+ " is not " + getRealTypeClass());
-		if (!isLegalActionTiles(context.getPlayerView(location),
-				action.getTiles()))
+					action.getType().getRealTypeClass().getSimpleName() + " is not " + getRealTypeClass());
+		if (!isLegalActionTiles(context.getPlayerView(((PlayerAction) action).getLocation()),
+				((PlayerAction) action).getTiles()))
 			return false;
 		return true;
 	}
@@ -134,15 +140,14 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现为用{@link #isLegalAction}检查是否合法，如果合法则调用{@link #doLegalAction}执行动作。
 	 * 
 	 * @see com.github.blovemaple.mj.action.ActionType#doAction(GameContext,
-	 *      PlayerLocation, com.github.blovemaple.mj.action.Action)
+	 *      com.github.blovemaple.mj.action.Action)
 	 */
 	@Override
-	public void doAction(GameContext context, PlayerLocation location,
-			Action action) throws IllegalActionException {
-		if (!isLegalAction(context, location, action))
-			throw new IllegalActionException(context, location, action);
+	public void doAction(GameContext context, Action action) throws IllegalActionException {
+		if (!isLegalAction(context, action))
+			throw new IllegalActionException(context, action);
 
-		doLegalAction(context, location, action.getTiles());
+		doLegalAction(context, ((PlayerAction)action).getLocation(), ((PlayerAction)action).getTiles());
 	}
 
 	/**

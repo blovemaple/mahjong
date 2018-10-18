@@ -3,7 +3,7 @@ package com.github.blovemaple.mj.action.standard;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.github.blovemaple.mj.action.AbstractActionType;
+import com.github.blovemaple.mj.action.AbstractPlayerActionType;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
@@ -15,7 +15,10 @@ import com.github.blovemaple.mj.object.Tile;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class DiscardActionType extends AbstractActionType {
+public class DiscardActionType extends AbstractPlayerActionType {
+
+	protected DiscardActionType() {
+	}
 
 	@Override
 	public boolean canPass(GameContext context, PlayerLocation location) {

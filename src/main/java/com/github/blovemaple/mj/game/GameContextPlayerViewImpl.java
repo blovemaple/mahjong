@@ -1,11 +1,11 @@
 package com.github.blovemaple.mj.game;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 
 import java.util.List;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.object.MahjongTablePlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -59,8 +59,8 @@ public class GameContextPlayerViewImpl implements GameContextPlayerView {
 	}
 
 	@Override
-	public ActionAndLocation getLastActionAndLocation() {
-		return gameContext.getLastActionAndLocation();
+	public String getStageName() {
+		return gameContext.getStage().getName();
 	}
 
 	@Override
@@ -75,18 +75,19 @@ public class GameContextPlayerViewImpl implements GameContextPlayerView {
 
 	@Override
 	public Tile getJustDrawedTile() {
-		ActionAndLocation laa = getLastActionAndLocation();
-		if (laa.getLocation() != myLocation) {
+		Action la = getLastAction();
+		if (!(la instanceof PlayerAction))
 			return null;
-		}
-		if (!DRAW.matchBy(laa.getAction().getType())) {
+		if (((PlayerAction) la).getLocation() != myLocation)
+			return null;
+		if (!DRAW.matchBy(la.getType())) {
 			return null;
 		}
 		return getMyInfo().getLastDrawedTile();
 	}
 
 	@Override
-	public List<ActionAndLocation> getDoneActions() {
+	public List<Action> getDoneActions() {
 		return gameContext.getDoneActions();
 	}
 

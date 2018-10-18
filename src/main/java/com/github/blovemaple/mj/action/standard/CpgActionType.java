@@ -1,6 +1,6 @@
 package com.github.blovemaple.mj.action.standard;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 
 import java.util.Collection;
@@ -11,9 +11,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.blovemaple.mj.action.AbstractActionType;
-import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.AbstractPlayerActionType;
+import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
@@ -32,7 +33,7 @@ import com.github.blovemaple.mj.object.TileGroupType;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class CpgActionType extends AbstractActionType {
+public class CpgActionType extends AbstractPlayerActionType {
 	@SuppressWarnings("unused")
 	private static final Logger logger = Logger
 			.getLogger(CpgActionType.class.getSimpleName());
@@ -48,7 +49,7 @@ public class CpgActionType extends AbstractActionType {
 	 * @param lastActionRelations
 	 *            限制上一个动作的玩家（出牌者）与当前玩家的位置关系
 	 */
-	public CpgActionType(TileGroupType groupType,
+	protected CpgActionType(TileGroupType groupType,
 			Collection<Relation> lastActionRelations) {
 		Objects.requireNonNull(groupType);
 		this.groupType = groupType;
@@ -64,7 +65,7 @@ public class CpgActionType extends AbstractActionType {
 	 * @param groupType
 	 *            组成的牌组类型
 	 */
-	public CpgActionType(TileGroupType groupType) {
+	protected CpgActionType(TileGroupType groupType) {
 		this(groupType, null);
 	}
 
@@ -74,11 +75,15 @@ public class CpgActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
+	protected boolean isAllowedInTing() {
+		return false;
+	}
+
+	@Override
+	protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
 		// 必须是指定关系的人出牌后
-		return (al, location) -> DISCARD.matchBy(al.getActionType())
-				&& lastActionRelations
-						.contains(location.getRelationOf(al.getLocation()));
+		return (a, location) -> DISCARD.matchBy(a.getType())
+				&& lastActionRelations.contains(location.getRelationOf(((PlayerAction) a).getLocation()));
 	}
 
 	@Override
@@ -89,8 +94,7 @@ public class CpgActionType extends AbstractActionType {
 	@Override
 	protected boolean isLegalActionWithPreconition(GameContextPlayerView context,
 			Set<Tile> tiles) {
-		Set<Tile> testTiles = mergedSet(tiles,
-				context.getLastAction().getTile());
+		Set<Tile> testTiles = mergedSet(tiles, (Tile) ((PlayerAction) context.getLastAction()).getTile());
 		boolean legal = groupType.isLegalTiles(testTiles);
 		return legal;
 	}
@@ -102,7 +106,7 @@ public class CpgActionType extends AbstractActionType {
 
 		playerInfo.getAliveTiles().removeAll(tiles);
 
-		Tile gotTile = context.getLastAction().getTile();
+		Tile gotTile = ((PlayerAction) context.getLastAction()).getTile();
 		TileGroup group = new TileGroup(groupType, gotTile,
 				location.getRelationOf(context.getLastActionLocation()),
 				mergedSet(tiles, gotTile));
@@ -112,7 +116,7 @@ public class CpgActionType extends AbstractActionType {
 	/**
 	 * 如果此类与testType的真正类是从属关系，并且testType的groupType与此对象相同，则视为match。
 	 * 
-	 * @see com.github.blovemaple.mj.action.AbstractActionType#matchBy(com.github.blovemaple.mj.action.ActionType)
+	 * @see com.github.blovemaple.mj.action.AbstractPlayerActionType#matchBy(com.github.blovemaple.mj.action.ActionType)
 	 */
 	@Override
 	public boolean matchBy(ActionType testType) {

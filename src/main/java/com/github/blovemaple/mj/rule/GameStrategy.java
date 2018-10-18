@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
-import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.ActionTypeAndLocation;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -39,24 +39,19 @@ public interface GameStrategy {
 	public List<Tile> getAllTiles();
 
 	/**
+	 * 根据阶段名称返回阶段。
+	 */
+	public GameStage getStageByName(String stageName);
+
+	/**
+	 * 返回初始阶段。
+	 */
+	public GameStage getFirstStage();
+
+	/**
 	 * 在一局开始之前对上下文进行必要操作。
 	 */
 	public void readyContext(GameContext context);
-
-	/**
-	 * 根据当前状态获取开局的发牌动作，用于发牌。
-	 */
-	public Action getDealAction(GameContext context);
-
-	/**
-	 * 返回游戏进行中（发牌后，直到结束）所有动作类型列表。
-	 */
-	public Set<? extends ActionType> getAllActionTypesInGame();
-
-	/**
-	 * 返回听牌状态中（听牌后，直到结束，听牌的玩家）所有动作类型列表。
-	 */
-	public Set<? extends ActionType> getAllActionTypesInTing();
 
 	/**
 	 * 获取动作优先级比较器。优先级越高的越小。
@@ -68,14 +63,15 @@ public interface GameStrategy {
 	 * 
 	 * @return 默认动作，null表示不做动作
 	 */
-	public Action getPlayerDefaultAction(GameContext context, PlayerLocation location, Set<ActionType> choises);
+	public PlayerAction getPlayerDefaultAction(GameContext context, PlayerLocation location,
+			Set<PlayerActionType> choises);
 
 	/**
 	 * 根据当前状态返回默认动作。默认动作是所有玩家都没有可选动作或均选择不做动作之后自动执行的动作。
 	 * 
 	 * @return 默认动作
 	 */
-	public ActionAndLocation getDefaultAction(GameContext context, Map<PlayerLocation, Set<ActionType>> choises);
+	public Action getDefaultAction(GameContext context, Map<PlayerLocation, Set<PlayerActionType>> choises);
 
 	/**
 	 * 获取此策略支持的所有和牌类型。

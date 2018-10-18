@@ -1,6 +1,6 @@
 package com.github.blovemaple.mj.local.bazbot;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 import static java.util.stream.Collectors.*;
 
@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.action.IllegalActionException;
+import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.game.GameContextPlayerViewImpl;
@@ -29,6 +29,7 @@ import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroupPlayerView;
 import com.github.blovemaple.mj.object.TileType;
+import com.github.blovemaple.mj.rule.GameStage;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 
@@ -45,7 +46,7 @@ class BazBotSimContext implements GameContext {
 
 	// 以下字段记录实时状态，可变
 	private PlayerInfo crtMyInfo;
-	private List<ActionAndLocation> doneActions;
+	private List<Action> doneActions;
 	private GameContextPlayerView crtContextView; // 延迟生成
 
 	public BazBotSimContext(GameContextPlayerView contextView) {
@@ -70,7 +71,7 @@ class BazBotSimContext implements GameContext {
 	 *            模拟执行的动作
 	 * @return 执行完动作的新实例。如果模拟动作为放弃（null），则直接返回当前实例。
 	 */
-	public BazBotSimContext afterSimAction(Action action) {
+	public BazBotSimContext afterSimAction(PlayerAction action) {
 		if (action == null)
 			return this;
 		BazBotSimContext newContext = new BazBotSimContext(this);
@@ -78,10 +79,10 @@ class BazBotSimContext implements GameContext {
 		return newContext;
 	}
 
-	private void simAction(Action action) {
+	private void simAction(PlayerAction action) {
 		try {
 			if (action != null)
-				action.getType().doAction(this, oriContextView.getMyLocation(), action);
+				action.getType().doAction(this, action);
 		} catch (IllegalActionException e) {
 			// 调用方保证传进来的action都是合法的，不抛出异常，省去调用方处理的麻烦
 			throw new RuntimeException(e);
@@ -96,7 +97,7 @@ class BazBotSimContext implements GameContext {
 			// 待出牌状态，从出每一张牌后的状态中选最高评分
 			return crtMyInfo.getAliveTiles().stream()
 					// 生成、模拟出牌动作
-					.map(aliveTile -> new Action(DISCARD, aliveTile)) //
+					.map(aliveTile -> new PlayerAction(crtContextView.getMyLocation(), DISCARD, aliveTile)) //
 					.map(rethrowFunction(this::afterSimAction))
 					// 评分并选出最高
 					.map(BazBotSimContext::score).max(Comparator.naturalOrder()).orElse(0d);
@@ -216,27 +217,35 @@ class BazBotSimContext implements GameContext {
 	}
 
 	@Override
-	public void actionDone(Action action, PlayerLocation location) {
-		doneActions.add(new ActionAndLocation(action, location));
+	public GameStage getStage() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ActionAndLocation getLastActionAndLocation() {
-		return doneActions.isEmpty() ? null : doneActions.get(doneActions.size() - 1);
+	public void setStage(GameStage stage) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void actionDone(Action action) {
+		doneActions.add(action);
 	}
 
 	@Override
 	public Action getLastAction() {
-		return doneActions.isEmpty() ? null : doneActions.get(doneActions.size() - 1).getAction();
+		return doneActions.isEmpty() ? null : doneActions.get(doneActions.size() - 1);
 	}
 
 	@Override
 	public PlayerLocation getLastActionLocation() {
-		return doneActions.isEmpty() ? null : doneActions.get(doneActions.size() - 1).getLocation();
+		Action lastAction = getLastAction();
+		if (lastAction == null || !(lastAction instanceof PlayerAction))
+			return null;
+		return ((PlayerAction) lastAction).getLocation();
 	}
 
 	@Override
-	public List<ActionAndLocation> getDoneActions() {
+	public List<Action> getDoneActions() {
 		return doneActions;
 	}
 

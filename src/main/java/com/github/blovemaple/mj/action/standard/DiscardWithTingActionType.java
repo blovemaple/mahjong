@@ -22,6 +22,14 @@ import com.github.blovemaple.mj.rule.win.WinInfo;
  */
 public class DiscardWithTingActionType extends DiscardActionType {
 
+	protected DiscardWithTingActionType() {
+	}
+
+	@Override
+	protected boolean isAllowedInTing() {
+		return false;
+	}
+
 	@Override
 	protected boolean isLegalActionWithPreconition(GameContextPlayerView context, Set<Tile> tiles) {
 		GameStrategy strategy = context.getGameStrategy();
