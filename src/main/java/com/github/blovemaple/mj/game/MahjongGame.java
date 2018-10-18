@@ -128,8 +128,9 @@ public class MahjongGame {
 		if (priorAction != null)
 			return priorAction;
 
-		// 从stage取自动动作
-		List<Action> autoActions = context.getStage().getAutoActionTypes().stream().map(Action::new).collect(toList());
+		// 从stage取合法的自动动作
+		List<Action> autoActions = context.getStage().getAutoActionTypes().stream().map(Action::new)
+				.filter(action -> action.getType().isLegalAction(context, action)).collect(toList());
 
 		// 查找所有玩家可以做的动作类型
 		Map<PlayerLocation, Set<PlayerActionType>> choicesByLocation = new HashMap<>();
@@ -143,7 +144,7 @@ public class MahjongGame {
 				choicesByLocation.put(location, choises);
 		});
 
-		if (!choicesByLocation.isEmpty()) {
+		if (!choicesByLocation.isEmpty() || !autoActions.isEmpty()) {
 
 			// 存在玩家可以做的动作
 
@@ -277,7 +278,7 @@ public class MahjongGame {
 
 	private Action determineAction(Map<PlayerLocation, Set<PlayerActionType>> choicesByLocation,
 			Map<PlayerLocation, PlayerAction> choseActionByLocation, List<Action> autoActions, GameContext context) {
-		if (choseActionByLocation.isEmpty())
+		if (choseActionByLocation.isEmpty() && autoActions.isEmpty())
 			return null;
 
 		Comparator<ActionTypeAndLocation> actionPriorityComparator = gameStrategy.getActionPriorityComparator();
