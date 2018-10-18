@@ -8,9 +8,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.github.blovemaple.mj.action.AbstractActionType;
+import com.github.blovemaple.mj.action.AbstractPlayerActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -21,7 +21,10 @@ import com.github.blovemaple.mj.object.TileGroup;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BugangActionType extends AbstractActionType {
+public class BugangActionType extends AbstractPlayerActionType {
+
+	protected BugangActionType() {
+	}
 
 	@Override
 	public boolean canPass(GameContext context, PlayerLocation location) {
@@ -39,7 +42,7 @@ public class BugangActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
+	protected boolean isLegalActionWithPreconition(GameContextPlayerView context,
 			Set<Tile> tiles) {
 		return findLegalPengGroup(context.getMyInfo(), tiles).isPresent();
 	}

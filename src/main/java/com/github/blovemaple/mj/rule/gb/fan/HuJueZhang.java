@@ -1,14 +1,14 @@
 package com.github.blovemaple.mj.rule.gb.fan;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.object.TileGroupType.*;
 
 import java.util.stream.Stream;
 
-import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.object.PlayerInfo;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
+import com.github.blovemaple.mj.object.PlayerInfoPlayerView;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileGroup;
+import com.github.blovemaple.mj.object.TileGroupPlayerView;
 import com.github.blovemaple.mj.rule.win.FanTypeMatcher;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
@@ -26,16 +26,16 @@ public class HuJueZhang implements FanTypeMatcher {
 			// 没有winType
 			return 0;
 
-		GameContext.PlayerView contextView = winInfo.getContextView();
+		GameContextPlayerView contextView = winInfo.getContextView();
 		if (contextView == null)
 			// 没有contextView
 			return 0;
 
 		Stream<Tile> showTiles = Stream.empty();
-		for (PlayerInfo.PlayerView playerInfoView : contextView.getTableView().getPlayerInfoView().values()) {
+		for (PlayerInfoPlayerView playerInfoView : contextView.getTableView().getPlayerInfoView().values()) {
 			// 打出的牌
 			showTiles = Stream.concat(showTiles, playerInfoView.getDiscardedTiles().stream());
-			for (TileGroup group : playerInfoView.getTileGroups()) {
+			for (TileGroupPlayerView group : playerInfoView.getTileGroups()) {
 				if (group.getType() != ANGANG_GROUP)
 					// 已亮明的group的牌
 					showTiles = Stream.concat(showTiles, group.getTiles().stream());

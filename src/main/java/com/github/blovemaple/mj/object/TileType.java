@@ -71,13 +71,34 @@ public class TileType implements Serializable, Comparable<TileType> {
 	public TileRank<?> rank() {
 		return rank;
 	}
+	
+	/**
+	 * 返回种类是否是数字。
+	 */
+	public boolean isNumberRank() {
+		return rank.getClass()==NumberRank.class;
+	}
+
+	/**
+	 * 返回数字种类的数值。
+	 * 
+	 * @throws UnsupportedOperationException
+	 *             种类不是数字
+	 */
+	public int number() {
+		if (!isNumberRank())
+			throw new UnsupportedOperationException("No number for a non-number rank.");
+		return ((NumberRank) rank).number();
+	}
 
 	@Override
 	public int compareTo(TileType o) {
-		if (this.equals(o))
+		if (this == o)
 			return 0;
-		int ti = all.indexOf(this), oi = all.indexOf(o);
-		return ti == oi ? 0 : ti < oi ? -1 : 1;
+		int suitRes = this.suit().compareTo(o.suit());
+		if (suitRes != 0)
+			return suitRes;
+		return TileRank.compare(this.rank(), o.rank());
 	}
 
 	/**

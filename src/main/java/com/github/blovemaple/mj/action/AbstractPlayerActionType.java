@@ -13,20 +13,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
 /**
- * 各种ActionType的共同逻辑。
+ * 玩家做出的各种动作类型的共同逻辑。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public abstract class AbstractActionType implements ActionType {
+public abstract class AbstractPlayerActionType implements PlayerActionType {
 	@SuppressWarnings("unused")
 	private static final Logger logger = Logger
-			.getLogger(AbstractActionType.class.getSimpleName());
+			.getLogger(AbstractPlayerActionType.class.getSimpleName());
 
 	/**
 	 * 先使用{@link #meetPrecondition}检查前提条件，如果满足再调用{@link #canDoWithPrecondition}
@@ -46,7 +46,11 @@ public abstract class AbstractActionType implements ActionType {
 	 * 判断当前状态下指定玩家是否符合做出此类型动作的前提条件（比如“碰”的前提条件是别人刚出牌）。<br>
 	 * 默认实现调用相应方法对上一个动作和活牌数量进行限制，进行判断。
 	 */
-	protected boolean meetPrecondition(GameContext.PlayerView context) {
+	protected boolean meetPrecondition(GameContextPlayerView context) {
+		// 验证听牌条件
+		if (!isAllowedInTing() && context.getMyInfo().isTing())
+			return false;
+
 		// 验证aliveTiles数量条件
 		Predicate<Integer> aliveTileSizeCondition = getAliveTileSizePrecondition();
 		if (aliveTileSizeCondition != null)
@@ -55,9 +59,9 @@ public abstract class AbstractActionType implements ActionType {
 				return false;
 
 		// 验证上一个动作条件
-		BiPredicate<ActionAndLocation, PlayerLocation> lastActionPrecondition = getLastActionPrecondition();
+		BiPredicate<Action, PlayerLocation> lastActionPrecondition = getLastActionPrecondition();
 		if (lastActionPrecondition != null) {
-			ActionAndLocation lastAction = context.getLastActionAndLocation();
+			Action lastAction = context.getLastAction();
 			if (lastAction != null)
 				if (!lastActionPrecondition.test(lastAction,
 						context.getMyLocation()))
@@ -68,12 +72,19 @@ public abstract class AbstractActionType implements ActionType {
 	}
 
 	/**
+	 * 返回听牌时是否可进行此动作。默认true。
+	 */
+	protected boolean isAllowedInTing() {
+		return true;
+	}
+
+	/**
 	 * 返回进行此类型动作时对上一个动作和本家位置的限制条件。<br>
 	 * 不允许返回null，不限制应该返回恒null的函数。默认返回恒true。<br>
 	 * 此方法用于{@link #meetPrecondition}的默认实现。
 	 */
-	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
-		return (al, l) -> true;
+	protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
+		return (a, l) -> true;
 	}
 
 	/**
@@ -96,14 +107,8 @@ public abstract class AbstractActionType implements ActionType {
 				.isPresent();
 	}
 
-	/**
-	 * 调用{@link #legalActionTilesStream}并收集为Set返回。
-	 * 
-	 * @see com.github.blovemaple.mj.action.ActionType#getLegalActionTiles(com.github.blovemaple.mj.game.GameContext)
-	 */
 	@Override
-	public Collection<Set<Tile>> getLegalActionTiles(
-			GameContext.PlayerView context) {
+	public Collection<Set<Tile>> getLegalActionTiles(GameContextPlayerView context) {
 		if (!meetPrecondition(context))
 			return Collections.emptySet();
 		return legalActionTilesStream(context).collect(Collectors.toSet());
@@ -114,18 +119,18 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现为将action为null的和动作类型不符合的报异常，然后用{@link #isLegalActionTiles}检查是否合法。
 	 * 
 	 * @see com.github.blovemaple.mj.action.ActionType#isLegalAction(GameContext,
-	 *      PlayerLocation, com.github.blovemaple.mj.action.Action)
+	 *      com.github.blovemaple.mj.action.Action)
 	 */
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location,
-			Action action) {
+	public boolean isLegalAction(GameContext context, Action action) {
 		Objects.requireNonNull(action);
+		if (!(action instanceof PlayerAction))
+			throw new IllegalArgumentException(action + " is not a PlayerAction");
 		if (!matchBy(action.getType()))
 			throw new IllegalArgumentException(
-					action.getType().getRealTypeClass().getSimpleName()
-							+ " is not " + getRealTypeClass());
-		if (!isLegalActionTiles(context.getPlayerView(location),
-				action.getTiles()))
+					action.getType().getRealTypeClass().getSimpleName() + " is not " + getRealTypeClass());
+		if (!isLegalActionTiles(context.getPlayerView(((PlayerAction) action).getLocation()),
+				((PlayerAction) action).getTiles()))
 			return false;
 		return true;
 	}
@@ -135,15 +140,14 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现为用{@link #isLegalAction}检查是否合法，如果合法则调用{@link #doLegalAction}执行动作。
 	 * 
 	 * @see com.github.blovemaple.mj.action.ActionType#doAction(GameContext,
-	 *      PlayerLocation, com.github.blovemaple.mj.action.Action)
+	 *      com.github.blovemaple.mj.action.Action)
 	 */
 	@Override
-	public void doAction(GameContext context, PlayerLocation location,
-			Action action) throws IllegalActionException {
-		if (!isLegalAction(context, location, action))
-			throw new IllegalActionException(context, location, action);
+	public void doAction(GameContext context, Action action) throws IllegalActionException {
+		if (!isLegalAction(context, action))
+			throw new IllegalActionException(context, action);
 
-		doLegalAction(context, location, action.getTiles());
+		doLegalAction(context, ((PlayerAction)action).getLocation(), ((PlayerAction)action).getTiles());
 	}
 
 	/**
@@ -151,8 +155,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * 默认实现为：在玩家手中的牌中选取所有合法数量个牌的组合，并使用{@link #isLegalActionTiles}过滤出合法的组合。<br>
 	 * 如果合法的相关牌不限于手中的牌，则需要子类重写此方法。
 	 */
-	protected Stream<Set<Tile>> legalActionTilesStream(
-			GameContext.PlayerView context) {
+	protected Stream<Set<Tile>> legalActionTilesStream(GameContextPlayerView context) {
 		PlayerInfo playerInfo = context.getMyInfo();
 		if (playerInfo == null)
 			return Stream.empty();
@@ -166,8 +169,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * 返回合法动作中相关牌的可选范围。<br>
 	 * 默认实现为指定玩家的aliveTiles。
 	 */
-	protected Set<Tile> getActionTilesRange(GameContext.PlayerView context,
-			PlayerLocation location) {
+	protected Set<Tile> getActionTilesRange(GameContextPlayerView context, PlayerLocation location) {
 		return context.getMyInfo().getAliveTiles();
 	}
 
@@ -180,8 +182,7 @@ public abstract class AbstractActionType implements ActionType {
 	 * 判断动作是否合法。<br>
 	 * 默认实现为：先检查前提条件、相关牌数量、相关牌范围，如果满足再调用{@link #isLegalActionWithPreconition}。
 	 */
-	protected boolean isLegalActionTiles(GameContext.PlayerView context,
-			Set<Tile> tiles) {
+	protected boolean isLegalActionTiles(GameContextPlayerView context, Set<Tile> tiles) {
 		PlayerLocation location = context.getMyLocation();
 		if (!meetPrecondition(context)) {
 			return false;
@@ -206,7 +207,7 @@ public abstract class AbstractActionType implements ActionType {
 	/**
 	 * 判断动作是否合法。调用此方法之前已经判断确保符合前提条件、相关牌数量、相关牌范围。
 	 */
-	protected abstract boolean isLegalActionWithPreconition(PlayerView context,
+	protected abstract boolean isLegalActionWithPreconition(GameContextPlayerView context,
 			Set<Tile> tiles);
 
 	/**

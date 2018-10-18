@@ -10,21 +10,19 @@ import java.util.Set;
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
 import com.github.blovemaple.mj.action.IllegalActionException;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 
 /**
- * 一些标准的动作类型。<br>
+ * 玩家动作类型枚举。<br>
  * 枚举的每种动作类型包含对应Type类的单例，并委托调用其对应的方法。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public enum StandardActionType implements ActionType {
-	/**
-	 * 发牌
-	 */
-	DEAL(new DealActionType()),
+public enum PlayerActionTypes implements PlayerActionType {
 	/**
 	 * 吃
 	 */
@@ -68,15 +66,11 @@ public enum StandardActionType implements ActionType {
 	/**
 	 * 和牌
 	 */
-	WIN(new WinActionType()),
-	/**
-	 * 流局
-	 */
-	LIUJU(new LiujuActionType());
+	WIN(new WinActionType());
 
-	private final ActionType type;
+	private final PlayerActionType type;
 
-	private StandardActionType(ActionType type) {
+	private PlayerActionTypes(PlayerActionType type) {
 		this.type = type;
 	}
 
@@ -93,14 +87,13 @@ public enum StandardActionType implements ActionType {
 	}
 
 	@Override
-	public Collection<Set<Tile>> getLegalActionTiles(
-			GameContext.PlayerView context) {
+	public Collection<Set<Tile>> getLegalActionTiles(GameContextPlayerView context) {
 		return type.getLegalActionTiles(context);
 	}
 
 	@Override
-	public void doAction(GameContext context, PlayerLocation location, Action action) throws IllegalActionException {
-		type.doAction(context, location, action);
+	public void doAction(GameContext context, Action action) throws IllegalActionException {
+		type.doAction(context, action);
 	}
 
 	@Override
@@ -119,8 +112,8 @@ public enum StandardActionType implements ActionType {
 	}
 
 	@Override
-	public boolean isLegalAction(GameContext context, PlayerLocation location, Action action) {
-		return type.isLegalAction(context, location, action);
+	public boolean isLegalAction(GameContext context, Action action) {
+		return type.isLegalAction(context, action);
 	}
 
 }

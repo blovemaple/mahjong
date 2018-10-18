@@ -330,7 +330,7 @@ public class MyUtils {
 	}
 
 	/**
-	 * 将指定的流按照标识符去重。标识符用指定的函数获取。
+	 * 将指定的流按照指定标识符去重。标识符用指定的函数获取。
 	 * 
 	 * @param stream
 	 *            流
@@ -339,8 +339,19 @@ public class MyUtils {
 	 * @return 去重后的流
 	 */
 	public static <E> Stream<E> distinctBy(Stream<E> stream, Function<E, ?> identifierFunction) {
+		return stream.filter(distinctorBy(identifierFunction));
+	}
+
+	/**
+	 * 返回按照指定标识符去重用的Predicate。标识符用指定的函数获取。
+	 * 
+	 * @param identifierFunction
+	 *            获取标识符的函数
+	 * @return Predicate
+	 */
+	public static <E> Predicate<E> distinctorBy(Function<E, ?> identifierFunction) {
 		Set<Integer> existIdHashCodes = Collections.synchronizedSet(new HashSet<>());
-		return stream.filter(e -> existIdHashCodes.add(identifierFunction.apply(e).hashCode()));
+		return e -> existIdHashCodes.add(identifierFunction.apply(e).hashCode());
 	}
 
 	/**

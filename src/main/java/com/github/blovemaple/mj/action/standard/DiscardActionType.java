@@ -3,9 +3,9 @@ package com.github.blovemaple.mj.action.standard;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.github.blovemaple.mj.action.AbstractActionType;
+import com.github.blovemaple.mj.action.AbstractPlayerActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -15,7 +15,10 @@ import com.github.blovemaple.mj.object.Tile;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class DiscardActionType extends AbstractActionType {
+public class DiscardActionType extends AbstractPlayerActionType {
+
+	protected DiscardActionType() {
+	}
 
 	@Override
 	public boolean canPass(GameContext context, PlayerLocation location) {
@@ -33,8 +36,7 @@ public class DiscardActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
-			Set<Tile> tiles) {
+	protected boolean isLegalActionWithPreconition(GameContextPlayerView context, Set<Tile> tiles) {
 		if (!context.getMyInfo().isTing()) {
 			// 没听牌时，所有aliveTiles都可以打出
 			return true;

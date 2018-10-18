@@ -1,8 +1,7 @@
 package com.github.blovemaple.mj.local.barbot;
 
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.utils.LambdaUtils.*;
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
-import static com.github.blovemaple.mj.object.TileGroupType.*;
 import static com.github.blovemaple.mj.utils.MyUtils.*;
 import static java.util.Comparator.*;
 
@@ -24,22 +23,24 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.cli.CliGameView;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileGroup;
+import com.github.blovemaple.mj.object.TileGroupPlayerView;
 import com.github.blovemaple.mj.object.TileType;
 import com.github.blovemaple.mj.rule.win.WinType;
 
 /**
- * TODO 换牌n个：remove n，add n+1
+ * 换牌n个：remove n，add n+1
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BarBotCpgdSelectTask implements Callable<Action> {
+@Deprecated
+public class BarBotCpgdSelectTask implements Callable<PlayerAction> {
 	private static final Logger logger = Logger.getLogger(BarBotCpgdSelectTask.class.getSimpleName());
 
 	public static final Set<ActionType> ACTION_TYPES = new HashSet<>(
@@ -48,14 +49,14 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	private static final int EXTENDED_MAX_CHANGE_COUNT = 4;
 	private static final int MAX_CHANGE_COUNT = 10;
 
-	private PlayerView contextView;
-	private Set<ActionType> actionTypes;
+	private GameContextPlayerView contextView;
+	private Set<PlayerActionType> actionTypes;
 	private PlayerInfo playerInfo;
 
 	@SuppressWarnings("unused")
 	private boolean stopRequest = false;
 
-	public BarBotCpgdSelectTask(PlayerView contextView, Set<ActionType> actionTypes) {
+	public BarBotCpgdSelectTask(GameContextPlayerView contextView, Set<PlayerActionType> actionTypes) {
 		this.contextView = contextView;
 		this.actionTypes = actionTypes;
 		this.playerInfo = contextView.getMyInfo();
@@ -68,8 +69,8 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 	}
 
 	@Override
-	// TODO interrupt
-	public Action call() throws Exception {
+	// interrupt
+	public PlayerAction call() throws Exception {
 		long startTime = System.currentTimeMillis();
 
 		// 生成所有可选动作（包括不做动作）后的状态
@@ -82,7 +83,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 
 		// 如果只有一个选择，就直接选择
 		if (choices.size() == 1) {
-			Action action = choices.get(0).getAction();
+			PlayerAction action = choices.get(0).getAction();
 			logger.info("[Single choice] " + action);
 			logger.info("Bot alivetiles " + aliveTilesStr());
 			return action;
@@ -108,7 +109,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 		}
 
 		// 算出和牌概率最大的一个动作
-		Action bestAction = choices.stream()
+		PlayerAction bestAction = choices.stream()
 				.peek(choice -> logger
 						.info("[Win prob] " + String.format("%.7f %s", choice.getFinalWinProb(), choice.getAction())))
 				// 第一条件：和牌概率大
@@ -137,7 +138,8 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 			legalTileSets = distinctCollBy(legalTileSets, Tile::type);
 			if (DISCARD != actionType || playerInfo.isTing()) {
 				return legalTileSets.map(tiles -> new BarBotCpgdChoice(contextView, playerInfo,
-						new Action(actionType, tiles), this, contextView.getGameStrategy().getAllWinTypes()));
+						new PlayerAction(contextView.getMyLocation(), actionType, tiles), this,
+						contextView.getGameStrategy().getAllWinTypes()));
 			} else {
 				Map<? extends WinType, List<Tile>> discardsByWinType = contextView.getGameStrategy().getAllWinTypes()
 						.stream().collect(Collectors.toMap(Function.identity(),
@@ -155,7 +157,8 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 							List<WinType> winTypes = discardsByWinType.entrySet().stream()
 									.filter(entry -> entry.getValue().contains(tile)).map(Map.Entry::getKey)
 									.collect(Collectors.toList());
-							return new BarBotCpgdChoice(contextView, playerInfo, new Action(actionType, tile), this,
+							return new BarBotCpgdChoice(contextView, playerInfo,
+									new PlayerAction(contextView.getMyLocation(), actionType, Set.of(tile)), this,
 									winTypes);
 						});
 			}
@@ -180,8 +183,7 @@ public class BarBotCpgdSelectTask implements Callable<Action> {
 			existTiles.addAll(contextView.getMyInfo().getAliveTiles());
 			contextView.getTableView().getPlayerInfoView().values().forEach(playerInfo -> {
 				playerInfo.getTileGroups().stream()
-						// XXX - 写死了暗杠不应该看到
-						.filter(group -> group.getType() != ANGANG_GROUP).map(TileGroup::getTiles)
+						.map(TileGroupPlayerView::getTiles).filter(Objects::nonNull)
 						.forEach(existTiles::addAll);
 				existTiles.addAll(playerInfo.getDiscardedTiles());
 			});

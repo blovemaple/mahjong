@@ -1,6 +1,6 @@
 package com.github.blovemaple.mj.rule.gb.fan;
 
-import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.rule.win.FanTypeMatcher;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
@@ -18,7 +18,7 @@ public class MiaoShouHuiChun implements FanTypeMatcher {
 			// 没有是否自摸的信息，或不是自摸
 			return 0;
 
-		GameContext.PlayerView contextView = winInfo.getContextView();
+		GameContextPlayerView contextView = winInfo.getContextView();
 		if (contextView == null)
 			// 没有contextView
 			return 0;

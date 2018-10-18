@@ -1,6 +1,7 @@
 package com.github.blovemaple.mj.cli;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.AutoActionTypes.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.cli.CliGameView.*;
 import static com.github.blovemaple.mj.cli.CliView.CharHandler.HandlingResult.*;
 import static com.github.blovemaple.mj.utils.LanguageManager.*;
@@ -23,11 +24,11 @@ import java.util.stream.Collectors;
 
 import com.github.blovemaple.mj.action.Action;
 import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.cli.CliView.CharHandler;
-import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.Player;
-import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.utils.LanguageManager.Message;
 
@@ -67,18 +68,18 @@ public class CliPlayer implements Player {
 	}
 
 	@Override
-	public synchronized Action chooseAction(GameContext.PlayerView contextView,
-			Set<ActionType> actionTypes, Action illegalAction)
+	public synchronized PlayerAction chooseAction(GameContextPlayerView contextView,
+			Set<PlayerActionType> actionTypes, PlayerAction illegalAction)
 			throws InterruptedException {
 		// 如果可以补花，则自动补花
 		Collection<Set<Tile>> buhuas = BUHUA.getLegalActionTiles(contextView);
 		if (!buhuas.isEmpty()) {
-			return new Action(BUHUA, buhuas.iterator().next());
+			return new PlayerAction(contextView.getMyLocation(), BUHUA, buhuas.iterator().next());
 		}
 
 		// 如果可以吃/碰/杠/和，则提供选择
 		boolean canWin = actionTypes.stream().anyMatch(WIN::matchBy);
-		Action action = chooseAction(contextView, actionTypes, canWin, true,
+		PlayerAction action = chooseAction(contextView, actionTypes, canWin, true,
 				CHI, PENG, ZHIGANG, BUGANG, ANGANG);
 		if (action != null)
 			return action;
@@ -92,24 +93,27 @@ public class CliPlayer implements Player {
 		// 如果可以摸牌，则自动摸牌
 		for (ActionType drawType : Arrays.asList(DRAW, DRAW_BOTTOM))
 			if (actionTypes.contains(drawType))
-				return new Action(drawType);
+				return new PlayerAction(contextView.getMyLocation(), drawType);
 
 		// 啥都没做，放弃了
 		return null;
 	}
 
+	private GameContextPlayerView contextView;
 	private final Map<Set<Tile>, List<ActionType>> actionChoices = new HashMap<>();
 	private final ArrayList<Set<Tile>> actionTilesChoices = new ArrayList<>();
 	private Set<Tile> focusedChoice;
 	private boolean canChooseWin;
 	private boolean canPass;
 	// 选择了动作就放在这里
-	private Action choseAction;
+	private PlayerAction choseAction;
 
-	private Action chooseAction(GameContext.PlayerView contextView,
-			Set<ActionType> legalActionTypes, boolean canChooseWin,
-			boolean canPass, ActionType... chooseActionTypes)
+	private PlayerAction chooseAction(GameContextPlayerView contextView,
+			Set<PlayerActionType> legalActionTypes, boolean canChooseWin,
+			boolean canPass, PlayerActionType... chooseActionTypes)
 			throws InterruptedException {
+		this.contextView = contextView;
+
 		Arrays.asList(chooseActionTypes).stream()
 				.filter(legalActionTypes::contains).forEach(actionType -> {
 					actionType.getLegalActionTiles(contextView)
@@ -201,7 +205,7 @@ public class CliPlayer implements Player {
 			return ACCEPT;
 		case ACTION_KEY:
 			if (focusedChoice != null) {
-				choseAction = new Action(
+				choseAction = new PlayerAction(contextView.getMyLocation(),
 						actionChoices.get(focusedChoice).get(0), focusedChoice);
 				return QUIT;
 			} else {
@@ -210,7 +214,7 @@ public class CliPlayer implements Player {
 		case ACTION_2_KEY:
 			if (focusedChoice != null
 					&& actionChoices.get(focusedChoice).size() > 1) {
-				choseAction = new Action(
+				choseAction = new PlayerAction(contextView.getMyLocation(),
 						actionChoices.get(focusedChoice).get(1), focusedChoice);
 				return QUIT;
 			} else {
@@ -218,7 +222,7 @@ public class CliPlayer implements Player {
 			}
 		case WIN_ACTION_KEY:
 			if (canChooseWin) {
-				choseAction = new Action(WIN);
+				choseAction = new PlayerAction(contextView.getMyLocation(), WIN);
 				return QUIT;
 			} else {
 				return IGNORE;
@@ -275,16 +279,16 @@ public class CliPlayer implements Player {
 	}
 
 	@Override
-	public void timeLimit(PlayerView contextView, Integer secondsToGo) {
+	public void timeLimit(GameContextPlayerView contextView, Integer secondsToGo) {
 		view.setTimeLimit(secondsToGo);
 	}
 
 	@Override
-	public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
+	public void actionDone(GameContextPlayerView contextView, Action action) {
 		try {
 			if (DEAL.matchBy(action.getType()))
 				view.setContext(contextView);
-			view.showAction(actionLocation, action);
+			view.showAction(action);
 		} catch (IOException e) {
 			try {
 				logger.log(Level.SEVERE, e.toString(), e);

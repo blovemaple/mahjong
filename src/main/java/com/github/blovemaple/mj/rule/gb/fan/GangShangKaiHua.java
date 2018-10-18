@@ -1,12 +1,12 @@
 package com.github.blovemaple.mj.rule.gb.fan;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.rule.win.FanTypeMatcher;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
@@ -26,7 +26,7 @@ public class GangShangKaiHua implements FanTypeMatcher {
 			// 没有自摸信息或不是自摸
 			return 0;
 
-		GameContext.PlayerView contextView = winInfo.getContextView();
+		GameContextPlayerView contextView = winInfo.getContextView();
 		if (contextView == null)
 			// 没有contextView
 			return 0;

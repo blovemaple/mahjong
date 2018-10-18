@@ -1,6 +1,6 @@
 package com.github.blovemaple.mj.cli;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 import static com.github.blovemaple.mj.utils.LanguageManager.*;
 import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.*;
@@ -13,14 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
 import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.action.standard.StandardActionType;
-import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.standard.AutoActionTypes;
+import com.github.blovemaple.mj.action.standard.PlayerActionTypes;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
@@ -29,8 +31,8 @@ import com.github.blovemaple.mj.object.TileGroup;
 import com.github.blovemaple.mj.object.TileGroupType;
 import com.github.blovemaple.mj.object.TileRank;
 import com.github.blovemaple.mj.object.TileRank.NumberRank;
-import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.object.TileSuit;
+import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.utils.LanguageManager.Message;
 import com.github.blovemaple.mj.utils.MyUtils;
 
@@ -42,7 +44,7 @@ import com.github.blovemaple.mj.utils.MyUtils;
 public class CliGameView {
 	private final CliView cliView;
 
-	private GameContext.PlayerView contextView;
+	private GameContextPlayerView contextView;
 	private PlayerInfo playerInfo;
 	private Set<Tile> focusedAliveTiles;
 	private Set<TileGroup> focusedGroups;
@@ -59,7 +61,8 @@ public class CliGameView {
 			// 再按种类
 			.<TileRank> thenComparing(tile -> tile.type().rank())
 			// 再按ID
-			.<Integer> thenComparing(tile -> tile.id());
+			// XXX - 如果不显式指定Function的类型，maven就会报错，有可能是编译器的bug
+			.<Integer> thenComparing((Function<Tile, Integer>) tile -> tile.id());
 
 	private static final char GROUP_START_STR = '<', GROUP_END_STR = '>';
 	private static final char FOCUS_START_STR = '[', FOCUS_END_STR = ']';
@@ -86,7 +89,7 @@ public class CliGameView {
 		return cliView;
 	}
 
-	public void setContext(GameContext.PlayerView contextView)
+	public void setContext(GameContextPlayerView contextView)
 			throws IOException {
 		cliView.init();
 		focusedAliveTiles = Collections.emptySet();
@@ -266,56 +269,59 @@ public class CliGameView {
 		str.append(' ').append(TIME_START_STR).append(timeLimit).append(TIME_END_STR);
 	}
 
-	public void showAction(PlayerLocation location, Action action)
+	public void showAction(Action action)
 			throws IOException {
-		if (!(action.getType() instanceof StandardActionType)) {
-			showActionDefault(location, action);
-			return;
-		}
-
-		switch ((StandardActionType) action.getType()) {
-		case DEAL:
-			PlayerLocation.Relation zhuangRelation = contextView.getMyLocation()
-					.getRelationOf(contextView.getZhuangLocation());
-			StringBuilder showStr = new StringBuilder();
-			showStr.append(DEAL_DONE.str());
-			showStr.append(' ').append(ZHUANG.str());
-			showStr.append(':').append(str(zhuangRelation)).append(str(contextView.getZhuangLocation()));
-			showStr.append(' ').append(str(contextView.getTableView().getPlayerName(contextView.getZhuangLocation())));
-			showActionStr(location, showStr);
-			break;
-		case CHI:
-		case PENG:
-		case ZHIGANG:
-			ActionAndLocation discardAction = contextView.getDoneActions()
-					.get(contextView.getDoneActions().size() - 2);
-			Set<Tile> groupTiles = mergedSet(action.getTiles(),
-					discardAction.getAction().getTiles());
-			showActionStr(location,
-					getDefaultActionStr(action.getType(), groupTiles));
-			break;
-		case BUGANG:
-			showActionStr(location, getDefaultActionStr(action.getType(),
-					Tile.allOfType(action.getTile().type())));
-			break;
-		case ANGANG:
-			showActionStr(location,
-					getDefaultActionStr(action.getType(), null));
-			break;
-		case DISCARD_WITH_TING:
-			StringBuilder str = getDefaultActionStr(DISCARD, action.getTiles());
-			str.append(" ");
-			str.append(TING_START_STR);
-			str.append(TING.str());
-			str.append(TING_END_STR);
-			showActionStr(location, str);
-			break;
-		case WIN:
-			showWinAction(location, action);
-			break;
-		default:
-			showActionDefault(location, action);
-			return;
+		if (action.getType() instanceof AutoActionTypes) {
+			switch ((AutoActionTypes) action.getType()) {
+			case DEAL:
+				PlayerLocation.Relation zhuangRelation = contextView.getMyLocation()
+						.getRelationOf(contextView.getZhuangLocation());
+				StringBuilder showStr = new StringBuilder();
+				showStr.append(DEAL_DONE.str());
+				showStr.append(' ').append(ZHUANG.str());
+				showStr.append(':').append(str(zhuangRelation)).append(str(contextView.getZhuangLocation()));
+				showStr.append(' ')
+						.append(str(contextView.getTableView().getPlayerName(contextView.getZhuangLocation())));
+				showActionStr(null, showStr);
+				break;
+			default:
+				showActionDefault(action);
+				return;
+			}
+		} else if (action.getType() instanceof PlayerActionTypes) {
+			PlayerAction playerAction = (PlayerAction) action;
+			PlayerLocation location = playerAction.getLocation();
+			switch ((PlayerActionTypes) action.getType()) {
+			case CHI:
+			case PENG:
+			case ZHIGANG:
+				Action discardAction = contextView.getDoneActions()
+						.get(contextView.getDoneActions().size() - 2);
+				Set<Tile> groupTiles = mergedSet(playerAction.getTiles(), ((PlayerAction) discardAction).getTiles());
+				showActionStr(location, getDefaultActionStr(action.getType(), groupTiles));
+				break;
+			case BUGANG:
+				showActionStr(location,
+						getDefaultActionStr(action.getType(), Tile.allOfType(playerAction.getTile().type())));
+				break;
+			case ANGANG:
+				showActionStr(location, getDefaultActionStr(action.getType(), null));
+				break;
+			case DISCARD_WITH_TING:
+				StringBuilder str = getDefaultActionStr(DISCARD, playerAction.getTiles());
+				str.append(" ");
+				str.append(TING_START_STR);
+				str.append(TING.str());
+				str.append(TING_END_STR);
+				showActionStr(location, str);
+				break;
+			case WIN:
+				showWinAction(location, action);
+				break;
+			default:
+				showActionDefault(action);
+				return;
+			}
 		}
 
 	}
@@ -325,7 +331,7 @@ public class CliGameView {
 		GameResult result = contextView.getGameResult();
 		if (result == null) {
 			// 和牌却没有结果，容错
-			showActionDefault(location, action);
+			showActionDefault(action);
 			return;
 		}
 
@@ -385,36 +391,34 @@ public class CliGameView {
 		cliView.printSplitLine(null, POSITION_WIDTH * 4);
 	}
 
-	private void showActionDefault(PlayerLocation location, Action action)
-			throws IOException {
-		showActionStr(location,
-				getDefaultActionStr(action.getType(), action.getTiles()));
+	private void showActionDefault(Action action) throws IOException {
+		Set<Tile> actionTiles = action instanceof PlayerAction ? ((PlayerAction) action).getTiles() : null;
+		PlayerLocation location = action instanceof PlayerAction ? ((PlayerAction) action).getLocation() : null;
+		showActionStr(location, getDefaultActionStr(action.getType(), actionTiles));
 	}
 
-	private StringBuilder getDefaultActionStr(ActionType actionType,
-			Set<Tile> actionTiles) {
+	private StringBuilder getDefaultActionStr(ActionType actionType, Set<Tile> actionTiles) {
 		StringBuilder actionStr = new StringBuilder();
 		actionStr.append(str(actionType));
-		if (!(actionTiles == null || actionTiles.isEmpty())) {
-			actionStr.append(' ');
-			List<TileSuit> suits = actionTiles.stream()
-					.map(tile -> tile.type().suit()).distinct()
-					.collect(Collectors.toList());
-			List<Tile> actionTileList = actionTiles.stream()
-					.sorted(TILE_COMPARATOR).collect(Collectors.toList());
-			if (suits.size() == 1) {
-				actionTileList.forEach(tile -> actionStr
-						.append(str(tile.type().rank())));
-				TileSuit suit = suits.get(0);
-				if (suit.getRankClass() == NumberRank.class)
-					actionStr.append(str(suit));
-			} else {
-				actionTileList.forEach(tile -> {
-					actionStr.append(str(tile.type().rank()));
-					TileSuit suit = tile.type().suit();
+		if (actionTiles != null && !actionTiles.isEmpty()) {
+			if (!(actionTiles == null || actionTiles.isEmpty())) {
+				actionStr.append(' ');
+				List<TileSuit> suits = actionTiles.stream().map(tile -> tile.type().suit()).distinct()
+						.collect(Collectors.toList());
+				List<Tile> actionTileList = actionTiles.stream().sorted(TILE_COMPARATOR).collect(Collectors.toList());
+				if (suits.size() == 1) {
+					actionTileList.forEach(tile -> actionStr.append(str(tile.type().rank())));
+					TileSuit suit = suits.get(0);
 					if (suit.getRankClass() == NumberRank.class)
 						actionStr.append(str(suit));
-				});
+				} else {
+					actionTileList.forEach(tile -> {
+						actionStr.append(str(tile.type().rank()));
+						TileSuit suit = tile.type().suit();
+						if (suit.getRankClass() == NumberRank.class)
+							actionStr.append(str(suit));
+					});
+				}
 			}
 		}
 		return actionStr;

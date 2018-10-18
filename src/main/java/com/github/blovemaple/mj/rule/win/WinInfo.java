@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerTiles;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.object.TileGroup;
@@ -46,7 +46,7 @@ public class WinInfo extends PlayerTiles {
 	// 以下三个字段是选填的额外信息，某些和牌类型和特殊的番种才可能会用到
 	private Tile winTile;
 	private Boolean ziMo;
-	private GameContext.PlayerView contextView;
+	private GameContextPlayerView contextView;
 
 	// 玩家手中所有牌，排序之后的。调用getTileTypes()时自动填入。
 	private List<TileType> tileTypes;
@@ -79,11 +79,11 @@ public class WinInfo extends PlayerTiles {
 		this.ziMo = ziMo;
 	}
 
-	public void setContextView(GameContext.PlayerView contextView) {
+	public void setContextView(GameContextPlayerView contextView) {
 		this.contextView = contextView;
 	}
 
-	public GameContext.PlayerView getContextView() {
+	public GameContextPlayerView getContextView() {
 		return contextView;
 	}
 

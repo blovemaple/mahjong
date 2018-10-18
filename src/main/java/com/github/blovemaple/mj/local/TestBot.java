@@ -1,16 +1,15 @@
 package com.github.blovemaple.mj.local;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.action.PlayerActionType;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.Player;
-import com.github.blovemaple.mj.object.PlayerLocation;
 
 /**
  * 测试用的机器人，无脑摸牌无脑出牌（出牌之前假装想一会儿），别的不干。
@@ -25,25 +24,25 @@ public class TestBot implements Player {
 	}
 
 	@Override
-	public Action chooseAction(GameContext.PlayerView contextView,
-			Set<ActionType> actionTypes, Action illegalAction)
-			throws InterruptedException {
+	public PlayerAction chooseAction(GameContextPlayerView contextView,
+			Set<PlayerActionType> actionTypes,
+			PlayerAction illegalAction) throws InterruptedException {
 		if (actionTypes.contains(DISCARD)) {
 			TimeUnit.SECONDS.sleep(1);
-			return new Action(DISCARD,
+			return new PlayerAction(contextView.getMyLocation(), DISCARD,
 					contextView.getMyInfo().getAliveTiles().iterator().next());
 		}
 		if (actionTypes.contains(DRAW))
-			return new Action(DRAW);
+			return new PlayerAction(contextView.getMyLocation(), DRAW);
 		return null;
 	}
 
 	@Override
-	public void actionDone(PlayerView contextView, PlayerLocation actionLocation, Action action) {
+	public void actionDone(GameContextPlayerView contextView, Action action) {
 	}
 
 	@Override
-	public void timeLimit(PlayerView contextView, Integer secondsToGo) {
+	public void timeLimit(GameContextPlayerView contextView, Integer secondsToGo) {
 	}
 
 }

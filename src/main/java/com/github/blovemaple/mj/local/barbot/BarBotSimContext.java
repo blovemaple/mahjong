@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerViewImpl;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
+import com.github.blovemaple.mj.rule.GameStage;
 import com.github.blovemaple.mj.rule.GameStrategy;
 import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.utils.MyUtils;
@@ -20,13 +23,18 @@ import com.github.blovemaple.mj.utils.MyUtils;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class BarBotSimContext extends GameContext {
-	private GameContext.PlayerView contextView;
-	private ActionAndLocation lastAction;
+@Deprecated
+public class BarBotSimContext implements GameContext {
+	private GameStrategy gameStrategy;
+	private TimeLimitStrategy timeLimitStrategy;
+	
+	private GameContextPlayerView contextView;
+	private Action lastAction;
 	private PlayerInfo myInfo;
 
-	public BarBotSimContext(GameContext.PlayerView contextView, ActionAndLocation lastAction, PlayerInfo myInfo) {
-		super(null, contextView.getGameStrategy(), contextView.getTimeLimitStrategy());
+	public BarBotSimContext(GameContextPlayerView contextView, Action lastAction, PlayerInfo myInfo) {
+		this.gameStrategy = contextView.getGameStrategy();
+		this.timeLimitStrategy = contextView.getTimeLimitStrategy();
 		this.contextView = contextView;
 		this.lastAction = lastAction;
 		this.myInfo = myInfo;
@@ -39,12 +47,12 @@ public class BarBotSimContext extends GameContext {
 
 	@Override
 	public GameStrategy getGameStrategy() {
-		return super.getGameStrategy();
+		return gameStrategy;
 	}
 
 	@Override
 	public TimeLimitStrategy getTimeLimitStrategy() {
-		return super.getTimeLimitStrategy();
+		return timeLimitStrategy;
 	}
 
 	@Override
@@ -64,18 +72,20 @@ public class BarBotSimContext extends GameContext {
 	public void setZhuangLocation(PlayerLocation zhuangLocation) {
 		throw new UnsupportedOperationException();
 	}
-
+	
 	@Override
-	public void actionDone(Action action, PlayerLocation location) {
+	public GameStage getStage() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ActionAndLocation getLastActionAndLocation() {
-		if (lastAction == null)
-			return contextView.getLastActionAndLocation();
-		else
-			return lastAction;
+	public void setStage(GameStage stage) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void actionDone(Action action) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -83,34 +93,32 @@ public class BarBotSimContext extends GameContext {
 		if (lastAction == null)
 			return contextView.getLastAction();
 		else
-			return lastAction.getAction();
+			return lastAction;
 	}
 
 	@Override
 	public PlayerLocation getLastActionLocation() {
 		if (lastAction == null)
 			return contextView.getLastActionLocation();
-		else
-			return lastAction.getLocation();
+		else {
+			if (lastAction == null || !(lastAction instanceof PlayerAction))
+				return null;
+			return ((PlayerAction) lastAction).getLocation();
+		}
 	}
 
-	private List<ActionAndLocation> doneActions;
+	private List<Action> doneActions;
 
 	@Override
-	public List<ActionAndLocation> getDoneActions() {
+	public List<Action> getDoneActions() {
 		if (doneActions == null) {
 			if (lastAction == null)
 				doneActions = contextView.getDoneActions();
 			else
-				doneActions = MyUtils.merged(ArrayList<ActionAndLocation>::new, contextView.getDoneActions(),
+				doneActions = MyUtils.merged(ArrayList<Action>::new, contextView.getDoneActions(),
 						lastAction);
 		}
 		return doneActions;
-	}
-
-	@Override
-	protected void setDoneActions(List<ActionAndLocation> doneActions) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -124,22 +132,16 @@ public class BarBotSimContext extends GameContext {
 	}
 
 	@Override
-	public PlayerView getPlayerView(PlayerLocation location) {
+	public GameContextPlayerView getPlayerView(PlayerLocation location) {
 		if (location == contextView.getMyLocation())
-			return new PlayerView(location);
+			return new GameContextPlayerViewImpl(this, location);
 		else
 			throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected PlayerView newPlayerView(PlayerLocation location) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public String toString() {
-		return "[last action=" + getLastActionAndLocation() + ", alive tiles=" + myInfo.getAliveTiles()
-				+ "]";
+		return "[last action=" + getLastAction() + ", alive tiles=" + myInfo.getAliveTiles() + "]";
 	}
 
 }

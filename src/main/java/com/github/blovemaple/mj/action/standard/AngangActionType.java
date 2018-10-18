@@ -5,9 +5,9 @@ import static com.github.blovemaple.mj.object.TileGroupType.*;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.github.blovemaple.mj.action.AbstractActionType;
+import com.github.blovemaple.mj.action.AbstractPlayerActionType;
 import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContext.PlayerView;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.object.PlayerInfo;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -18,7 +18,10 @@ import com.github.blovemaple.mj.object.TileGroup;
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-public class AngangActionType extends AbstractActionType {
+public class AngangActionType extends AbstractPlayerActionType {
+
+	protected AngangActionType() {
+	}
 
 	@Override
 	public boolean canPass(GameContext context, PlayerLocation location) {
@@ -36,7 +39,7 @@ public class AngangActionType extends AbstractActionType {
 	}
 
 	@Override
-	protected boolean isLegalActionWithPreconition(PlayerView context,
+	protected boolean isLegalActionWithPreconition(GameContextPlayerView context,
 			Set<Tile> tiles) {
 		return ANGANG_GROUP.isLegalTiles(tiles);
 	}

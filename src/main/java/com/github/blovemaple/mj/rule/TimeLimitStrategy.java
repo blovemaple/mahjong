@@ -3,7 +3,7 @@ package com.github.blovemaple.mj.rule;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerLocation;
 
@@ -25,5 +25,5 @@ public interface TimeLimitStrategy {
 	 * @return 限时（单位：秒），若不限制则返回null。
 	 */
 	Integer getLimit(GameContext context,
-			Map<PlayerLocation, Set<ActionType>> choises);
+			Map<PlayerLocation, Set<PlayerActionType>> choises);
 }

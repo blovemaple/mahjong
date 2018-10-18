@@ -1,11 +1,13 @@
 package com.github.blovemaple.mj.rule.simple;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.rule.AbstractGameStrategy;
+import com.github.blovemaple.mj.rule.GameStage;
 import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.rule.win.WinType;
 
@@ -33,6 +35,19 @@ public class SimpleGameStrategy extends AbstractGameStrategy {
 	@Override
 	public List<FanType> getAllFanTypes() {
 		return FAN_TYPES;
+	}
+
+	private List<GameStage> stages = List.of(new DealingStage(), new BeforePlayingStage(), new PlayingStage(),
+			new FinishedStage());
+
+	@Override
+	protected Collection<GameStage> getAllStages() {
+		return stages;
+	}
+
+	@Override
+	public GameStage getFirstStage() {
+		return stages.get(0);
 	}
 
 }

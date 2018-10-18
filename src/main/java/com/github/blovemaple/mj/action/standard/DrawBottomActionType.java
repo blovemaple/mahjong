@@ -1,12 +1,13 @@
 package com.github.blovemaple.mj.action.standard;
 
-import static com.github.blovemaple.mj.action.standard.StandardActionType.*;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
 
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
-import com.github.blovemaple.mj.action.ActionAndLocation;
+import com.github.blovemaple.mj.action.Action;
+import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.object.PlayerLocation;
 import com.github.blovemaple.mj.object.Tile;
@@ -18,11 +19,14 @@ import com.github.blovemaple.mj.object.Tile;
  */
 public class DrawBottomActionType extends DrawActionType {
 
+	protected DrawBottomActionType() {
+	}
+
 	@Override
-	protected BiPredicate<ActionAndLocation, PlayerLocation> getLastActionPrecondition() {
+	protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
 		// 必须是自己补花或杠之后
-		return (al, location) -> al.getLocation() == location
-				&& Stream.of(BUHUA, ANGANG, ZHIGANG, BUGANG).anyMatch(type -> type.matchBy(al.getActionType()));
+		return (a, location) -> a instanceof PlayerAction && ((PlayerAction) a).getLocation() == location
+				&& Stream.of(BUHUA, ANGANG, ZHIGANG, BUGANG).anyMatch(type -> type.matchBy(a.getType()));
 	}
 
 	@Override

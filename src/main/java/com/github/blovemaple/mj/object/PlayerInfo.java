@@ -1,8 +1,10 @@
 package com.github.blovemaple.mj.object;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 麻将桌上一个玩家的信息，包括玩家对象、牌，以及其他信息。
@@ -90,43 +92,37 @@ public class PlayerInfo extends PlayerTiles implements Cloneable {
 	/**
 	 * 获取其他玩家的视图。
 	 */
-	public PlayerView getOtherPlayerView() {
+	public PlayerInfoPlayerView getOtherPlayerView() {
 		if (otherPlayerView == null) { // 不需要加锁，因为多创建了也没事
 			otherPlayerView = new PlayerView();
 		}
 		return otherPlayerView;
 	}
 
-	/**
-	 * 一个位置的玩家的视图。需要限制一些权限。
-	 * 
-	 * @author blovemaple <blovemaple2010(at)gmail.com>
-	 */
-	public class PlayerView {
+	private class PlayerView implements PlayerInfoPlayerView {
 
-		/**
-		 * 返回玩家名称。
-		 */
+		@Override
 		public String getPlayerName() {
 			Player player = getPlayer();
 			return player != null ? getPlayer().getName() : null;
 		}
 
-		/**
-		 * 返回手中的牌数。
-		 */
+		@Override
 		public int getAliveTileSize() {
 			return getAliveTiles().size();
 		}
 
+		@Override
 		public List<Tile> getDiscardedTiles() {
-			return discardedTiles;
+			return Collections.unmodifiableList(discardedTiles);
 		}
 
-		public List<TileGroup> getTileGroups() {
-			return tileGroups; // FIXME 会看到暗杠
+		@Override
+		public List<TileGroupPlayerView> getTileGroups() {
+			return tileGroups.stream().map(TileGroup::getOtherPlayerView).collect(Collectors.toList());
 		}
 
+		@Override
 		public boolean isTing() {
 			return isTing;
 		}
