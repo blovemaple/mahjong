@@ -1,7 +1,7 @@
 ==这是什么==
 用Java写的单机命令行麻将游戏。
 
-点击直接玩（powered by [https://github.com/yudai/gotty gotty]）：http://vt.chentong.ren:8888/
+点击直接玩（powered by [https://github.com/yudai/gotty gotty]）：http://chentong.ren:8888/
 
 待实现：
 #番种
