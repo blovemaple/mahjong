@@ -28,6 +28,8 @@ import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.action.PlayerActionType;
 import com.github.blovemaple.mj.cli.CliView.CharHandler;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
+import com.github.blovemaple.mj.local.AbstractBot;
+import com.github.blovemaple.mj.local.bazbot.BazBot;
 import com.github.blovemaple.mj.object.Player;
 import com.github.blovemaple.mj.object.Tile;
 import com.github.blovemaple.mj.utils.LanguageManager.Message;
@@ -47,6 +49,7 @@ public class CliPlayer implements Player {
 	private static final char ACTION_2_KEY = 'm';
 	private static final char WIN_ACTION_KEY = 'h';
 	private static final char PASS_KEY = '/';
+	private static final char TIP_KEY = 't';
 	@SuppressWarnings("unused")
 	private static final Message MOVE_CHOISE_KEY_MESSAGE = COMMA_AND_PERIOD_KEY;
 	private static final Message ACTION_KEY_MESSAGE = SPACE_KEY;
@@ -56,10 +59,13 @@ public class CliPlayer implements Player {
 
 	private String name;
 	private CliGameView view;
+	private AbstractBot tipBot;
 
 	public CliPlayer(String name, CliView cliView) {
 		this.name = name;
 		this.view = new CliGameView(cliView);
+		this.tipBot = new BazBot("TIP");
+		this.tipBot.setThinkingTime(0, 0);
 	}
 
 	@Override
@@ -100,7 +106,7 @@ public class CliPlayer implements Player {
 	}
 
 	private GameContextPlayerView contextView;
-	private final Map<Set<Tile>, List<ActionType>> actionChoices = new HashMap<>();
+	private final Map<Set<Tile>, List<PlayerActionType>> actionChoices = new HashMap<>();
 	private final ArrayList<Set<Tile>> actionTilesChoices = new ArrayList<>();
 	private Set<Tile> focusedChoice;
 	private boolean canChooseWin;
@@ -118,10 +124,10 @@ public class CliPlayer implements Player {
 				.filter(legalActionTypes::contains).forEach(actionType -> {
 					actionType.getLegalActionTiles(contextView)
 							.forEach(tiles -> {
-								List<ActionType> types = actionChoices
+								List<PlayerActionType> types = actionChoices
 										.get(tiles);
 								if (types == null) {
-									types = new ArrayList<ActionType>();
+									types = new ArrayList<PlayerActionType>();
 									actionChoices.put(tiles, types);
 									actionTilesChoices.add(tiles);
 								}
@@ -234,6 +240,9 @@ public class CliPlayer implements Player {
 			} else {
 				return IGNORE;
 			}
+		case TIP_KEY:
+			showTip();
+			return ACCEPT;
 		default:
 			return IGNORE;
 		}
@@ -254,10 +263,30 @@ public class CliPlayer implements Player {
 		viewFocusAndOptions();
 	}
 
+	private void showTip() {
+		try {
+			Set<PlayerActionType> tipActionTypes = actionChoices.values().stream().flatMap(List::stream)
+					.collect(Collectors.toSet());
+			PlayerAction tipAction = tipBot.chooseAction(contextView, tipActionTypes);
+			if (tipAction != null) {
+				view.showAction(tipAction);
+			}
+		} catch (InterruptedException e) {
+			// impossible
+		} catch (IOException e) {
+			try {
+				logger.log(Level.SEVERE, e.toString(), e);
+				view.getCliView().printMessage("[ERROR] " + e.toString());
+			} catch (IOException e1) {
+				logger.log(Level.SEVERE, e.toString(), e);
+			}
+		}
+	}
+
 	private void viewFocusAndOptions() {
 		view.setFocusedAliveTiles(focusedChoice);
 
-		List<ActionType> actionTypeList = focusedChoice == null
+		List<PlayerActionType> actionTypeList = focusedChoice == null
 				? Collections.emptyList() : actionChoices.get(focusedChoice);
 		if (actionTypeList.size() > 2)
 			throw new RuntimeException("Action types > 2 : " + actionTypeList);
