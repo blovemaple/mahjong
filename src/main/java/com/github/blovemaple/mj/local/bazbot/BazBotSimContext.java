@@ -176,9 +176,10 @@ class BazBotSimContext implements GameContext {
 				// 所有概率相乘
 				.reduce((prob1, prob2) -> prob1 * prob2).orElse(1d);
 
-		// XXX - 计算prob有两个问题：
+		// XXX - 计算prob有三个问题：
 		// 1. 通过摸/吃/碰/和牌得牌的概率是不一样的，每个tileType需要根据可得牌的方式区别对待；
-		// 2. 需要考虑每轮中其他玩家和牌的概率，根据tileType数量计算在每组tileType的prob内。
+		// 2. 需要考虑每轮中其他玩家和牌的概率，根据tileType数量计算在每组tileType的prob内；
+		// 3. 吃碰杠/摸牌同时可选时，需要考虑选择吃碰少了一次摸牌的机会。
 	}
 
 	// 以下方法是实现GameContext接口的方法，部分支持，主要是足够模拟动作使用即可
