@@ -2,7 +2,6 @@ package com.github.blovemaple.mj.local;
 
 import static com.github.blovemaple.mj.object.PlayerLocation.*;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
 
 import com.github.blovemaple.mj.game.MahjongGame;
@@ -21,7 +20,8 @@ import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 public class LocalGame {
 	private GameStrategy gameStrategy = new SimpleGameStrategy();
 	private TimeLimitStrategy timeStrategy = TimeLimitStrategy.NO_LIMIT;
-	private Class<? extends Player> botPlayerClass = BazBot.class;
+
+	private Supplier<? extends AbstractBot> botSupplier = () -> new BazBot().thinkingTime(1000, 3000);
 
 	private Player localPlayer;
 	private Supplier<Boolean> newGameChecker;
@@ -40,21 +40,16 @@ public class LocalGame {
 	}
 
 	public void play() throws InterruptedException {
-		try {
-			MahjongTable table = new MahjongTable();
-			table.init();
-			table.setPlayer(EAST, localPlayer);
-			table.setPlayer(SOUTH, botPlayerClass.getConstructor().newInstance());
-			table.setPlayer(WEST, botPlayerClass.getConstructor().newInstance());
-			table.setPlayer(NORTH, botPlayerClass.getConstructor().newInstance());
+		MahjongTable table = new MahjongTable();
+		table.init();
+		table.setPlayer(EAST, localPlayer);
+		table.setPlayer(SOUTH, botSupplier.get());
+		table.setPlayer(WEST, botSupplier.get());
+		table.setPlayer(NORTH, botSupplier.get());
 
-			MahjongGame game = new MahjongGame(gameStrategy, timeStrategy);
-			while (newGameChecker.get()) {
-				game.play(table);
-			}
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException(e);
+		MahjongGame game = new MahjongGame(gameStrategy, timeStrategy);
+		while (newGameChecker.get()) {
+			game.play(table);
 		}
 	}
 }

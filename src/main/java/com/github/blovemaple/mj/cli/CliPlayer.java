@@ -65,7 +65,6 @@ public class CliPlayer implements Player {
 		this.name = name;
 		this.view = new CliGameView(cliView);
 		this.tipBot = new BazBot("TIP");
-		this.tipBot.setThinkingTime(0, 0);
 	}
 
 	@Override

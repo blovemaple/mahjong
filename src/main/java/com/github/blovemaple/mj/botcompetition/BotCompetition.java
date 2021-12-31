@@ -3,13 +3,13 @@ package com.github.blovemaple.mj.botcompetition;
 import static com.github.blovemaple.mj.object.PlayerLocation.*;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.logging.LogManager;
 
 import com.github.blovemaple.mj.cli.CliRunner;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.game.MahjongGame;
 import com.github.blovemaple.mj.local.AbstractBot;
-import com.github.blovemaple.mj.local.barbot.BarBot;
 import com.github.blovemaple.mj.local.bazbot.BazBot;
 import com.github.blovemaple.mj.object.MahjongTable;
 import com.github.blovemaple.mj.object.Player;
@@ -20,20 +20,19 @@ import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
-@SuppressWarnings("deprecation")
 public class BotCompetition {
 	public static void main(String[] args) {
-		new BotCompetition(BarBot.class, BazBot.class).compete(1000);
+		new BotCompetition(BazBot::new, BazBot::new).compete(1000);
 	}
 
-	private Class<? extends AbstractBot> botType1, botType2;
+	private Supplier<? extends AbstractBot> botSupplier1, botSupplier2;
 
 	private GameStrategy gameStrategy = new SimpleGameStrategy();
 	private TimeLimitStrategy timeStrategy = TimeLimitStrategy.NO_LIMIT;
 
-	public BotCompetition(Class<? extends AbstractBot> botType1, Class<? extends AbstractBot> botType2) {
-		this.botType1 = botType1;
-		this.botType2 = botType2;
+	public BotCompetition(Supplier<? extends AbstractBot> botSupplier1, Supplier<? extends AbstractBot> botSupplier2) {
+		this.botSupplier1 = botSupplier1;
+		this.botSupplier2 = botSupplier2;
 	}
 
 	// 序号，获胜的bot，坐庄的bot，耗时1，调用次数1，耗时2，调用次数2，本局总耗时
@@ -42,10 +41,10 @@ public class BotCompetition {
 			LogManager.getLogManager()
 					.readConfiguration(CliRunner.class.getResource("/logging_botcompetition.properties").openStream());
 
-			AbstractBot bot11 = botType1.getConstructor().newInstance();
-			AbstractBot bot12 = botType1.getConstructor().newInstance();
-			AbstractBot bot21 = botType2.getConstructor().newInstance();
-			AbstractBot bot22 = botType2.getConstructor().newInstance();
+			AbstractBot bot11 = botSupplier1.get();
+			AbstractBot bot12 = botSupplier1.get();
+			AbstractBot bot21 = botSupplier2.get();
+			AbstractBot bot22 = botSupplier2.get();
 
 			for (int gameIndex = 1; gameCount >= 0 && gameIndex <= gameCount; gameIndex++) {
 				bot11.resetCostStat();

@@ -27,7 +27,7 @@ public abstract class AbstractBot implements Player {
 	private static final Logger logger = Logger.getLogger(AbstractBot.class.getSimpleName());
 
 	private String name;
-	private int minThinkingMs = 1000, maxThinkingMs = 3000;
+	private int minThinkingMs, maxThinkingMs;
 
 	private long costSum;
 	private int invokeCount;
@@ -41,11 +41,12 @@ public abstract class AbstractBot implements Player {
 		return name;
 	}
 
-	public void setThinkingTime(int min, int max) {
+	public AbstractBot thinkingTime(int min, int max) {
 		if (min > max)
 			throw new IllegalArgumentException("Invalid thinking time: [" + min + "," + max + "]");
 		this.minThinkingMs = min;
 		this.maxThinkingMs = max;
+		return this;
 	}
 
 	public void resetCostStat() {
@@ -70,11 +71,12 @@ public abstract class AbstractBot implements Player {
 		PlayerAction action = chooseAction0(contextView, actionTypes);
 		logger.info(() -> "BOT Chosed action:" + action);
 
+		// 没到目标时间的话假装再想一会儿
 		long endTime = System.nanoTime();
 		long nanoCost = endTime - startTime;
-		long delayMillis = minThinkingMs - TimeUnit.MILLISECONDS.convert(nanoCost, TimeUnit.NANOSECONDS);
+		int targetThinkingTime = minThinkingMs + (int) (Math.random() * (maxThinkingMs - minThinkingMs));
+		long delayMillis = targetThinkingTime - TimeUnit.MILLISECONDS.convert(nanoCost, TimeUnit.NANOSECONDS);
 		TimeUnit.MILLISECONDS.sleep(delayMillis);
-
 		return action;
 	}
 
@@ -156,11 +158,6 @@ public abstract class AbstractBot implements Player {
 			costSum += nanoCost;
 			invokeCount++;
 			logger.info("BOT Time cost(millis): " + Math.round(nanoCost / 1_000_000D));
-
-			// 没到目标时间的话假装再想一会儿
-			int targetThinkingTime = minThinkingMs + (int) (Math.random() * (maxThinkingMs - minThinkingMs));
-			long delayMillis = targetThinkingTime - TimeUnit.MILLISECONDS.convert(nanoCost, TimeUnit.NANOSECONDS);
-			TimeUnit.MILLISECONDS.sleep(delayMillis);
 		}
 	}
 
