@@ -12,10 +12,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import jline.console.ConsoleReader;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 /**
- * 基于jline2实现的命令行界面。提供信息显示以及最下方的状态栏显示，以及接受用户单字符无回显输入。
+ * 命令行界面。提供信息显示以及最下方的状态栏显示，以及接受用户单字符无回显输入。<br>
+ * 利用jline-terminal关闭回显，并进入raw模式。
  * 
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
@@ -23,7 +25,8 @@ class CliView {
 	private static final Logger logger = Logger
 			.getLogger(CliView.class.getSimpleName());
 
-	private final ConsoleReader console;
+	private final Terminal terminal;
+	private final InputStream in;
 	private final PrintStream out;
 
 	// 分割线字符
@@ -45,11 +48,12 @@ class CliView {
 	 */
 	public CliView(PrintStream out, InputStream in)
 			throws IOException, InterruptedException {
-		console = new ConsoleReader(null, in, out, null);
+		terminal = TerminalBuilder.builder().system(true).streams(in, out).build();
+		this.in = in;
 		this.out = out;
-		console.getTerminal().setEchoEnabled(false);
-		console.setHandleUserInterrupt(true);
-		logger.info("terminal width: " + console.getTerminal().getWidth());
+		terminal.echo(false);
+		terminal.enterRawMode();
+		logger.info("terminal width: " + terminal.getWidth());
 		startCharReading();
 	}
 
@@ -59,8 +63,7 @@ class CliView {
 	 * @throws IOException
 	 */
 	public synchronized void init() throws IOException {
-		console.clearScreen();
-		for (int i = 0; i < console.getTerminal().getHeight(); i++)
+		for (int i = 0; i < terminal.getHeight(); i++)
 			out.println();
 		updateStatus("");
 	}
@@ -122,7 +125,7 @@ class CliView {
 	 */
 	public synchronized void updateStatus(String status) {
 		int strWidth = strWidth(status);
-		int terminalWidth = console.getTerminal().getWidth();
+		int terminalWidth = terminal.getWidth();
 		if (strWidth > terminalWidth)
 			status = WINDOW_TOO_NARROW.str();// TODO 窗口太窄
 
@@ -160,27 +163,6 @@ class CliView {
 				}
 			}
 		}
-	}
-
-	/**
-	 * 读取一行输入。读取时字符处理将暂停。
-	 * 
-	 * @return 输入字符串
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	public synchronized String readInputLine()
-			throws IOException, InterruptedException {
-		stopCharReading();
-
-		console.getTerminal().setEchoEnabled(true);
-		// XXX - 读取一行输入时，输入太多会超出状态栏显示
-		String line = console.readLine();
-		console.getTerminal().setEchoEnabled(false);
-
-		startCharReading();
-
-		return line;
 	}
 
 	/**
@@ -233,6 +215,7 @@ class CliView {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void stopCharReading() throws InterruptedException {
 		synchronized (ReadThread.class) {
 			if (thread != null && thread.getState() != State.TERMINATED) {
@@ -253,7 +236,7 @@ class CliView {
 			try {
 				char c;
 
-				while ((c = (char) console.readCharacter()) >= 0) {
+				while ((c = (char) in.read()) >= 0) {
 					if (monoHandler != null) {
 						CharHandler handler = monoHandler;
 						monoHandler = null;
