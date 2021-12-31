@@ -96,6 +96,8 @@ class BazBotSimContext implements GameContext {
 		if (crtMyInfo.getAliveTiles().size() % 3 == 2) {
 			// 待出牌状态，从出每一张牌后的状态中选最高评分
 			return crtMyInfo.getAliveTiles().stream()
+					// 并行
+					.parallel()
 					// 生成、模拟出牌动作
 					.map(aliveTile -> new PlayerAction(crtContextView.getMyLocation(), DISCARD, aliveTile)) //
 					.map(rethrowFunction(this::afterSimAction))
