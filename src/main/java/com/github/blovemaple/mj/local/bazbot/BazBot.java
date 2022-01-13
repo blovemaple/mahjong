@@ -9,12 +9,8 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.action.IllegalActionException;
 import com.github.blovemaple.mj.action.PlayerAction;
 import com.github.blovemaple.mj.action.PlayerActionType;
-import com.github.blovemaple.mj.game.GameContext;
 import com.github.blovemaple.mj.game.GameContextPlayerView;
 import com.github.blovemaple.mj.local.AbstractBot;
 
@@ -23,28 +19,6 @@ import com.github.blovemaple.mj.local.AbstractBot;
  */
 public class BazBot extends AbstractBot {
 	private static final Logger logger = Logger.getLogger(BazBot.class.getSimpleName());
-
-	/**
-	 * 由于Stream中不能用null作为元素（reduce后在创建Optional时出错），所以用这个对象表示放弃动作。<br>
-	 * XXX 后续应用到其他表示放弃动作地方代替原来的null。
-	 */
-	private static final Action PASS_ACTION = new Action(new ActionType() {
-
-		@Override
-		public boolean isLegalAction(GameContext context, Action action) {
-			return true;
-		}
-
-		@Override
-		public void doAction(GameContext context, Action action)
-				throws IllegalActionException {
-		}
-
-		@Override
-		public String toString() {
-			return "[PASS]";
-		}
-	});
 
 	public BazBot(String name) {
 		super(name);
@@ -71,7 +45,7 @@ public class BazBot extends AbstractBot {
 
 		// 选评分最高的一个
 		PlayerAction chosenAction = actionAndScores.get(0).getKey();
-		return chosenAction == PASS_ACTION ? null : chosenAction;
+		return chosenAction;
 	}
 
 }

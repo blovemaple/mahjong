@@ -1,6 +1,5 @@
 package com.github.blovemaple.mj.game;
 
-import static com.github.blovemaple.mj.utils.LambdaUtils.*;
 import static java.util.stream.Collectors.*;
 
 import java.util.Comparator;
@@ -10,10 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -74,25 +75,33 @@ public class MahjongGame {
 		gameStrategy.readyContext(context);
 		context.setStage(new InitStage());
 
+		// 初始化线程池
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+
 		logger.info("[Main] init done.");
 
-		// 循环执行动作，直到结束
-		while (true) {
-			// 执行一次动作
-			boolean actionDone = chooseAndDoAction(context);
+		try {
+			// 循环执行动作，直到结束
+			while (true) {
+				// 执行一次动作
+				boolean actionDone = chooseAndDoAction(context, executor);
 
-			// 从策略判断游戏是否结束
-			boolean end = gameStrategy.tryEndGame(context);
-			if (end) {
-				// 策略判断游戏已结束
-				logger.info("[Main] game over.");
-				return context.getGameResult();
-			}
+				// 从策略判断游戏是否结束
+				boolean end = gameStrategy.tryEndGame(context);
+				if (end) {
+					// 策略判断游戏已结束
+					logger.info("[Main] game over.");
+					return context.getGameResult();
+				}
 
-			if (!actionDone && !end) {
-				// 如果既没有动作可执行，游戏又没有结束，则是异常状态
-				throw new RuntimeException("Nothing to do. Context: " + context);
+				if (!actionDone && !end) {
+					// 如果既没有动作可执行，游戏又没有结束，则是异常状态
+					throw new RuntimeException("Nothing to do. Context: " + context);
+				}
 			}
+		} finally {
+			// 关闭线程池
+			executor.shutdownNow();
 		}
 	}
 
@@ -102,8 +111,9 @@ public class MahjongGame {
 	 * @return 有没有执行动作
 	 * @throws InterruptedException
 	 */
-	private boolean chooseAndDoAction(GameContext context) throws InterruptedException {
-		Action action = chooseAction(context);
+	private boolean chooseAndDoAction(GameContext context, ScheduledExecutorService executor)
+			throws InterruptedException {
+		Action action = chooseAction(context, executor);
 		logger.info("[Action ready] " + action);
 		if (action != null) {
 			// 如果有动作要执行，则执行动作
@@ -122,7 +132,7 @@ public class MahjongGame {
 	/**
 	 * 决定要执行的动作。先让stage和玩家选择，如果无可选动作或者都选择不做动作，则从stage获取默认动作。
 	 */
-	public Action chooseAction(GameContext context) throws InterruptedException {
+	private Action chooseAction(GameContext context, ScheduledExecutorService executor) throws InterruptedException {
 		// 从stage取优先动作
 		Action priorAction = context.getStage().getPriorAction(context);
 		if (priorAction != null)
@@ -151,21 +161,21 @@ public class MahjongGame {
 			// 询问这些玩家想要做的动作
 			// 玩家做出动作之后判断合法性，如果不合法则继续询问
 
-			ScheduledExecutorService executor = Executors.newScheduledThreadPool(choicesByLocation.size() * 2 + 1);
 			// （这个map必须支持null value，因为需要用null value表示选择不做动作）
 			Map<PlayerLocation, PlayerAction> choseActionByLocation = new EnumMap<>(PlayerLocation.class);
-			Map<PlayerLocation, CompletableFuture<PlayerAction>> chooseFutures = new EnumMap<>(PlayerLocation.class);
+			Map<PlayerLocation, Future<PlayerAction>> chooseFutures = new EnumMap<>(PlayerLocation.class);
 			choicesByLocation.forEach((location, choisesAndPriority) -> {
-				CompletableFuture<PlayerAction> chooseFuture = playerChooseActionAsync(context, context.getTable(), location,
+				Future<PlayerAction> chooseFuture = playerChooseActionAsync(context, context.getTable(), location,
 						choisesAndPriority, executor, choseActionByLocation);
 				chooseFutures.put(location, chooseFuture);
 			});
 
 			// 用限时策略获取最长等待时间，如果超时则从策略获取每个玩家的默认动作
 			Integer timeLimit = timeStrategy.getLimit(context, choicesByLocation);
+			ScheduledFuture<?> timeLimitFuture = null;
 			if (timeLimit != null) {
 				AtomicInteger secondsToGo = new AtomicInteger(timeLimit);
-				executor.scheduleAtFixedRate(() -> {
+				timeLimitFuture = executor.scheduleAtFixedRate(() -> {
 					int crtSecondsToGo = secondsToGo.getAndDecrement();
 					if (crtSecondsToGo < 0)
 						return;
@@ -176,7 +186,8 @@ public class MahjongGame {
 							if (!chooseFuture.isDone()) {
 								PlayerAction defAction = gameStrategy.getPlayerDefaultAction(context, location,
 										choicesByLocation.get(location));
-								chooseFuture.complete(defAction);
+								choseActionByLocation.put(location, defAction);
+								choseActionByLocation.notifyAll();
 								logger.info("[Def action] " + location + defAction);
 							}
 						});
@@ -186,14 +197,14 @@ public class MahjongGame {
 
 			// 在map上等待
 			// 如果出现目前等待的玩家中优先级最高的动作，或者所有玩家都做出了动作，则进行做出的优先级最高的动作
+			Action determinedAction = null;
 			synchronized (choseActionByLocation) {
 				while (true) {
-					Action action = determineAction(choicesByLocation, choseActionByLocation, autoActions, context);
-					if (action != null) {
+					determinedAction = determineAction(choicesByLocation, choseActionByLocation, autoActions, context);
+					if (determinedAction != null) {
 						// 动作已决定
 						// 中断未作出选择的玩家的选择逻辑并返回
-						executor.shutdownNow();
-						return action;
+						break;
 					} else if (choseActionByLocation.size() == choicesByLocation.size()) {
 						// 所有玩家都做出选择仍不能决定（即所有玩家都选择不做动作）
 						break;
@@ -201,8 +212,20 @@ public class MahjongGame {
 					choseActionByLocation.wait();
 				}
 			}
-			// 所有玩家都做出决定了，关掉executor
-			executor.shutdownNow();
+
+			// 已决定动作或所有玩家都做出决定了，中断所有选择动作的线程
+			if (timeLimitFuture != null)
+				timeLimitFuture.cancel(true);
+			chooseFutures.values().stream().filter(future -> !future.isDone()).forEach(future -> {
+				try {
+					future.cancel(true);
+				} catch (CancellationException e) {
+				}
+			});
+
+			// 如果已决定动作，则返回
+			if (determinedAction != null)
+				return determinedAction;
 		}
 
 		// 如果上面没有产生要做的动作，则从stage获取默认动作
@@ -224,46 +247,36 @@ public class MahjongGame {
 	 *            玩家选择结果后需要put到此map中，并且在此map上notifyAll，通知主线程map已更新。
 	 * @return 选择任务的Future
 	 */
-	private CompletableFuture<PlayerAction> playerChooseActionAsync(GameContext context, MahjongTable table,
-			PlayerLocation location, Set<PlayerActionType> choices, Executor executor,
+	private Future<PlayerAction> playerChooseActionAsync(GameContext context, MahjongTable table,
+			PlayerLocation location, Set<PlayerActionType> choices, ExecutorService executor,
 			Map<PlayerLocation, PlayerAction> choseActionByLocation) {
 		Player player = table.getPlayerByLocation(location);
 
 		boolean canPass = choices.stream().allMatch(actionType -> actionType.canPass(context, location));
 
 		try {
-			CompletableFuture<PlayerAction> chooseFuture = CompletableFuture.supplyAsync(rethrowSupplier(() -> {
+			return executor.submit(() -> {
 				// 让玩家选择动作
 				PlayerAction testedAction = player.chooseAction(context.getPlayerView(location), choices);
 				// 检查选择的动作合法性，如果不合法则循环重新选择
 				checkInterrupted();
 				while (!(testedAction == null ? canPass
 						: testedAction.getType().isLegalAction(context, testedAction))) {
-					logger.info("[Action chosed illegal] " + location + testedAction + " FROM " + choices);
+					logger.warning("[Action chosed illegal] " + location + " " + testedAction + " FROM " + choices);
 					checkInterrupted();
 					testedAction = player.chooseAction(context.getPlayerView(location), choices, testedAction);
 				}
+				// 动作已选择
 				logger.info("[Action chosed] " + location + testedAction + " FROM " + choices);
-				return testedAction;
-			}), executor);
-
-			// 当选择结束时，把选择的结果放入map
-			chooseFuture.whenCompleteAsync(rethrowBiConsumer((action, e) -> {
-				if (e != null) {
-					logger.log(Level.SEVERE, ((Throwable) e).toString(), (Throwable) e);
-					return;
-				}
 				checkInterrupted();
 				synchronized (choseActionByLocation) {
-					choseActionByLocation.put(location, (PlayerAction) action);
+					choseActionByLocation.put(location, (PlayerAction) testedAction);
 					// notify一下，让主线程知道选择已更新
 					choseActionByLocation.notifyAll();
 				}
-			}), executor);
 
-			return chooseFuture;
-		} catch (InterruptedException e) {
-			return null;
+				return testedAction;
+			});
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.toString(), e);
 			return null;

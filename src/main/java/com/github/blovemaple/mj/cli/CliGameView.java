@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -295,9 +296,20 @@ public class CliGameView {
 			case CHI:
 			case PENG:
 			case ZHIGANG:
-				Action discardAction = contextView.getDoneActions()
-						.get(contextView.getDoneActions().size() - 2);
-				Set<Tile> groupTiles = mergedSet(playerAction.getTiles(), ((PlayerAction) discardAction).getTiles());
+				Action discardAction = null;
+				ListIterator<Action> doneActionItr = contextView.getDoneActions()
+						.listIterator(contextView.getDoneActions().size());
+				while (doneActionItr.hasPrevious() && discardAction == null) {
+					Action doneAction = doneActionItr.previous();
+					if (DISCARD.matchBy(doneAction.getType())) {
+						discardAction = doneAction;
+					}
+				}
+				Set<Tile> groupTiles;
+				if (discardAction != null)
+					groupTiles = mergedSet(playerAction.getTiles(), ((PlayerAction) discardAction).getTiles());
+				else
+					groupTiles = playerAction.getTiles();
 				showActionStr(location, getDefaultActionStr(action.getType(), groupTiles));
 				break;
 			case BUGANG:
