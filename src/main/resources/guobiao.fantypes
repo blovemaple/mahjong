@@ -111,7 +111,6 @@ HUA_PAI					<HuaPai>
 NO_GROUP				<NoGroup>
 
 
-
 判断条件：
 type a. 包含类：列出若干个同种对象，以,逗号分隔，表示必须包含这些对象。
 type b. 限制类：~ + 牌种，表示每张牌都必须是指定牌种；^ + 牌种，表示每张牌都不是指定牌种。
@@ -140,3 +139,205 @@ part 2. 字母变量名，或?问号（表示任意）。
 2. 并列的若干个对象有若干部分不同时，只写一次，大括号{}或中括号[]内写不同的部分，每个不同的部分对每个对象只能有一个字符
 	@A!{123} == @A!1,@A!2,@A!3
 	@A![123] == [@A!1/@A!2/@A!3]
+
+	
+	
+	
+
+<cond>: <single_cond> | !! <single_cond> | <cond> (&&|\|\|) <cond>
+<single_cond>: <including> | <all_matching> | <equalling> | <matching> | <function(boolean)>
+
+<including>: :<item_cond>{&<item_cond>}
+<all_matching>: %<item_cond>
+<equalling>: <function>=<string>
+<matching>: <function(item)>~<item_cond>
+
+<function>: *<function_name>[(<function_param>{,<function_param>})]
+<function_name>: <capital_letter>
+<function_param>: <multi_var> | <item> | <string> | <function>
+
+<item_cond>: <single_item_cond> {\|<single_item_cond>}
+<single_item_cond>: <unit_cond> | <tile_type_cond>
+<unit_cond>: <unit_type_cond>[<unit_source_cond>][<tile_type_cond>]
+<unit_type_cond>: <any_unit_type> | <unit_type> | <multi_form(unit_type)>
+<any_unit_type>: ?
+<unit_source_cond>: <unit_source> | <multi_form(unit_source)>
+<tile_type_cond>: [suit_cond][rank_cond]
+<suit_cond>: @<suit_cond_content>
+<suit_cond_content>: <single_suit_cond_content> | <multi_form(single_suit_cond_content)>
+<single_suit_cond_content>: <suit_content> | <var>
+<rank_cond>: #<rank_cond_content>
+<rank_cond_content>: <single_rank_cond_content> | <multi_form(single_rank_cond_content)>
+<single_rank_cond_content>: <rank_content> | <var>
+
+<item>: <unit> | <tile_type>
+<unit>: <unit_type>[<unit_source>][<tile_type>]
+<unit_type>: <capital_letter>
+<unit_source>: <digit>
+<tile_type>: [suit][rank]
+<suit>: @<suit_content>
+<suit_content>: <capital_letter>
+<rank>: #<rank_content>
+<rank_content>: <capital_letter> | <digit>
+
+<multi_var>: <var>{<var>}
+<var>: <small_letter>[+<var_offset>]
+<var_offset>: <digit> | <multi_form(digit)>
+
+<multi_form(x)>: <all_form(x)> | <any_form(x)>
+<all_form(x)>: \{x{x}\}
+<any_form(x)>: \[x{x}\]
+
+<capital_letter>: [A-Z]
+<small_letter>: [a-z]
+<digit>: [0-9]
+<string>: _[A-Za-z0-9_]+
+
+包含 :
+全部（不算补花/花牌） %
+
+条件与 &&
+条件或 ||
+条件非 !!
+
+单元/牌种与 &
+单元/牌种或 |
+
+优先 ()
+单元/牌种重复与 num[单元/牌种/或]
+
+单元 <(KSGJDH)|?>[明暗][牌种]
+明暗 0暗 1明 2补（杠） 3和（非自摸）
+
+牌种 [花色][种类]
+花色 @<(WTBZ)|变量>
+种类 #<(1-9)|(ESWNZFB)|变量>
+变量 (a-z)[(+-)num]
+
+单字与（用于单元/牌种） {xyz}
+单字或（用于单元/牌种） [xyz]
+
+变量不重复 *D((a-z)+)
+判断和牌方式 *R(_W, _XXX)
+听牌数量 *T
+牌墙剩余牌数 *L
+判断和牌前第num个动作位置（自己/他人）和动作类型 *A(num>=0, _S|_O, _PlayerActionTypes)
+明牌中指定牌的数量 *V(牌种)
+和牌单元/牌种 *W(_U|_T)
+除了指定番种没有其他番种 *N(_XXX)
+圈风 *Q
+门风 *M
+
+判断相同 =
+判断匹配单元/牌种 ~
+
+
+*W
+NORMAL_WIN				:4[KSG]&J
+QI_DUI					:7D
+SHI_SAN_YAO				:@{WBT}#{19}&#{ESWNZFB}&#[19ESWNZFB]
+QUAN_BU_KAO				:14(@a#[147]|@b#[258]|@c#[369]|@Z) && !!:2@d#e && *D(abc)
+ZU_HE_LONG				:@a#{147}&@b#{258}&@c#{369}&[SKG]&J && *D(abc)
+
+*F(88)
+DA_SAN_YUAN				:[KG]#{ZFB}
+DA_SI_XI				:[KG]#{ESWN}
+JIU_LIAN_BAO_DENG		:@a#{1112345678999} && *T=_9
+LIAN_QI_DUI				:D@a#b+{0123456}
+SI_GANG					:4G
+LV_YI_SE				%@T#[23468]|#F
+SHI_SAN_YAO				*R(_W,_SHI_SAN_YAO)
+
+*F(64)
+QING_YAO_JIU			%#[19]
+XIAO_SAN_YUAN			:2[KG]#[ZFB]&J#[ZFB]
+XIAO_SI_XI				:3[KG]#[ESWN]&J#[ESWN]
+ZI_YI_SE				%@Z
+SI_AN_KE				:4[KG]0
+YI_SE_SHUANG_LONG_HUI	:S@a#{1177}J@a#5
+YI_SE_SI_TONG_SHUN		:4S@a#b
+YI_SE_SI_JIE_GAO		:[KG]@a#b+{0123}
+
+*F(32)
+YI_SE_SI_BU_GAO			:S@a#b+{0123} || :S@a#b+{0246}
+SAN_GANG				:3G
+HUN_YAO_JIU				%#[19]|@Z
+
+*F(24)
+QI_DUI					*R(_W,_QI_DUI)
+QI_XING_BU_KAO			*R(_W,_QUAN_BU_KAO) && :#{ESWNZFB}
+QUAN_SHUANG_KE			%[KGJ]#[2468]
+QING_YI_SE				%@a#[123456789]
+YI_SE_SAN_TONG_SHUN		:3S@a#b
+YI_SE_SAN_JIE_GAO		:[KG]@a#b+{012}
+QUAN_DA					%#[789]
+QUAN_ZHONG				%#[456]
+QUAN_XIAO				%#[123]
+
+*F(16)
+QING_LONG				:@a#{123456789}
+SAN_SE_SHUANG_LONG_HUI	:S@{ab}#{17}&J@c#5 && *D(abc)
+YI_SE_SAN_BU_GAO		:S@a#b+{012} || :S@a#b+{024}
+QUAN_DAI_WU				%[JKG]#5|S#[345]
+SAN_TONG_KE				:3[KG]#a
+SAN_AN_KE				:3[KG]0
+
+*F(12)
+QUAN_BU_KAO				*R(_W,_QUAN_BU_KAO)
+ZU_HE_LONG				*R(_W,_ZU_HE_LONG)
+DA_YU_WU				%#[6789]
+XIAO_YU_WU				%#[1234]
+SAN_FENG_KE				:3[KG]#[ESWN]
+
+[8]
+HUA_LONG				:@a#{123}&@b#{456}&@c#{789} && *D(abc)
+TUI_BU_DAO				%@B#[1234589]|@T#[245689]|#B
+SAN_SE_SAN_TONG_SHUN	:S@{abc}#d && *D(abc)
+SAN_SE_SAN_JIE_GAO		:[KG]@a#d&[KG]@b#d+1&[KG]@c#d+2 && *D(abc)
+WU_FAN_HU				*N(_HUA_PAI)
+MIAO_SHOU_HUI_CHUN		!!:?3 && *L=_0
+HAI_DI_LAO_YUE			:?3 && *L=_0
+GANG_SHANG_KAI_HUA		*A(1,_S,_DRAW_BOTTOM) && !!*A(2,_S,_BUHUA)
+QIANG_GANG_HU			*A(1,_O,_BUGANG)
+
+[6]
+PENG_PENG_HU			:4[KG]
+HUN_YI_SE				%@a#[123456789]|@Z
+SAN_SE_SAN_BU_GAO		:S@a#d&S@b#d+1&S@c#d+2
+WU_MEN_QI				:@{WTB}&#[ESWN]&#[ZFB]
+QUAN_QIU_REN			%?[123]
+SHUANG_AN_GANG			:2G0
+SHUANG_JIAN_KE			:2[KG]#[ZFB]
+
+[4]
+QUAN_DAI_YAO			%[KGJ]#[19]|[KGJ]@Z|S#[17]
+BU_QIU_REN				!!:?[123]
+SHUANG_MING_GANG		:2G[12]
+HU_JUE_ZHANG			*V(*W(T))=_3
+
+[2]
+JIAN_KE					:K#[ZFB]
+QUAN_FENG_KE			:K*Q
+MEN_FENG_KE				:K*M
+MEN_QIAN_QING			!!:?[12] && :?3
+PING_HU					:4S&J@[WTB]
+SI_GUI_YI				!!:G@a#b && :4@a#b
+SHUANG_TONG_KE			:2K@[WTB]#a
+SHUANG_AN_KE			:2K0
+AN_GANG					:G0
+DUAN_YAO				!!:#[19]|@Z
+
+[1]
+YI_BAN_GAO				:2S@a#b
+XI_XIANG_FENG			:S@{ab}#c && *D(ab)
+LIAN_LIU				:@a#b+{012345}
+LAO_SHAO_FU				:S@a#1&S@a#7
+YAO_JIU_KE				:K#[19]|K@Z
+MING_GANG				:G[12]
+QUE_YI_MEN				!!:@{WBT}
+WU_ZI					!!:@Z
+BIAN_ZHANG				*T=_1 && *W(U)~S#[17] && *W(T)~#[37]
+KAN_ZHANG				*T=_1 && *W(U)~S#a && *W(T)~#a+1
+DAN_DIAO_JIANG			*T=_1 && *W(U)~J
+ZI_MO					!!:?3
+HUA_PAI					:H
